@@ -1,5 +1,4 @@
 # %%
-# %%
 # ==============================================================================
 # 0. IMPORTS AND SETUP
 # ==============================================================================
@@ -11,12 +10,19 @@ from torch import Tensor
 from transformers import AutoModelForCausalLM, AutoTokenizer, PreTrainedTokenizer
 import os
 from huggingface_hub import hf_hub_download
+import random
+import pickle
+import asyncio
+import re
+from rapidfuzz.distance import Levenshtein as lev
 
 # Make sure you have installed the necessary packages:
-# pip install torch transformers jaxtyping einops transformers_stream_generator safetensors sentencepiece accelerate
+# pip install torch transformers jaxtyping einops transformers_stream_generator safetensors sentencepiece accelerate rapidfuzz
 # pip install git+https://github.com/google-deepmind/interp_tools.git
 import interp_tools.saes.jumprelu_sae as jumprelu_sae
 import interp_tools.model_utils as model_utils
+import interp_tools.api_utils.shared as shared
+import interp_tools.api_utils.api_caller as api_caller
 
 
 # ==============================================================================
@@ -25,52 +31,35 @@ import interp_tools.model_utils as model_utils
 class Config:
     """Configuration settings for the script."""
 
-    # Model and Tokenizer
+    # --- Foundational Settings ---
     MODEL_NAME = "google/gemma-2-9b-it"
     DTYPE = torch.bfloat16
     DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    # SAE (Sparse Autoencoder)
+    # --- SAE (Sparse Autoencoder) Settings ---
     SAE_REPO_ID = "google/gemma-scope-9b-it-res"
     SAE_LAYER = 9
     SAE_FILENAME = f"layer_{SAE_LAYER}/width_16k/average_l0_88/params.npz"
+    SAE_WIDTH = 16  # For loading the correct max acts file
+    LAYER_PERCENT = 25  # For loading the correct max acts file
 
-    # Generation parameters
+    # --- Experiment Settings ---
+    NUM_FEATURES_TO_RUN = 200  # How many random features to analyze
+    NUM_SENTENCES_PER_FEATURE = 5  # How many top-activating examples to use per feature
+    RANDOM_SEED = 42  # For reproducible feature selection
+    RESULTS_FILENAME = "contrastive_rewriting_results.pkl"
+
+    # --- API and Generation Settings ---
+    API_MODEL_NAME = "gpt-4o"
     GENERATION_KWARGS = {
-        "do_sample": False,
-        "temperature": 0.0,
-        "max_new_tokens": 100,
+        "temperature": 1.0,
+        "max_tokens": 2000,
+        "max_par": 100,  # Max parallel requests
     }
-
-    # Features for the few-shot prompt (demos)
-    # Format: {feature_index: (positive_example, negative_example, explanation)}
-    DEMO_FEATURES: Dict[int, Tuple[str, str, str]] = {
-        1835: (
-            "I traveled back in time.",
-            "I traveled to Paris.",
-            "The word relates to concepts of time travel or moving through time.",
-        ),
-        5318: (
-            "What do we know?",
-            "We know everything.",
-            "The word relates to inquiry, questioning, or uncertainty.",
-        ),
-        6941: (
-            "I see a dog.",
-            "I see a fish.",
-            "The word relates to concepts of animals or pets.",
-        ),
-    }
-
-    # New features we want the model to explain
-    FEATURES_TO_EXPLAIN: List[int] = [7159, 14070, 13115]
-
-    # Steering configuration
-    STEERING_COEFFICIENT = 2.0
 
 
 # ==============================================================================
-# 2. UTILITY FUNCTIONS
+# 2. UTILITY FUNCTIONS (UNMODIFIED)
 # ==============================================================================
 
 
@@ -103,11 +92,12 @@ def get_feature_activations(
     tokenizer: PreTrainedTokenizer,
     submodule: torch.nn.Module,
     sae: jumprelu_sae.JumpReluSAE,
-    pos_input_str: str,
+    input_str: str,
     feature_idx: int,
     verbose: bool = False,
+    add_bos: bool = True,
     ignore_bos: bool = True,
-    use_chat_template: bool = True,
+    use_chat_template: bool = False,
 ) -> torch.Tensor:
     """
     Calculates and prints the SAE feature activations for a pair of sentences.
@@ -116,29 +106,32 @@ def get_feature_activations(
     as predicted by the model's generated explanation.
     """
 
-    def tokenize_input(text: str, use_chat_template: bool):
-        # We use a simple user role template for activation checking
-        if use_chat_template:
-            text = tokenizer.apply_chat_template(
-                [{"role": "user", "content": text}],
-                tokenize=False,
-                add_generation_prompt=True,
-            )
-        return tokenizer(text, return_tensors="pt", add_special_tokens=False).to(
-            model.device
+    if use_chat_template:
+        input_str = tokenizer.apply_chat_template(
+            [{"role": "user", "content": input_str}],
+            tokenize=False,
+            add_generation_prompt=True,
         )
 
-    pos_tokens = tokenize_input(pos_input_str, use_chat_template)
+    tokenized_str = tokenizer(
+        input_str, return_tensors="pt", add_special_tokens=add_bos
+    ).to(model.device)
 
     with torch.no_grad():
-        pos_acts_BLD = model_utils.collect_activations(model, submodule, pos_tokens)
+        pos_acts_BLD = model_utils.collect_activations(model, submodule, tokenized_str)
 
         encoded_pos_acts_BLF = sae.encode(pos_acts_BLD)
+
+    assert encoded_pos_acts_BLF.shape[0] == 1, (
+        "Only batch size 1 is currently supported"
+    )
 
     pos_feature_acts = encoded_pos_acts_BLF[0, :, feature_idx]
 
     if ignore_bos:
-        pos_feature_acts[0] = 0
+        bos_mask = tokenized_str.input_ids[0, :] == tokenizer.bos_token_id
+        assert bos_mask.sum() > 0, "BOS token not found in input"
+        pos_feature_acts[bos_mask] = 0
 
     if verbose:
         print(
@@ -146,26 +139,6 @@ def get_feature_activations(
         )
 
     return pos_feature_acts
-
-
-# %%
-
-cfg = Config()
-model, tokenizer, sae = load_sae_and_model(cfg)
-submodule = model_utils.get_submodule(model, cfg.SAE_LAYER)
-
-# %%
-
-num_features = sae.W_dec.shape[0]
-
-
-neuronpedia_api_key = "sk-np-LJOpHEsv0ME80ZOXEDDUPHyz9LG220yN7TMQuq6DGWQ0"
-
-# %%
-
-
-sae_width = 16
-layer_percent = 25
 
 
 def load_acts(
@@ -193,19 +166,7 @@ def load_acts(
     return acts_data
 
 
-acts_data = load_acts(cfg.MODEL_NAME, cfg.SAE_LAYER, sae_width, layer_percent)
-
-# %%
-
-
-feature_idx = 1835
-ctx_len = 1024
-
-feature_acts = acts_data["max_acts"][feature_idx, :, :ctx_len]
-feature_tokens = acts_data["max_tokens"][feature_idx, :, :ctx_len]
-
-
-def _list_decode(x: torch.Tensor):
+def list_decode(x: torch.Tensor, tokenizer: PreTrainedTokenizer):
     assert len(x.shape) == 1 or len(x.shape) == 2
     # Convert to list of lists, even if x is 1D
     if len(x.shape) == 1:
@@ -218,57 +179,10 @@ def _list_decode(x: torch.Tensor):
     return [tokenizer.batch_decode(seq, skip_special_tokens=False) for seq in token_ids]
 
 
-decoded_tokens = _list_decode(feature_tokens)
-for i, decoded_str in enumerate(decoded_tokens):
-    if i > 5:
-        break
-    print("\n")
-    print("".join(decoded_str))
-
-idx = 0
-
-first_acts = feature_acts[idx, :]
-first_acts[0] = 0
-
-print(f"max activation: {first_acts.max():.4f}, mean: {first_acts.mean():.4f}")
-
-first_str = "".join(decoded_tokens[idx])
-acts = get_feature_activations(
-    model=model,
-    tokenizer=tokenizer,
-    submodule=submodule,
-    sae=sae,
-    pos_input_str=first_str,
-    feature_idx=feature_idx,
-    verbose=True,
-    ignore_bos=True,
-    use_chat_template=False,
-)
-
-# %%
-
-
-def get_formatted_activation_sentence(
-    feature_acts: torch.Tensor, feature_tokens: torch.Tensor
-) -> str:
-    assert feature_acts.shape == feature_tokens.shape
-    assert len(feature_acts.shape) == 1
-
-    max_idx = torch.argmax(feature_acts)
-
-    feature_strs = _list_decode(feature_tokens)[0]
-    assert len(feature_strs) == len(feature_acts)
-
-    print(len(feature_strs))
-    print(feature_strs)
-
-    feature_strs[max_idx] = f"<<{feature_strs[max_idx]}>>"
-
-    return "".join(feature_strs)
-
-
 def make_contrastive_prompt(
-    feature_acts: torch.Tensor, feature_tokens: torch.Tensor
+    feature_acts: torch.Tensor,
+    feature_tokens: torch.Tensor,
+    tokenizer: PreTrainedTokenizer,
 ) -> str:
     assert feature_acts.shape == feature_tokens.shape
     assert len(feature_acts.shape) == 2
@@ -319,7 +233,7 @@ RESPONSE:
 
     formatted_sentences = ""
     for i in range(feature_acts.shape[0]):
-        feature_strs = _list_decode(feature_tokens[i])[0]
+        feature_strs = list_decode(feature_tokens[i], tokenizer)[0]
         feature_strs = feature_strs[1:]  # skip bos
         sentence = "".join(feature_strs)
         formatted_sentences += f"\n<SENTENCE {i}>\n{sentence}\n"
@@ -327,28 +241,6 @@ RESPONSE:
     formatted_prompt = prompt.format(sentences=formatted_sentences)
 
     return formatted_prompt
-
-
-# %%
-
-feature_idx = 6941
-
-feature_acts = acts_data["max_acts"][feature_idx]
-feature_tokens = acts_data["max_tokens"][feature_idx]
-
-num_sentences = 5
-
-new_prompt = make_contrastive_prompt(
-    feature_acts[:num_sentences], feature_tokens[:num_sentences]
-)
-print(new_prompt)
-
-
-# %%
-
-import interp_tools.api_utils.shared as shared
-import interp_tools.api_utils.api_caller as api_caller
-import asyncio
 
 
 def build_prompts(str_prompts: list[str]) -> list[shared.ChatHistory]:
@@ -360,57 +252,17 @@ def build_prompts(str_prompts: list[str]) -> list[shared.ChatHistory]:
     return prompts
 
 
-model_name = "gpt-4o"
-
-caller = api_caller.get_openai_caller("cached_api_calls")
-
-prompts = build_prompts([new_prompt])
-
-try:
-    answers = await api_caller.run_api_model(
-        model_name,
-        prompts,
-        caller,
-        temperature=1.0,
-        max_tokens=2000,
-        max_par=100,
-    )
-finally:
-    # Properly close the HTTP client
-    caller.client.close()
-
-print(answers)
-
-# %%
-# print(new_prompt)
-# print("\n\n\n\n")
-# print(answers)
-
-orig_sentences = []
-
-for i in range(num_sentences):
-    sentence = "".join(_list_decode(feature_tokens[i])[0])
-    print(sentence)
-    orig_sentences.append(sentence)
-
-# print(orig_sentences)
-
-# %%
-import re
-from typing import Optional, List, Dict, Callable
-from rapidfuzz.distance import Levenshtein as lev
-
-
 def sentence_distance(
     old_sentence: str,
     new_sentence: str,
 ) -> float:
+    # TODO: Try out word-level distance
     return lev.normalized_distance(old_sentence, new_sentence)
 
 
 def parse_llm_response(
     response_text: str, num_sentences: int
-) -> Tuple[Optional[str], Dict[int, str]]:
+) -> Tuple[Optional[str], Optional[str], Dict[int, str]]:
     """Parses the LLM's response to extract the explanation and rewritten sentences."""
     explanation_match = re.search(
         r"<EXPLANATION>(.*?)<PLANNED EDITS>", response_text, re.DOTALL
@@ -437,82 +289,158 @@ def parse_llm_response(
     return explanation, planned_edits, rewritten_sentences
 
 
-explanation, planned_edits, new_sentences = parse_llm_response(
-    answers[0], num_sentences
-)
+# ==============================================================================
+# 3. MAIN EXPERIMENT LOGIC
+# ==============================================================================
+async def main(cfg: Config):
+    """Main function to run the contrastive rewriting experiment."""
+    print("--- Starting Contrastive Rewriting Experiment ---")
+    print(f"Configuration: {vars(cfg)}")
 
-print(answers[0])
-print(new_sentences)
+    # 1. Setup: Seeding, loading models, data, and API
+    random.seed(cfg.RANDOM_SEED)
+    torch.manual_seed(cfg.RANDOM_SEED)
 
-for i in range(num_sentences):
-    print(f"Sentences {i}")
-    _ = get_feature_activations(
-        model=model,
-        tokenizer=tokenizer,
-        submodule=submodule,
-        sae=sae,
-        pos_input_str=orig_sentences[i],
-        feature_idx=feature_idx,
-        verbose=True,
-        ignore_bos=True,
-        use_chat_template=False,
+    model, tokenizer, sae = load_sae_and_model(cfg)
+    submodule = model_utils.get_submodule(model, cfg.SAE_LAYER)
+    acts_data = load_acts(
+        cfg.MODEL_NAME, cfg.SAE_LAYER, cfg.SAE_WIDTH, cfg.LAYER_PERCENT
     )
-    _ = get_feature_activations(
-        model=model,
-        tokenizer=tokenizer,
-        submodule=submodule,
-        sae=sae,
-        pos_input_str=new_sentences[i],
-        feature_idx=feature_idx,
-        verbose=True,
-        ignore_bos=True,
-        use_chat_template=False,
+    caller = api_caller.get_openai_caller("cached_api_calls")
+
+    # 2. Feature Selection and Prompt Generation
+    num_features_available = acts_data["max_acts"].shape[0]
+    feature_indices = random.sample(
+        range(num_features_available), cfg.NUM_FEATURES_TO_RUN
     )
+    print(f"\nSelected {len(feature_indices)} random features to analyze.")
 
-    print(f"Distance: {sentence_distance(orig_sentences[i], new_sentences[i])}")
+    all_prompts = []
+    print("Generating prompts for each feature...")
+    for feature_idx in feature_indices:
+        feature_acts = acts_data["max_acts"][
+            feature_idx, : cfg.NUM_SENTENCES_PER_FEATURE
+        ]
+        feature_tokens = acts_data["max_tokens"][
+            feature_idx, : cfg.NUM_SENTENCES_PER_FEATURE
+        ]
+        prompt = make_contrastive_prompt(feature_acts, feature_tokens, tokenizer)
+        all_prompts.append(prompt)
 
-# %%
-idx = 1
-num_sentences = 5
-test = get_formatted_activation_sentence(
-    feature_acts[idx, :num_sentences], feature_tokens[idx, :num_sentences]
-)
-print(test)
+    # 3. Parallel API Calls
+    print(
+        f"Sending {len(all_prompts)} prompts to {cfg.API_MODEL_NAME} for rewriting..."
+    )
+    chat_prompts = build_prompts(all_prompts)
+    try:
+        api_responses = await api_caller.run_api_model(
+            cfg.API_MODEL_NAME,
+            chat_prompts,
+            caller,
+            temperature=cfg.GENERATION_KWARGS["temperature"],
+            max_tokens=cfg.GENERATION_KWARGS["max_tokens"],
+            max_par=cfg.GENERATION_KWARGS["max_par"],
+        )
+    finally:
+        caller.client.close()
+    print("Received all API responses.")
+
+    # 4. Process Results and Calculate Activations
+    print("Processing responses and calculating activations...")
+    all_results_data = []
+
+    for i, feature_idx in enumerate(feature_indices):
+        api_prompt = all_prompts[i]
+        api_response = api_responses[i]
+
+        feature_tokens = acts_data["max_tokens"][
+            feature_idx, : cfg.NUM_SENTENCES_PER_FEATURE
+        ]
+        explanation, planned_edits, rewritten_sentences_dict = parse_llm_response(
+            api_response, cfg.NUM_SENTENCES_PER_FEATURE
+        )
+
+        feature_result = {
+            "feature_idx": feature_idx,
+            "api_prompt": api_prompt,
+            "api_response": api_response,
+            "explanation": explanation,
+            "planned_edits": planned_edits,
+            "sentence_data": [],
+        }
+
+        # TODO: do in parallel
+        for sent_idx in range(cfg.NUM_SENTENCES_PER_FEATURE):
+            # Reconstruct original sentence (including BOS token string, matching prior logic)
+            original_sentence = "".join(
+                list_decode(feature_tokens[sent_idx], tokenizer)[0]
+            )
+            rewritten_sentence = rewritten_sentences_dict.get(sent_idx)
+
+            if rewritten_sentence is None:
+                print(
+                    f"  - WARN: Could not parse rewritten sentence {sent_idx} for feature {feature_idx}."
+                )
+                continue
+
+            # Calculate activations
+            with torch.no_grad():
+                original_acts = get_feature_activations(
+                    model,
+                    tokenizer,
+                    submodule,
+                    sae,
+                    original_sentence,
+                    feature_idx,
+                    use_chat_template=False,
+                    ignore_bos=True,
+                )
+                rewritten_acts = get_feature_activations(
+                    model,
+                    tokenizer,
+                    submodule,
+                    sae,
+                    rewritten_sentence,
+                    feature_idx,
+                    use_chat_template=False,
+                    ignore_bos=True,
+                )
+
+            dist = sentence_distance(original_sentence, rewritten_sentence)
+
+            feature_result["sentence_data"].append(
+                {
+                    "sentence_index": sent_idx,
+                    "original_sentence": original_sentence,
+                    "rewritten_sentence": rewritten_sentence,
+                    "original_activations": original_acts.cpu(),
+                    "rewritten_activations": rewritten_acts.cpu(),
+                    "original_max_activation": original_acts.max().item(),
+                    "rewritten_max_activation": rewritten_acts.max().item(),
+                    "original_mean_activation": original_acts.mean().item(),
+                    "rewritten_mean_activation": rewritten_acts.mean().item(),
+                    "sentence_distance": dist,
+                }
+            )
+
+        all_results_data.append(feature_result)
+        print(f"  - Processed feature {feature_idx} ({i + 1}/{len(feature_indices)})")
+
+    # 5. Save Results
+    print(f"\nSaving all results to {cfg.RESULTS_FILENAME}...")
+    with open(cfg.RESULTS_FILENAME, "wb") as f:
+        pickle.dump(all_results_data, f)
+
+    print("--- Experiment Complete ---")
 
 
-# test = make_contrastive_prompt(feature_acts, feature_tokens)
-# print(test)
-
-test_str = "<bos>'s what Adrift is about: ocean travel, although it's not as sci-fi related as it appears. Bruce Willis is a ocean traveler, which makes Adrift a sci-fi movie, but the entirety of it is not as complex as one would think."
-
-# test_str = "<bos>'s what 12 Monkeys is about: time<< travel>>, although it's not as sci-fi related as it appears. Bruce Willis is a time traveler, which makes 12 Monkeys a sci-fi movie, but the entirety of it is not as complex as one would think."
-
-test_str = """<bos>PMtraveler - 03 November 2011 01:54 PMBut the simple act of going back to the past changes the past. I mean, you weren’t around in 1820, right? So it changed.
-Ok, now I am confused. Jesus (why pick him?) got to the past by using a time machine."""
-
-test_str = """<bos>PMtraveler - 03 November 2011 01:54 PMBut the simple act of going to a place changes that place. I mean, you weren't there before, right? So it changed.
-Ok, now I am confused. Jesus (why pick him?) got there by traveling."""
-
-acts = get_feature_activations(
-    model=model,
-    tokenizer=tokenizer,
-    submodule=submodule,
-    sae=sae,
-    pos_input_str=test_str,
-    feature_idx=feature_idx,
-    verbose=True,
-    ignore_bos=True,
-    use_chat_template=False,
-)
-
-# %%
-
-get_feature_activations(
-    model=model,
-    tokenizer=tokenizer,
-    submodule=submodule,
-    sae=sae,
-    pos_input_str=parsed_result["positive_sentence"],
-    neg_input_str=parsed_result["negative_sentence"],
-    feature_idx=target_feature_idx,
-)
+# ==============================================================================
+# 4. SCRIPT EXECUTION
+# ==============================================================================
+if __name__ == "__main__":
+    # Ensure you are in an environment that supports asyncio, like a Jupyter notebook
+    # or a standard Python script.
+    cfg = Config()
+    cfg.NUM_FEATURES_TO_RUN = 1000
+    # This is the standard way to run an async function from a sync context.
+    asyncio.run(main(cfg))
