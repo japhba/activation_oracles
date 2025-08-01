@@ -117,7 +117,7 @@ def get_submodule(model: AutoModelForCausalLM, layer: int):
 
     if "pythia" in model_name:
         return model.gpt_neox.layers[layer]
-    elif "gemma" in model_name or "mistral" in model_name:
+    elif "gemma" in model_name or "mistral" in model_name or "Llama" in model_name:
         return model.model.layers[layer]
     else:
         raise ValueError(f"Please add submodule for model {model_name}")
