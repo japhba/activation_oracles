@@ -42,6 +42,7 @@ class Config:
     SAE_FILENAME = f"layer_{SAE_LAYER}/width_16k/average_l0_88/params.npz"
     SAE_WIDTH = 16  # For loading the correct max acts file
     LAYER_PERCENT = 25  # For loading the correct max acts file
+    CONTEXT_LENGTH = 32
 
     # --- Experiment Settings ---
     NUM_FEATURES_TO_RUN = 200  # How many random features to analyze
@@ -142,10 +143,19 @@ def get_feature_activations(
 
 
 def load_acts(
-    model_name: str, sae_layer: int, sae_width: int, layer_percent: int
+    model_name: str,
+    sae_layer: int,
+    sae_width: int,
+    layer_percent: int,
+    context_length: int | None = None,
 ) -> dict[str, torch.Tensor]:
     acts_dir = "max_acts"
-    acts_filename = f"acts_{model_name}_layer_{sae_layer}_trainer_{sae_width}_layer_percent_{layer_percent}.pt".replace(
+
+    ctx_len_str = (
+        f"_context_length_{context_length}" if context_length is not None else ""
+    )
+
+    acts_filename = f"acts_{model_name}_layer_{sae_layer}_trainer_{sae_width}_layer_percent_{layer_percent}{ctx_len_str}.pt".replace(
         "/", "_"
     )
     print(acts_filename)
@@ -304,7 +314,11 @@ async def main(cfg: Config):
     model, tokenizer, sae = load_sae_and_model(cfg)
     submodule = model_utils.get_submodule(model, cfg.SAE_LAYER)
     acts_data = load_acts(
-        cfg.MODEL_NAME, cfg.SAE_LAYER, cfg.SAE_WIDTH, cfg.LAYER_PERCENT
+        cfg.MODEL_NAME,
+        cfg.SAE_LAYER,
+        cfg.SAE_WIDTH,
+        cfg.LAYER_PERCENT,
+        cfg.CONTEXT_LENGTH,
     )
     caller = api_caller.get_openai_caller("cached_api_calls")
 
