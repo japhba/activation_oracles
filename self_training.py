@@ -14,6 +14,7 @@ import einops
 from rapidfuzz.distance import Levenshtein as lev
 from tqdm import tqdm
 import wandb
+from torch.nn.utils import clip_grad_norm_
 
 import interp_tools.saes.jumprelu_sae as jumprelu_sae
 import interp_tools.model_utils as model_utils
@@ -534,9 +535,9 @@ def construct_train_dataset(
 
             full_prompt_ids = torch.tensor(full_prompt_ids, dtype=torch.long).to(device)
             labels = full_prompt_ids.clone()
-            labels[assistant_start_idx:] = -100
+            labels[:assistant_start_idx] = -100
             attn_mask = torch.ones_like(full_prompt_ids, dtype=torch.bool).to(device)
-            attn_mask[padding_length:] = False
+            attn_mask[:padding_length] = False
 
             batch_tokens.append(full_prompt_ids)
             batch_labels.append(labels)
@@ -679,14 +680,14 @@ eval_data = construct_eval_dataset(
 # %%
 
 
-def train_model(
+def train_batch(
     cfg: SelfInterpTrainingConfig,
     training_batch: dict,
     model: AutoModelForCausalLM,
     submodule: torch.nn.Module,
     device: torch.device,
     dtype: torch.dtype,
-) -> dict:
+) -> torch.Tensor:
     """
     Trains the model on a single batch of data.
     """
@@ -719,6 +720,7 @@ def eval_batch(
     eval_batch: dict,
     model: AutoModelForCausalLM,
     submodule: torch.nn.Module,
+    sae: jumprelu_sae.JumpReluSAE,
     device: torch.device,
     dtype: torch.dtype,
 ) -> dict:
@@ -791,6 +793,7 @@ def eval_batch(
             "api_response": output,
             "explanation": explanations[i],
             "sentence_data": [],
+            "sentence_metrics": [],
         }
 
         pos_activations_L = pos_activations_BLK[i, :, i]
@@ -800,21 +803,110 @@ def eval_batch(
             pos_statements[i], neg_statements[i]
         )
 
+        original_max_activation = pos_activations_L.max().item()
+        rewritten_max_activation = neg_activations_L.max().item()
+        original_mean_activation = pos_activations_L.mean().item()
+        rewritten_mean_activation = neg_activations_L.mean().item()
+
+        max_activation_ratio = rewritten_max_activation / (
+            original_max_activation + 1e-6
+        )
+        mean_activation_ratio = rewritten_mean_activation / (
+            original_mean_activation + 1e-6
+        )
+
+        max_activation_ratio = max(max_activation_ratio, 0.0)
+        mean_activation_ratio = max(mean_activation_ratio, 0.0)
+
+        max_activation_ratio = min(max_activation_ratio, 1.0)
+        mean_activation_ratio = min(mean_activation_ratio, 1.0)
+
         sentence_data = {
             "sentence_index": 0,
             "original_sentence": pos_statements[i],
             "rewritten_sentence": neg_statements[i],
-            "original_activations": pos_activations_L,
-            "rewritten_activations": neg_activations_L,
-            "original_max_activation": pos_activations_L.max().item(),
-            "rewritten_max_activation": neg_activations_L.max().item(),
-            "original_mean_activation": pos_activations_L.mean().item(),
-            "rewritten_mean_activation": neg_activations_L.mean().item(),
+        }
+
+        sentence_metrics = {
+            "original_max_activation": original_max_activation,
+            "rewritten_max_activation": rewritten_max_activation,
+            "original_mean_activation": original_mean_activation,
+            "rewritten_mean_activation": rewritten_mean_activation,
+            "max_activation_ratio": max_activation_ratio,
+            "mean_activation_ratio": mean_activation_ratio,
             "sentence_distance": sentence_distance,
         }
 
         feature_result["sentence_data"].append(sentence_data)
-
+        feature_result["sentence_metrics"].append(sentence_metrics)
         feature_results.append(feature_result)
 
     return feature_results
+
+
+def train_model(
+    cfg: SelfInterpTrainingConfig,
+    training_data: list[dict],
+    eval_data: list[dict],
+    model: AutoModelForCausalLM,
+    submodule: torch.nn.Module,
+    sae: jumprelu_sae.JumpReluSAE,
+    device: torch.device,
+    dtype: torch.dtype,
+):
+    num_epochs = 1
+    lr = 1e-5
+    max_grad_norm = 1.0
+    eval_interval = 50
+    wandb_project = "sae_introspection"
+    run_name = f"{cfg.model_name}-layer{cfg.sae_layer}-itcp"
+
+    wandb.init(project=wandb_project, name=run_name, config=asdict(cfg))
+
+    model.train()
+    optimizer = torch.optim.AdamW(model.parameters(), lr=lr)
+
+    global_step = 0
+
+    for epoch in range(num_epochs):
+        pbar = tqdm(training_data, desc=f"Epoch {epoch + 1}")
+        for batch_idx, batch in enumerate(pbar):
+            loss = train_batch(cfg, batch, model, submodule, device, dtype)
+            loss.backward()
+            clip_grad_norm_(model.parameters(), max_grad_norm)
+            optimizer.step()
+            optimizer.zero_grad()
+
+            wandb.log({"train/loss": loss.item(), "step": global_step})
+
+            # -------------------------------- evaluation --------------------------------
+            if global_step % eval_interval == 0:
+                model.eval()
+                with torch.no_grad():
+                    all_sentence_metrics = []
+                    for e_batch in eval_data:
+                        feature_results = eval_batch(
+                            cfg, e_batch, model, submodule, sae, device, dtype
+                        )
+                        for res in feature_results:
+                            all_sentence_metrics.extend(res["sentence_metrics"])
+
+                    if all_sentence_metrics:
+                        aggregated_metrics = {}
+                        metric_keys = all_sentence_metrics[0].keys()
+                        for key in metric_keys:
+                            avg_val = sum(m[key] for m in all_sentence_metrics) / len(
+                                all_sentence_metrics
+                            )
+                            aggregated_metrics[key] = avg_val
+
+                        wandb_log_dict = {
+                            f"eval/{k}": v for k, v in aggregated_metrics.items()
+                        }
+                        wandb.log(wandb_log_dict, step=global_step)
+
+                model.train()
+            global_step += 1
+
+    print("Training complete.")
+    wandb.finish()
