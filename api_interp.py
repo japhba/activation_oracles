@@ -382,10 +382,6 @@ async def main(cfg: SelfInterpTrainingConfig):
         batch_size=32,
     )
 
-    model_name_str = cfg.model_name.replace("/", "_").replace(".", "_")
-
-    cfg.training_data_filename = f"contrastive_rewriting_results_{model_name_str}.pkl"
-
     # 5. Save Results
     print(f"\nSaving all results to {cfg.training_data_filename}...")
     with open(cfg.training_data_filename, "wb") as f:
@@ -402,8 +398,16 @@ if __name__ == "__main__":
     # Ensure you are in an environment that supports asyncio, like a Jupyter notebook
     # or a standard Python script.
     cfg = SelfInterpTrainingConfig()
-    cfg.model_name = "meta-llama/Llama-3.1-8B-Instruct"
-    cfg.sae_repo_id = "fnlp/Llama3_1-8B-Base-LXR-32x"
-    cfg.api_num_features_to_run = 200000
+    # cfg.model_name = "meta-llama/Llama-3.1-8B-Instruct"
+    # cfg.sae_repo_id = "fnlp/Llama3_1-8B-Base-LXR-32x"
+
+    cfg.model_name = "google/gemma-2-9b-it"
+    cfg.sae_repo_id = "google/gemma-scope-9b-it-res"
+    cfg.api_num_features_to_run = 2000
+
+    model_name_str = cfg.model_name.replace("/", "_").replace(".", "_")
+
+    cfg.training_data_filename = f"contrastive_rewriting_results_{model_name_str}_num_features_{cfg.api_num_features_to_run}.pkl"
+    print(f"Results will be saved to {cfg.training_data_filename}")
     # This is the standard way to run an async function from a sync context.
     asyncio.run(main(cfg))
