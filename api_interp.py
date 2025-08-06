@@ -49,8 +49,6 @@ def load_acts(
     print(acts_filename)
     acts_path = os.path.join(acts_dir, acts_filename)
     if not os.path.exists(acts_path):
-        from huggingface_hub import hf_hub_download
-
         path_to_config = hf_hub_download(
             repo_id="adamkarvonen/sae_max_acts",
             filename=acts_filename,
@@ -329,15 +327,19 @@ async def main(cfg: SelfInterpTrainingConfig):
 
     # 2. Feature Selection and Prompt Generation
     num_features_available = acts_data["max_acts"].shape[0]
-    feature_indices = random.sample(
-        range(num_features_available),
-        min(cfg.api_num_features_to_run, num_features_available),
-    )
-    print(f"\nSelected {len(feature_indices)} random features to analyze.")
+
+    if len(cfg.eval_features) == 0:
+        print("No eval features provided, selecting random features...")
+        cfg.eval_features = random.sample(
+            range(num_features_available),
+            min(cfg.api_num_features_to_run, num_features_available),
+        )
+
+    print(f"\nSelected {len(cfg.eval_features)} features to analyze.")
 
     all_prompts = []
     print("Generating prompts for each feature...")
-    for feature_idx in feature_indices:
+    for feature_idx in cfg.eval_features:
         feature_acts = acts_data["max_acts"][
             feature_idx, : cfg.api_num_sentences_per_feature
         ]
@@ -375,7 +377,7 @@ async def main(cfg: SelfInterpTrainingConfig):
 
     all_results_data = parallel_eval(
         cfg,
-        feature_indices,
+        cfg.eval_features,
         all_prompts,
         api_responses,
         acts_data,
@@ -402,16 +404,26 @@ if __name__ == "__main__":
     # Ensure you are in an environment that supports asyncio, like a Jupyter notebook
     # or a standard Python script.
     cfg = SelfInterpTrainingConfig()
-    cfg.model_name = "meta-llama/Llama-3.1-8B-Instruct"
-    cfg.sae_repo_id = "fnlp/Llama3_1-8B-Base-LXR-32x"
+    # cfg.model_name = "meta-llama/Llama-3.1-8B-Instruct"
+    # cfg.sae_repo_id = "fnlp/Llama3_1-8B-Base-LXR-32x"
 
-    # cfg.model_name = "google/gemma-2-9b-it"
-    # cfg.sae_repo_id = "google/gemma-scope-9b-it-res"
-    cfg.api_num_features_to_run = 20000
+    cfg.model_name = "google/gemma-2-9b-it"
+    cfg.sae_repo_id = "google/gemma-scope-9b-it-res"
+    cfg.api_num_features_to_run = 2000
 
     model_name_str = cfg.model_name.replace("/", "_").replace(".", "_")
 
     cfg.training_data_filename = f"contrastive_rewriting_results_{model_name_str}_num_features_{cfg.api_num_features_to_run}.pkl"
+
+    lora_results_filename = "lora_eval_results.pkl"
+
+    with open(lora_results_filename, "rb") as f:
+        lora_results = pickle.load(f)
+
+    cfg.eval_features = lora_results["config"]["eval_features"]
+
+    cfg.training_data_filename = "gpt4o_contrastive_rewriting_results.pkl"
+    cfg.api_model_name = "gpt-4o"
     print(f"Results will be saved to {cfg.training_data_filename}")
     # This is the standard way to run an async function from a sync context.
     asyncio.run(main(cfg))
