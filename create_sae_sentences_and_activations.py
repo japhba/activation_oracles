@@ -175,7 +175,8 @@ def create_sae_feature_data(
     feature_activations = acts_data["max_acts"][feature_idx, :num_sentences]  # Shape: [num_sentences, seq_len]
     
     sentences = []
-    for i in range(num_sentences):
+    max_sentences = min(num_sentences, len(feature_tokens))
+    for i in range(max_sentences):
         sentence_info = create_sentence_info(
             feature_tokens[i],
             feature_activations[i],
@@ -210,13 +211,9 @@ def create_sae_activations_jsonl(
     """
     print(f"🔧 Creating SAE activations JSONL with {num_features} features...")
     
-    # Setup configuration
-    cfg = SelfInterpTrainingConfig()
-    cfg.model_name = model_name
-    cfg.sae_repo_id = sae_repo_id
-    
-    # Get SAE info
-    cfg.sae_width, cfg.sae_layer, cfg.sae_layer_percent, cfg.sae_filename = get_sae_info(cfg.sae_repo_id)
+    # Setup configurationa
+    sae_info = get_sae_info(sae_repo_id)
+    cfg = SelfInterpTrainingConfig(model_name=model_name, sae_repo_id=sae_repo_id, sae_width=sae_info[0], sae_layer=sae_info[1], layer_percent=sae_info[2], context_length=context_length)
     
     print(f"📋 Configuration:")
     print(f"   Model: {cfg.model_name}")
@@ -242,24 +239,20 @@ def create_sae_activations_jsonl(
     # Create output file
     with open(output_file, 'w', encoding='utf-8') as f:
         for feature_idx in range(num_features):
-            try:
-                # Create SAE activations data for this feature
-                sae_activations = create_sae_feature_data(
-                    acts_data,
-                    tokenizer,
-                    feature_idx,
-                    num_sentences_per_feature
-                )
+            # Create SAE activations data for this feature
+            sae_activations = create_sae_feature_data(
+                acts_data,
+                tokenizer,
+                feature_idx,
+                num_sentences_per_feature
+            )
+            
+            # Write to JSONL
+            json_line = sae_activations.model_dump_json()
+            f.write(json_line + '\n')
+            
+            print(f"✅ Processed feature {feature_idx}")
                 
-                # Write to JSONL
-                json_line = sae_activations.model_dump_json()
-                f.write(json_line + '\n')
-                
-                print(f"✅ Processed feature {feature_idx}")
-                
-            except Exception as e:
-                print(f"❌ Error processing feature {feature_idx}: {e}")
-                continue
     
     print(f"💾 JSONL output saved to: {output_file}")
     print(f"🎯 Successfully processed {num_features} features with {num_sentences_per_feature} sentences each")
@@ -268,8 +261,9 @@ def create_sae_activations_jsonl(
 def main():
     """Main function to run with default parameters."""
     create_sae_activations_jsonl(
-        num_features=5,
-        output_file="sae_activations.jsonl"
+        num_features=200,
+        output_file="sae_activations.jsonl",
+        num_sentences_per_feature=40,
     )
 
 
