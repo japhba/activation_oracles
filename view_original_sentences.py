@@ -88,7 +88,7 @@ def decode_tokens_to_sentences(
             token_sequence = token_sequence[1:]
 
         # Decode to string
-        sentence = tokenizer.decode(token_sequence, skip_special_tokens=True).strip()
+        sentence = tokenizer.decode(token_sequence.tolist(), skip_special_tokens=True).strip()
         sentences.append(sentence)
 
     return sentences
