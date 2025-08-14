@@ -208,14 +208,14 @@ def main(
     sae_index: int = typer.Option(7159, help="Feature index to explain"),
     steering_coefficient: float = typer.Option(2.0, help="Coefficient for activation steering"),
     layer: int = typer.Option(9, help="Layer number for SAE"),
-    num_generations: int = typer.Option(10, help="Number of features to generate explanations for"),
+    num_generations: int = typer.Option(5, help="Number of features to generate explanations for"),
 ):
     """Main function for few-shot SAE explanation generation."""
     # Main script logic
     cfg = SelfInterpConfig()
     
     # Set up variables from parameters
-    features_to_explain = [sae_index]
+    features_to_explain = [sae_index] * num_generations  # Repeat sae_index num_generations times
     sae_layer = layer
     batch_size = 8
     verbose = True
@@ -322,10 +322,10 @@ def main(
     #     cfg.model_name, tokenizer, device
     # )
     
-    # Use the feature specified by sae_index parameter
-    num_features_to_run = min(len(features_to_explain), num_generations)
+    # Use the feature specified by sae_index parameter, repeated num_generations times
+    num_features_to_run = num_generations
     
-    assert len(features_to_explain) >= num_features_to_run
+    assert len(features_to_explain) == num_features_to_run
 
     # Prepare batch steering vectors for each feature
     batch_steering_vectors = []
