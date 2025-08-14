@@ -46,7 +46,9 @@ def build_explanation_prompt(
 
     # Find the position of the placeholder 'X'
     token_ids = tokenizer.encode(str(formatted_input), add_special_tokens=False)
-    x_token_id = tokenizer.encode("X", add_special_tokens=False)[0]
+    x_token_ids = tokenizer.encode("X", add_special_tokens=False)
+    assert len(x_token_ids) == 1, "Expected to find 1 'X' token"
+    x_token_id = x_token_ids[0]
     positions = [i for i, token_id in enumerate(token_ids) if token_id == x_token_id]
 
     assert len(positions) == 1, (
