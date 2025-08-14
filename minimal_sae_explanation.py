@@ -40,8 +40,8 @@ def build_explanation_prompt(
     formatted_input = tokenizer.apply_chat_template(
         messages,
         tokenize=False,
-        add_generation_prompt=False,
-        continue_final_message=True,
+        add_generation_prompt=True,
+        continue_final_message=False,
     )
 
     # Find the position of the placeholder 'X'
