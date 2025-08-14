@@ -358,9 +358,9 @@ few_shot_indices = [example["feature_idx"] for example in few_shot_examples]
 #     cfg.model_name, tokenizer, device
 # )
 
-cfg.features_to_explain = [0, 1835,17159, 14070]
-# fish feature, python function def feature
-cfg.num_features_to_run = 2
+cfg.features_to_explain = [0, 1835, 17159, 14070]
+# race feature, time travel, fish feature, python function def feature
+cfg.num_features_to_run = 4
 
 assert len(cfg.features_to_explain) == cfg.num_features_to_run
 
