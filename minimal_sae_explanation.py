@@ -38,19 +38,21 @@ def build_explanation_prompt(
     ]
 
     # Apply chat template
-    formatted_input = tokenizer.apply_chat_template(
+    input_as_str: str = tokenizer.apply_chat_template( # type: ignore
         messages,
         tokenize=False,
         add_generation_prompt=True,
         continue_final_message=False,
     )
-    print(f"Formatted input: {formatted_input}")
+    print(f"Formatted input: {input_as_str}")
 
     # Find the position of the placeholder 'X'
-    token_ids = tokenizer.encode(str(formatted_input), add_special_tokens=False)
+    token_ids = tokenizer.encode(input_as_str, add_special_tokens=False)
+    print(f"Token IDs: {token_ids}")
     x_token_ids = tokenizer.encode("X", add_special_tokens=False)
     assert len(x_token_ids) == 1, "Expected to find 1 'X' token"
     x_token_id = x_token_ids[0]
+    print(f"X token ID: {x_token_id}")
     positions = [i for i, token_id in enumerate(token_ids) if token_id == x_token_id]
 
     print(f"Found X token at position: {positions[0]}/{len(token_ids)}")
@@ -66,11 +68,11 @@ def build_explanation_prompt(
 
     assert len(positions) == 1, (
         f"Expected to find 1 'X' placeholder, but found {len(positions)}. "
-        f"Full prompt: {formatted_input}"
+        f"Full prompt: {input_as_str}"
     )
 
     tokenized_input = tokenizer(
-        str(formatted_input), return_tensors="pt", add_special_tokens=False
+        str(input_as_str), return_tensors="pt", add_special_tokens=False
     ).to(device)
 
     return tokenized_input.input_ids, positions[0]
