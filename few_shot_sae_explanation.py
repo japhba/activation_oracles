@@ -30,20 +30,20 @@ def hardcoded_gemma_2_9b_it_few_shot_example(model_name: str) -> list[dict]:
             # "rewritten_sentence": "We know everything.",
             "explanation": "The word relates to inquiry, questioning, or uncertainty.",
         },
-        {
-            "feature_idx": 6941,
-            # "original_sentence": "I see a dog.",
-            # "rewritten_sentence": "I see a fish.",
-            "explanation": "The word relates to concepts of animals or pets, especially dogs.",
-        },
-        {
-            "feature_idx": 500,
-            "explanation": "The word relates to references to payment methods, particularly credit cards and cash.",
-        },
-        {
-            "feature_idx": 555,
-            "explanation": "The word references to various trails and paths, particularly those that are connected to outdoor activities.",
-        },
+        # {
+        #     "feature_idx": 6941,
+        #     # "original_sentence": "I see a dog.",
+        #     # "rewritten_sentence": "I see a fish.",
+        #     "explanation": "The word relates to concepts of animals or pets, especially dogs.",
+        # },
+        # {
+        #     "feature_idx": 500,
+        #     "explanation": "The word relates to references to payment methods, particularly credit cards and cash.",
+        # },
+        # {
+        #     "feature_idx": 555,
+        #     "explanation": "The word references to various trails and paths, particularly those that are connected to outdoor activities.",
+        # },
     ]
 
     return demo_features
