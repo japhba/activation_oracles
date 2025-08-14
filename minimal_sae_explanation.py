@@ -201,6 +201,10 @@ def main(
     # Build prompt once
     orig_input_ids, x_position = build_explanation_prompt(tokenizer, device)
     orig_input_ids = orig_input_ids.squeeze()
+    
+    print(f"Original prompt length: {len(orig_input_ids)}")
+    print(f"X position: {x_position}")
+    print(f"Prompt: {tokenizer.decode(orig_input_ids)}")
 
     # Get feature vector (using decoder weights)
     feature_vector = sae.W_dec[sae_index]
@@ -243,6 +247,8 @@ def main(
 
     # Generate all explanations at once
     print(f"\nGenerating {num_generations} explanations in batch...")
+    print(f"Input shape: {tokenized_input['input_ids'].shape}")
+    print(f"First few tokens: {tokenized_input['input_ids'][0, :10]}")
     
     with add_hook(submodule, hook_fn):
         output_ids = model.generate(**tokenized_input, **generation_kwargs)
