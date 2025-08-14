@@ -43,6 +43,7 @@ def build_explanation_prompt(
         add_generation_prompt=True,
         continue_final_message=False,
     )
+    print(f"Formatted input: {formatted_input}")
 
     # Find the position of the placeholder 'X'
     token_ids = tokenizer.encode(str(formatted_input), add_special_tokens=False)
