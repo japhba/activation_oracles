@@ -53,19 +53,16 @@ def build_explanation_prompt(
     x_token_id = x_token_ids[0]
     positions = [i for i, token_id in enumerate(token_ids) if token_id == x_token_id]
 
-    print(f"Looking for X token ID: {x_token_id}")
-    print(f"Found X at positions: {positions}")
-    print(f"Total tokens: {len(token_ids)}")
-    print(f"First 20 token IDs: {token_ids[:20]}")
+    print(f"Found X token at position: {positions[0]}/{len(token_ids)}")
     
     # Debug: decode around the X position
     if positions:
         pos = positions[0]
-        start = max(0, pos - 5)
-        end = min(len(token_ids), pos + 6)
+        start = max(0, pos - 3)
+        end = min(len(token_ids), pos + 4)
         context_tokens = token_ids[start:end]
         context_text = tokenizer.decode(context_tokens)
-        print(f"Context around X (pos {pos}): '{context_text}'")
+        print(f"Context around X: '{context_text}'")
 
     assert len(positions) == 1, (
         f"Expected to find 1 'X' placeholder, but found {len(positions)}. "
@@ -120,11 +117,9 @@ def get_activation_steering_hook(
 
         # Only touch the *prompt* forward pass (sequence length > 1)
         if L <= 1:
-            print(f"Skipping hook - sequence too short (L={L})")
-            print(f"resid_BLD: {resid_BLD.shape}")
             return (resid_BLD, *rest)
-        else:
-            print("Hooking!")
+        
+        print(f"Applying steering! Sequence length: {L}, Batch size: {resid_BLD.shape[0]}")
 
         # Safety: make sure every position is inside current sequence
         if (pos_BK >= L).any():
@@ -271,7 +266,7 @@ if __name__ == "__main__":
     # Example usage
     explanations = main(
         sae_index=0,
-        steering_coefficient=20.0,
+        steering_coefficient=50.0,
         layer=9,
         num_generations=10,
     )
