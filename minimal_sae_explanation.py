@@ -35,14 +35,18 @@ def build_explanation_prompt(
             "role": "user",
             "content": "Can you explain to me what 'X' means? Format your final answer with <explanation>",
         },
+        {
+            "role": "assistant",
+            "content": "'x' means that",
+        },
     ]
 
     # Apply chat template
-    input_as_str: str = tokenizer.apply_chat_template( # type: ignore
+    input_as_str: str = tokenizer.apply_chat_template(  # type: ignore
         messages,
         tokenize=False,
-        add_generation_prompt=True,
-        continue_final_message=False,
+        add_generation_prompt=False,
+        continue_final_message=True,
     )
     print(f"Formatted input: {input_as_str}")
 
@@ -56,7 +60,7 @@ def build_explanation_prompt(
     positions = [i for i, token_id in enumerate(token_ids) if token_id == x_token_id]
 
     print(f"Found X token at position: {positions[0]}/{len(token_ids)}")
-    
+
     # Debug: decode around the X position
     if positions:
         # Print a few tokens before and after the X token for context
@@ -64,13 +68,17 @@ def build_explanation_prompt(
         start_idx = max(0, positions[0] - context_window)
         end_idx = min(len(token_ids), positions[0] + context_window + 1)
         # 3 tokens before
-        context_tokens = token_ids[start_idx:positions[0]]
+        context_tokens = token_ids[start_idx : positions[0]]
         context_text = tokenizer.decode(context_tokens)
-        print(f"Context before X: '{context_text}' (tokens {start_idx}-{positions[0]-1})")
+        print(
+            f"Context before X: '{context_text}' (tokens {start_idx}-{positions[0] - 1})"
+        )
         # 3 tokens after
-        context_tokens = token_ids[positions[0]+1:end_idx]
+        context_tokens = token_ids[positions[0] + 1 : end_idx]
         context_text = tokenizer.decode(context_tokens)
-        print(f"Context after X: '{context_text}' (tokens {positions[0]+1}-{end_idx-1})")
+        print(
+            f"Context after X: '{context_text}' (tokens {positions[0] + 1}-{end_idx - 1})"
+        )
 
     assert len(positions) == 1, (
         f"Expected to find 1 'X' placeholder, but found {len(positions)}. "
@@ -97,12 +105,12 @@ def add_hook(module: torch.nn.Module, hook: Callable):
 def nuclear_hook(module, _input, output):
     resid_BLD, *rest = output
     L = resid_BLD.shape[1]
-    
+
     if L > 1:  # Only during initial prompt
-        print(f"🚨 NUCLEAR HOOK: Zeroing ALL activations!")
+        print("🚨 NUCLEAR HOOK: Zeroing ALL activations!")
         # Zero out everything - should completely break the model
         resid_BLD.zero_()
-        
+
     return (resid_BLD, *rest)
 
 
@@ -138,8 +146,10 @@ def get_activation_steering_hook(
         # Only touch the *prompt* forward pass (sequence length > 1)
         if L <= 1:
             return (resid_BLD, *rest)
-        
-        print(f"Applying feature vector on module {type(module).__name__}. Sequence length: {L}, Batch size: {resid_BLD.shape[0]}")
+
+        print(
+            f"Applying feature vector on module {type(module).__name__}. Sequence length: {L}, Batch size: {resid_BLD.shape[0]}"
+        )
 
         # Safety: make sure every position is inside current sequence
         if (pos_BK >= L).any():
@@ -216,7 +226,7 @@ def main(
     # Build prompt once
     orig_input_ids, x_position = build_explanation_prompt(tokenizer, device)
     orig_input_ids = orig_input_ids.squeeze()
-    
+
     print(f"Original prompt length: {len(orig_input_ids)}")
     print(f"X position: {x_position}")
     print(f"Prompt: {tokenizer.decode(orig_input_ids)}")
@@ -228,7 +238,7 @@ def main(
     # Prepare batch data for steering
     batch_steering_vectors = []
     batch_positions = []
-    
+
     for i in range(num_generations):
         # Each batch item gets the same feature vector
         batch_steering_vectors.append([feature_vector])
@@ -275,14 +285,14 @@ def main(
     #         next_token_logits = logits[:, -1, :]  # Last position
     #         next_tokens = torch.argmax(next_token_logits, dim=-1)
     #         print("Next tokens:", [tokenizer.decode(t) for t in next_tokens])
-    
-    with add_hook(submodule, nuclear_hook):
+
+    with add_hook(submodule, hook_fn):
         output_ids = model.generate(**tokenized_input, **generation_kwargs)
 
     # Decode the generated tokens for each batch item
     explanations = []
-    generated_tokens = output_ids[:, input_ids_BL.shape[1]:]
-    
+    generated_tokens = output_ids[:, input_ids_BL.shape[1] :]
+
     for i in range(num_generations):
         decoded_output = tokenizer.decode(generated_tokens[i], skip_special_tokens=True)
         explanations.append(decoded_output)
