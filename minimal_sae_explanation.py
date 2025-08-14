@@ -59,12 +59,18 @@ def build_explanation_prompt(
     
     # Debug: decode around the X position
     if positions:
-        pos = positions[0]
-        start = max(0, pos - 3)
-        end = min(len(token_ids), pos + 4)
-        context_tokens = token_ids[start:end]
+        # Print a few tokens before and after the X token for context
+        context_window = 3  # Number of tokens before and after X
+        start_idx = max(0, positions[0] - context_window)
+        end_idx = min(len(token_ids), positions[0] + context_window + 1)
+        # 3 tokens before
+        context_tokens = token_ids[start_idx:positions[0]]
         context_text = tokenizer.decode(context_tokens)
-        print(f"Context around X: '{context_text}'")
+        print(f"Context before X: '{context_text}' (tokens {start_idx}-{positions[0]-1})")
+        # 3 tokens after
+        context_tokens = token_ids[positions[0]+1:end_idx]
+        context_text = tokenizer.decode(context_tokens)
+        print(f"Context after X: '{context_text}' (tokens {positions[0]+1}-{end_idx-1})")
 
     assert len(positions) == 1, (
         f"Expected to find 1 'X' placeholder, but found {len(positions)}. "
