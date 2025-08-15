@@ -343,7 +343,7 @@ def main(
     sae_repo_id: str = "google/gemma-scope-9b-it-res",
     context_length: int = 32,
     hard_negative_threshold: float = 0.5,
-    batch_size: int = 8,
+    batch_size: int = 20,
 ):
 
     
