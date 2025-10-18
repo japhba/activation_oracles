@@ -93,10 +93,9 @@ def train_with_sft_only(
         **llm_kwargs,
     )
 
-    if quantize:
-        model = prepare_model_for_kbit_training(
-            model,
-        )
+    model.enable_input_require_grads()
+    model.use_cache = False
+    model.gradient_checkpointing_enable()
 
     # I use this to continue training from an existing LoRA checkpoint
     if load_lora_path is not None:
@@ -108,11 +107,6 @@ def train_with_sft_only(
         model = get_peft_model(model, lora_config)
 
     print_trainable_parameters(model)
-
-    model.config.use_cache = False
-
-    if sft_config.gradient_checkpointing:
-        model.enable_input_require_grads()
 
     sft_trainer = SFTTrainer(
         model=model,
@@ -202,11 +196,7 @@ def manual_qwen3_assistant_mask(
         while i < len(sequence):
             # Check if we're starting an assistant turn
             if i + 2 < len(sequence):
-                if (
-                    sequence[i] == begin_turn_idx
-                    and sequence[i + 1] == asst_idx
-                    and sequence[i + 2] == newline_idx
-                ):
+                if sequence[i] == begin_turn_idx and sequence[i + 1] == asst_idx and sequence[i + 2] == newline_idx:
                     i += 3
                     cur_message_idx += 1
                     in_assistant_turn = True
@@ -242,9 +232,7 @@ def manual_qwen3_assistant_mask(
             i += 1
 
     assert cur_eos_idx == num_messages, f"Expected {num_messages} messages, got {cur_eos_idx}"
-    assert cur_message_idx == num_messages, (
-        f"Expected {num_messages} messages, got {cur_message_idx}"
-    )
+    assert cur_message_idx == num_messages, f"Expected {num_messages} messages, got {cur_message_idx}"
 
     assert len(input_ids) == len(assistant_mask)
     return {
@@ -253,9 +241,7 @@ def manual_qwen3_assistant_mask(
     }
 
 
-def prepare_sft_dataset(
-    dataset: Dataset, tokenizer: AutoTokenizer, final_message_loss_only: bool
-) -> Dataset:
+def prepare_sft_dataset(dataset: Dataset, tokenizer: AutoTokenizer, final_message_loss_only: bool) -> Dataset:
     remove_cols = [c for c in dataset.column_names if c not in {"messages"}]
 
     new_ds = dataset.map(
@@ -336,16 +322,36 @@ def create_incremental_turn_dataset(dataset: Dataset) -> Dataset:
 
 if __name__ == "__main__":
     model_names = [
-        "Qwen/Qwen3-8B",
+        # "Qwen/Qwen3-8B",
         # "Qwen/Qwen3-14B",
         # "google/gemma-2-9b-it",
-        # "Qwen/Qwen3-32B",
+        "Qwen/Qwen3-32B",
         # "google/gemma-2-27b-it",
     ]
 
     dataset_name = "bcywinski/taboo-smile"
 
     dataset_names = [
+        "bcywinski/taboo-ship",
+        "bcywinski/taboo-wave",
+        "bcywinski/taboo-song",
+        "bcywinski/taboo-snow",
+        "bcywinski/taboo-rock",
+        "bcywinski/taboo-moon",
+        "bcywinski/taboo-jump",
+        "bcywinski/taboo-green",
+        "bcywinski/taboo-flame",
+        "bcywinski/taboo-flag",
+        "bcywinski/taboo-dance",
+        "bcywinski/taboo-cloud",
+        "bcywinski/taboo-clock",
+        "bcywinski/taboo-chair",
+        "bcywinski/taboo-salt",
+        "bcywinski/taboo-book",
+        "bcywinski/taboo-blue",
+        "bcywinski/taboo-adversarial",
+        "bcywinski/taboo-gold",
+        "bcywinski/taboo-leaf",
         "bcywinski/taboo-smile",
     ]
 
@@ -392,12 +398,8 @@ if __name__ == "__main__":
 
         tokenizer = AutoTokenizer.from_pretrained(config.model_name)
 
-        train_ds = prepare_sft_dataset(
-            train_ds, tokenizer, final_message_loss_only=final_message_loss_only
-        )
-        eval_ds = prepare_sft_dataset(
-            eval_ds, tokenizer, final_message_loss_only=final_message_loss_only
-        )
+        train_ds = prepare_sft_dataset(train_ds, tokenizer, final_message_loss_only=final_message_loss_only)
+        eval_ds = prepare_sft_dataset(eval_ds, tokenizer, final_message_loss_only=final_message_loss_only)
 
         early_stopping_callback = EarlyStoppingCallback(early_stopping_patience=2)
 
@@ -406,7 +408,7 @@ if __name__ == "__main__":
         sft_config.eval_steps = eval_frequency
         sft_config.save_steps = eval_frequency
 
-        if not lora_path.exists() or True:
+        if not lora_path.exists():
             train_with_sft_only(
                 train_ds,
                 eval_ds,
