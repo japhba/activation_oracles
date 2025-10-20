@@ -29,6 +29,7 @@ from nl_probes.utils.eval import run_evaluation
 # MODEL_NAME = "Qwen/Qwen3-32B"
 MODEL_NAME = "Qwen/Qwen3-8B"
 DTYPE = torch.bfloat16
+model_name_str = MODEL_NAME.split("/")[-1].replace(".", "_")
 
 # Device selection
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -63,7 +64,7 @@ ADD_GENERATION_PROMPT = True
 ENABLE_THINKING = False
 
 
-OUTPUT_JSON_DIR: str = "taboo_eval_results"
+OUTPUT_JSON_DIR: str = f"taboo_eval_results_yes_no_{model_name_str}"
 os.makedirs(OUTPUT_JSON_DIR, exist_ok=True)
 # Optional: save results to disk as JSON
 OUTPUT_JSON_TEMPLATE: Optional[str] = f"{OUTPUT_JSON_DIR}/" + "taboo_probe_results_yes_no_{lora}.json"
