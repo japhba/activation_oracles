@@ -882,7 +882,6 @@ if __name__ == "__main__":
         gradient_checkpointing = True
         train_batch_size //= 1
 
-    if model_name == "meta-llama/Llama-3.3-70B-Instruct":
         bnb_config = BitsAndBytesConfig(
             load_in_8bit=True,
             bnb_8bit_compute_dtype=dtype,
@@ -971,6 +970,11 @@ if __name__ == "__main__":
         #     "wandb_suffix": f"_all_single_and_multi_pretrain_sae_explanation_posttrain_{model_name_str}",
         # },
     ]
+
+    # Note: You can comment this out if training a lora from scratch that will be used later during the same run
+    for hyperparam_override in iterations:
+        if hyperparam_override["load_lora_path"] is not None:
+            assert os.path.exists(hyperparam_override["load_lora_path"]), f"{hyperparam_override['load_lora_path']}"
 
     for hyperparam_override in iterations:
         loop_dataset_loaders = hyperparam_override.pop("dataset_loaders")
