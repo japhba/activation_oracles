@@ -41,14 +41,18 @@ class VerbalizerEvalConfig:
 
     model_name: str
 
+    # these will be set in post_init
     act_layers: list[int] = field(default_factory=list)
     active_layer: int = -1
 
     injection_layer: int = 1
     layer_percents: list[int] = field(default_factory=lambda: [25, 50, 75])
 
+    selected_layer_percent: int = 50
+
+    # IMPORTANT: We will apply the verbalizer to these activation types from the target model
+    # default is all three types, but can be modified as needed
     activation_input_types: list[str] = field(default_factory=lambda: ["orig", "lora", "diff"])
-    verbalizer_input_types: list[str] = field(default_factory=lambda: ["tokens", "segment", "full_seq"])
 
     add_generation_prompt: bool = True
     enable_thinking: bool = False
@@ -62,6 +66,13 @@ class VerbalizerEvalConfig:
     steering_coefficient: float = 1.0
     eval_batch_size: int = 256
     add_response_to_context_prompt: bool = False
+
+
+    # IMPORTANT: We will create verbalizer inputs from these locations: a response per individual selected token
+    # segment_repeats responses for the selected segment of tokens (from segment_start_idx to segment_end_idx)
+    # full_seq_repeats responses for the full sequence of tokens
+    # default is all three types, but can be modified as needed
+    verbalizer_input_types: list[str] = field(default_factory=lambda: ["tokens", "segment", "full_seq"])
 
     # if start_idx is negative, counts from end of sequence
     # if >= 0, counts from start of sequence
@@ -83,7 +94,10 @@ class VerbalizerEvalConfig:
         assert self.token_start_idx < self.token_end_idx, "token_start_idx must be less than token_end_idx"
 
         act_layers = [layer_percent_to_layer(model_name, lp) for lp in self.layer_percents]
-        active_layer = act_layers[1]
+
+        # a bit janky, just selecting the middle layer for activation collection
+        active_layer_idx = self.layer_percents.index(self.selected_layer_percent)
+        active_layer = act_layers[active_layer_idx]
 
         self.act_layers = act_layers
         self.active_layer = active_layer
@@ -118,7 +132,7 @@ class VerbalizerInputInfo:
 @dataclass
 class VerbalizerResults:
     verbalizer_lora_path: str
-    target_lora_path: str
+    target_lora_path: str | None
     context_prompt: list[dict[str, str]]
     act_key: str
     verbalizer_prompt: str
@@ -267,11 +281,12 @@ def collect_target_responses(
     model: AutoModelForCausalLM,
     tokenizer: AutoTokenizer,
     context_prompts: list[list[dict[str, str]]],
-    target_lora_path: str,
+    target_lora_path: str | None,
     config: VerbalizerEvalConfig,
     device: torch.device,
 ) -> list[list[dict[str, str]]]:
-    model.set_adapter(sanitize_lora_name(target_lora_path))
+    if target_lora_path is not None:
+        model.set_adapter(sanitize_lora_name(target_lora_path))
     new_messages: list[list[dict[str, str]]] = []
 
     for i in range(0, len(context_prompts), config.eval_batch_size):
@@ -300,14 +315,15 @@ def collect_target_activations(
     model: AutoModelForCausalLM,
     inputs_BL: dict[str, torch.Tensor],
     config: VerbalizerEvalConfig,
-    target_lora_name: str,
+    target_lora_path: str | None,
 ) -> dict[str, dict[int, torch.Tensor]]:
     act_types = {}
 
     # Collect activations for the whole batch under the active persona
     if "lora" in config.activation_input_types:
+        assert target_lora_path is not None, "target_lora_path must be provided to collect lora activations"
         model.enable_adapters()
-        model.set_adapter(target_lora_name)
+        model.set_adapter(sanitize_lora_name(target_lora_path))
         # setting submodules after setting the adapter - I don't think this matters but I'm paranoid
         submodules = {layer: get_hf_submodule(model, layer) for layer in config.act_layers}
         lora_acts = collect_activations_multiple_layers(
@@ -352,7 +368,7 @@ def run_verbalizer(
     tokenizer: AutoTokenizer,
     verbalizer_prompt_infos: list[VerbalizerInputInfo],
     verbalizer_lora_path: str,
-    target_lora_path: str,
+    target_lora_path: str | None,
     config: VerbalizerEvalConfig,
     device: torch.device,
 ) -> list[VerbalizerResults]:
@@ -378,7 +394,7 @@ def run_verbalizer(
 
     injection_submodule = get_hf_submodule(model, config.injection_layer)
 
-    if sanitize_lora_name(target_lora_path) not in model.peft_config:
+    if target_lora_path is not None and sanitize_lora_name(target_lora_path) not in model.peft_config:
         print(f"Loading target LoRA: {target_lora_path}")
         model.load_adapter(
             target_lora_path,
@@ -438,7 +454,7 @@ def run_verbalizer(
             model=model,
             inputs_BL=inputs_BL,
             config=config,
-            target_lora_name=sanitize_lora_name(target_lora_path),
+            target_lora_path=target_lora_path,
         )
 
         # Compute per-sample unpadded input_ids and left pad lengths
@@ -548,8 +564,13 @@ def run_verbalizer(
             )
             results.append(record)
 
+        if target_lora_path is not None:
+            target_lora_str = target_lora_path.split("/")[-1][:40]
+        else:
+            target_lora_str = "None"
+
         pbar.set_postfix(
-            {"inv": verbalizer_lora_path.split("/")[-1][:40], "target": target_lora_path.split("/")[-1][:40]}
+            {"inv": verbalizer_lora_path.split("/")[-1][:40], "target": target_lora_str}
         )
         pbar.update(len(batch))
     pbar.close()
@@ -683,7 +704,7 @@ if __name__ == "__main__":
             )
             verbalizer_results.extend(results)
 
-            if sanitize_lora_name(target_lora_path) in model.peft_config:
+            if target_lora_path is not None and sanitize_lora_name(target_lora_path) in model.peft_config:
                 model.delete_adapter(sanitize_lora_name(target_lora_path))
 
         # Optionally save to JSON
