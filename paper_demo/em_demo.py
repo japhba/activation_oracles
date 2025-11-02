@@ -410,7 +410,7 @@ def run_verbalizer(
         for i in range(len(verbalizer_prompt_infos)):
             verbalizer_prompt_infos[i].context_prompt = context_prompts[i]
 
-    pbar = tqdm(total=len(verbalizer_prompt_infos), desc="Verbalizer Eval Progress")
+    pbar = tqdm(total=len(verbalizer_prompt_infos), desc="Verbalizer Eval Progress", position=1)
     results: list[VerbalizerResults] = []
 
     # Process in activation batches
@@ -691,6 +691,10 @@ if __name__ == "__main__":
     dummy_config = LoraConfig()
     model.add_adapter(dummy_config, adapter_name="default")
 
+    # Progress over (verbalizer_lora_path x target_lora_suffix) combos
+    total_combos = len(verbalizer_lora_paths) * len(target_lora_suffixes)
+    combo_pbar = tqdm(total=total_combos, desc="LoRA Combo Progress", position=0)
+
     for verbalizer_lora_path in verbalizer_lora_paths:
         verbalizer_results = []
         sanitized_verbalizer_name = None
@@ -722,6 +726,12 @@ if __name__ == "__main__":
                     )
                     verbalizer_prompt_infos.append(context_prompt_info)
 
+            # Show which combo is running alongside inner progress
+            combo_pbar.set_postfix({
+                "verbalizer": (verbalizer_lora_path.split("/")[-1] if verbalizer_lora_path else "None"),
+                "target": (target_lora_suffix.split("/")[-1] if target_lora_suffix else "None"),
+            })
+
             results = run_verbalizer(
                 model=model,
                 tokenizer=tokenizer,
@@ -735,6 +745,8 @@ if __name__ == "__main__":
 
             if sanitized_target_name is not None and sanitized_target_name in model.peft_config:
                 model.delete_adapter(sanitized_target_name)
+
+            combo_pbar.update(1)
 
         # Optionally save to JSON
 
@@ -755,3 +767,4 @@ if __name__ == "__main__":
                 json.dump(final_verbalizer_results, f, indent=2)
             print(f"Saved results to {output_json}")
             
+    combo_pbar.close()
