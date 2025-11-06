@@ -24,8 +24,9 @@ from shared_color_mapping import get_shared_palette
 
 # Text sizes for plots (edit here to change all text sizes)
 FONT_SIZE_SUBPLOT_TITLE = 20  # Subplot titles (e.g., "Taboo", "Gender", "Secret Keeping")
-FONT_SIZE_Y_AXIS_LABEL = 16  # Y-axis labels (e.g., "Average Accuracy")
+FONT_SIZE_Y_AXIS_LABEL = 18  # Y-axis labels (e.g., "Average Accuracy")
 FONT_SIZE_BAR_VALUE = 16  # Numbers above each bar
+FONT_SIZE_LEGEND = 18  # Legend text size
 
 # Data locations
 TABOO_JSON_DIR = "experiments/taboo_eval_results/gemma-2-9b-it_open_ended_all_direct"
@@ -44,8 +45,8 @@ SSC_HIGHLIGHT = "act_cls_latentqa"
 
 # Extra baseline bars to show in the second figure (per task)
 TABOO_EXTRAS = [
-    {"label": "Best Interp Method (SAEs)", "value": 0.0413, "error": 0.0038},
-    {"label": "Best Black Box Method (Prefill)", "value": 0.0717, "error": 0.0055},
+    {"label": "Best Interp Method", "value": 0.0413, "error": 0.0038},
+    {"label": "Best Black Box Method", "value": 0.0717, "error": 0.0055},
 ]
 
 GENDER_EXTRAS = [
@@ -597,8 +598,15 @@ async def main():
     )
 
     # Single shared legend mapping label -> color
-    # handles = [Patch(facecolor=shared_palette[lab], edgecolor="black", label=lab) for lab in unique_labels]
-    # fig1.legend(handles=handles, loc="lower center", bbox_to_anchor=(0.5, -0.04), ncol=4, frameon=False, fontsize=10)
+    handles = [Patch(facecolor=shared_palette[lab], edgecolor="black", label=lab) for lab in unique_labels]
+    fig1.legend(
+        handles=handles,
+        loc="lower center",
+        bbox_to_anchor=(0.5, -0.06),
+        ncol=4,
+        frameon=False,
+        fontsize=FONT_SIZE_LEGEND,
+    )
     # fig1.suptitle("Results by Dataset Mix", fontsize=15, y=1.02)
     plt.tight_layout()
     out1 = f"{PAPER_IMAGE_FOLDER}/secret_keeping_combined_results_dataset_comparison.pdf"
@@ -656,17 +664,17 @@ async def main():
     # fig2.suptitle("Talkative Probe vs. Baselines", fontsize=15, y=1.02)
 
     # Single shared legend for the 3 panels
-    our_method_patch = Patch(facecolor=INTERP_BAR_COLOR, edgecolor="black", hatch="////", label="Our Method (Interp)")
-    best_interp_patch = Patch(facecolor=INTERP_BAR_COLOR, edgecolor="black", label="Best Interp Method")
+    our_method_patch = Patch(facecolor=INTERP_BAR_COLOR, edgecolor="black", hatch="////", label="Talkative Probe")
+    best_interp_patch = Patch(facecolor=INTERP_BAR_COLOR, edgecolor="black", label="Best White Box Method")
     best_blackbox_patch = Patch(facecolor=BLACKBOX_BAR_COLOR, edgecolor="black", label="Best Black Box Method")
-    # fig2.legend(
-    #     handles=[our_method_patch, best_interp_patch, best_blackbox_patch],
-    #     loc="lower center",
-    #     bbox_to_anchor=(0.5, -0.02),
-    #     ncol=3,
-    #     frameon=False,
-    #     fontsize=11,
-    # )
+    fig2.legend(
+        handles=[our_method_patch, best_interp_patch, best_blackbox_patch],
+        loc="lower center",
+        bbox_to_anchor=(0.5, -0.06),
+        ncol=3,
+        frameon=False,
+        fontsize=FONT_SIZE_LEGEND,
+    )
     plt.tight_layout()
     out2 = f"{PAPER_IMAGE_FOLDER}/secret_keeping_combined_selected_with_baselines.pdf"
     plt.savefig(out2, dpi=300, bbox_inches="tight")

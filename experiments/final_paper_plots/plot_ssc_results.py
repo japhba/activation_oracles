@@ -17,6 +17,13 @@ from nl_probes.autointerp_detection_eval.caller import (
     load_openai_caller,
 )
 
+from shared_color_mapping import get_colors_for_labels
+
+# Text sizes for plots (matching plot_secret_keeping_results.py)
+FONT_SIZE_Y_AXIS_LABEL = 16  # Y-axis labels (e.g., "Average Accuracy")
+FONT_SIZE_BAR_VALUE = 16  # Numbers above each bar
+FONT_SIZE_LEGEND = 14  # Legend text size
+
 OUTPUT_JSON_DIR = "experiments/ssc_eval_results/Llama-3_3-70B-Instruct_open_ended_all_direct_1028_v3"
 OUTPUT_JSON_DIR = "experiments/ssc_eval_results/Llama-3_3-70B-Instruct_open_ended_all_direct"
 
@@ -50,7 +57,7 @@ misc = ""
 TITLE = f"SSC Results{misc}: {task_type} Response with {sequence_str.capitalize()}-Level Inputs for\n{model_name}"
 
 
-OUTPUT_PATH = f"{CLS_IMAGE_FOLDER}/ssc_results_{DATA_DIR}_{sequence_str}.png"
+OUTPUT_PATH = f"{CLS_IMAGE_FOLDER}/ssc_results_{DATA_DIR}_{sequence_str}.pdf"
 
 
 # Filter filenames - skip files containing any of these strings
@@ -403,9 +410,7 @@ def plot_results(results_by_lora, highlight_keyword, highlight_color="#FDB813", 
     bars[0].set_edgecolor("black")
     bars[0].set_linewidth(2.0)
 
-    ax.set_xlabel("Investigator LoRA", fontsize=12)
-    ax.set_ylabel("Average Accuracy", fontsize=12)
-    ax.set_title(TITLE, fontsize=14)
+    ax.set_ylabel("Average Accuracy", fontsize=FONT_SIZE_Y_AXIS_LABEL)
     ax.set_xticks(range(len(lora_names)))
     ax.set_xticklabels([])  # use legend instead
     ax.set_ylim(0, 1.1)
@@ -420,10 +425,18 @@ def plot_results(results_by_lora, highlight_keyword, highlight_color="#FDB813", 
             f"{acc:.3f}",
             ha="center",
             va="bottom",
-            fontsize=10,
+            fontsize=FONT_SIZE_BAR_VALUE,
         )
 
-    ax.legend(bars, legend_labels, loc="upper center", bbox_to_anchor=(0.5, -0.15), fontsize=10, ncol=2, frameon=False)
+    ax.legend(
+        bars,
+        legend_labels,
+        loc="upper center",
+        bbox_to_anchor=(0.5, -0.15),
+        fontsize=FONT_SIZE_LEGEND,
+        ncol=3,
+        frameon=False,
+    )
 
     plt.tight_layout()
     plt.subplots_adjust(bottom=0.2)
@@ -472,9 +485,7 @@ def plot_by_keyword_with_extras(
     bars[0].set_edgecolor("black")
     bars[0].set_linewidth(2.0)
 
-    ax.set_xlabel("Selected LoRA + Extras", fontsize=12)
-    ax.set_ylabel("Average Accuracy", fontsize=12)
-    ax.set_title(TITLE + " (Selected + Extras)", fontsize=14)
+    ax.set_ylabel("Average Accuracy", fontsize=FONT_SIZE_Y_AXIS_LABEL)
     ax.set_xticks(range(len(labels)))
     ax.set_xticklabels([])  # legend carries names
     ax.set_ylim(0, 1.1)
@@ -488,7 +499,7 @@ def plot_by_keyword_with_extras(
             f"{acc:.3f}",
             ha="center",
             va="bottom",
-            fontsize=10,
+            fontsize=FONT_SIZE_BAR_VALUE,
         )
 
     legend_labels = []
@@ -498,12 +509,20 @@ def plot_by_keyword_with_extras(
         legend_labels.append(selected_name)
     legend_labels.extend([b["label"] for b in extra_bars])
 
-    ax.legend(bars, legend_labels, loc="upper center", bbox_to_anchor=(0.5, -0.15), fontsize=10, ncol=2, frameon=False)
+    ax.legend(
+        bars,
+        legend_labels,
+        loc="upper center",
+        bbox_to_anchor=(0.5, -0.15),
+        fontsize=FONT_SIZE_LEGEND,
+        ncol=3,
+        frameon=False,
+    )
 
     plt.tight_layout()
     plt.subplots_adjust(bottom=0.2)
     path = (
-        OUTPUT_PATH.replace(".png", f"_{required_keyword}_selected_with_extras.png")
+        OUTPUT_PATH.replace(".pdf", f"_{required_keyword}_selected_with_extras.pdf")
         if output_path is None
         else output_path
     )
@@ -514,8 +533,8 @@ def plot_by_keyword_with_extras(
 
 async def main():
     extra_bars = [
-        {"label": "Best Interp Method (Activation Tokens)", "value": 0.5224, "error": 0.0077},
-        {"label": "Best Black Box Method (User Persona)", "value": 0.9676, "error": 0.0004},
+        {"label": "Best Interp Method", "value": 0.5224, "error": 0.0077},
+        {"label": "Best Black Box Method", "value": 0.9676, "error": 0.0004},
     ]
 
     # Load results from all JSON files

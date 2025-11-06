@@ -5,23 +5,10 @@ import numpy as np
 import os
 from shared_color_mapping import get_colors_for_labels
 
-TITLE_FONT_SIZE = 24
-LABEL_FONT_SIZE = 20
-TICK_FONT_SIZE = 16
-LEGEND_FONT_SIZE = 18
-VALUE_LABEL_FONT_SIZE = 16
-
-# Ensure Matplotlib defaults are scaled up consistently
-plt.rcParams.update(
-    {
-        "font.size": LABEL_FONT_SIZE,
-        "axes.titlesize": TITLE_FONT_SIZE,
-        "axes.labelsize": LABEL_FONT_SIZE,
-        "xtick.labelsize": TICK_FONT_SIZE,
-        "ytick.labelsize": TICK_FONT_SIZE,
-        "legend.fontsize": LEGEND_FONT_SIZE,
-    }
-)
+# Text sizes for plots (matching plot_secret_keeping_results.py)
+FONT_SIZE_Y_AXIS_LABEL = 16  # Y-axis labels (e.g., "Average Accuracy")
+FONT_SIZE_BAR_VALUE = 16  # Numbers above each bar
+FONT_SIZE_LEGEND = 14  # Legend text size
 
 # Configuration
 RUN_DIR = "experiments/classification/classification_eval_Qwen3-8B_single_token"
@@ -237,9 +224,7 @@ def _plot_split(
     bars[0].set_edgecolor("black")
     bars[0].set_linewidth(2.0)
 
-    ax.set_xlabel("Investigator LoRA")
-    ax.set_ylabel("Average Accuracy")
-    ax.set_title(title)
+    ax.set_ylabel("Average Accuracy", fontsize=FONT_SIZE_Y_AXIS_LABEL)
     ax.set_xticks(range(len(names)))
     ax.set_xticklabels([])
     ax.set_ylim(0, 1.1)
@@ -249,10 +234,23 @@ def _plot_split(
     for bar, val, err in zip(bars, values, errors):
         h = bar.get_height()
         ax.text(
-            bar.get_x() + bar.get_width() / 2.0, h + err + 0.02, f"{val:.3f}", ha="center", va="bottom", fontsize=10
+            bar.get_x() + bar.get_width() / 2.0,
+            h + err + 0.02,
+            f"{val:.3f}",
+            ha="center",
+            va="bottom",
+            fontsize=FONT_SIZE_BAR_VALUE,
         )
 
-    ax.legend(bars, legend_labels, loc="upper center", bbox_to_anchor=(0.5, -0.15), fontsize=10, ncol=2, frameon=False)
+    ax.legend(
+        bars,
+        legend_labels,
+        loc="upper center",
+        bbox_to_anchor=(0.5, -0.15),
+        fontsize=FONT_SIZE_LEGEND,
+        ncol=3,
+        frameon=False,
+    )
 
     plt.tight_layout()
     plt.subplots_adjust(bottom=0.2)
@@ -262,15 +260,11 @@ def _plot_split(
 
 def plot_iid_and_ood(results, highlight_keyword, output_path_base):
     """Create separate IID and OOD plots with highlighted LoRA."""
-    # Titles to mirror the other plotting style
-    title_iid = "Classification Results: IID Datasets"
-    title_ood = "Classification Results: OOD Datasets"
+    iid_path = f"{output_path_base}_iid.pdf"
+    ood_path = f"{output_path_base}_ood.pdf"
 
-    iid_path = f"{output_path_base}_iid.png"
-    ood_path = f"{output_path_base}_ood.png"
-
-    _plot_split(results, "iid", highlight_keyword, title_iid, iid_path)
-    _plot_split(results, "ood", highlight_keyword, title_ood, ood_path)
+    _plot_split(results, "iid", highlight_keyword, "", iid_path)
+    _plot_split(results, "ood", highlight_keyword, "", ood_path)
 
 
 def main():

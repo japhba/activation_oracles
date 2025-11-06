@@ -6,6 +6,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 from shared_color_mapping import get_colors_for_labels
 
+# Text sizes for plots (matching plot_secret_keeping_results.py)
+FONT_SIZE_Y_AXIS_LABEL = 16  # Y-axis labels (e.g., "Average Accuracy")
+FONT_SIZE_BAR_VALUE = 16  # Numbers above each bar
+FONT_SIZE_LEGEND = 14  # Legend text size
+
 # Configuration
 OUTPUT_JSON_DIR = "experiments/personaqa_single_eval_results_all/Qwen3-8B_yes_no_v1"
 # OUTPUT_JSON_DIR = "experiments/personaqa_single_eval_results/Qwen3-8B_yes_no"
@@ -45,7 +50,7 @@ else:
 TITLE = f"PersonAQA{person_type} Results: {task_type} Response with {sequence_str.capitalize()}-Level Inputs for {model_name}"
 
 
-OUTPUT_PATH = f"{CLS_IMAGE_FOLDER}/personaqa_results_{DATA_DIR}_{sequence_str}_{person_str}.png"
+OUTPUT_PATH = f"{CLS_IMAGE_FOLDER}/personaqa_results_{DATA_DIR}_{sequence_str}_{person_str}.pdf"
 
 
 # Filter filenames - skip files containing any of these strings
@@ -212,9 +217,7 @@ def plot_results(results_by_lora, highlight_keyword, highlight_color="#FDB813", 
     bars[0].set_edgecolor("black")
     bars[0].set_linewidth(2.0)
 
-    ax.set_xlabel("Investigator LoRA", fontsize=12)
-    ax.set_ylabel("Average Accuracy", fontsize=12)
-    ax.set_title(TITLE, fontsize=14)
+    ax.set_ylabel("Average Accuracy", fontsize=FONT_SIZE_Y_AXIS_LABEL)
     ax.set_xticks(range(len(lora_names)))
     ax.set_xticklabels([])  # use legend instead
     ax.set_ylim(0, 1.1)
@@ -229,10 +232,18 @@ def plot_results(results_by_lora, highlight_keyword, highlight_color="#FDB813", 
             f"{acc:.3f}",
             ha="center",
             va="bottom",
-            fontsize=10,
+            fontsize=FONT_SIZE_BAR_VALUE,
         )
 
-    ax.legend(bars, legend_labels, loc="upper center", bbox_to_anchor=(0.5, -0.15), fontsize=10, ncol=2, frameon=False)
+    ax.legend(
+        bars,
+        legend_labels,
+        loc="upper center",
+        bbox_to_anchor=(0.5, -0.15),
+        fontsize=FONT_SIZE_LEGEND,
+        ncol=3,
+        frameon=False,
+    )
 
     plt.tight_layout()
     plt.subplots_adjust(bottom=0.2)
@@ -262,9 +273,8 @@ def plot_per_word_accuracy(results_by_lora_word):
             range(len(words)), mean_accs, color=colors, yerr=error_bars, capsize=3, error_kw={"linewidth": 1.5}
         )
 
-        ax.set_xlabel("Word", fontsize=12)
-        ax.set_ylabel("Accuracy", fontsize=12)
-        ax.set_title(f"Per-Word Accuracy: {lora_name}", fontsize=14)
+        ax.set_xlabel("Word", fontsize=FONT_SIZE_Y_AXIS_LABEL)
+        ax.set_ylabel("Accuracy", fontsize=FONT_SIZE_Y_AXIS_LABEL)
         ax.set_xticks(range(len(words)))
         ax.set_xticklabels(words, rotation=45, ha="right")
         ax.set_ylim(0, 1)
@@ -277,7 +287,7 @@ def plot_per_word_accuracy(results_by_lora_word):
 
         plt.tight_layout()
         safe_lora_name = lora_name.replace("/", "_").replace(" ", "_")
-        filename = f"per_word_{safe_lora_name}.png"
+        filename = f"per_word_{safe_lora_name}.pdf"
         plt.savefig(filename, dpi=300, bbox_inches="tight")
         print(f"Saved per-word plot: {filename}")
         plt.close()
