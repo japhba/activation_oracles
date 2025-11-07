@@ -59,19 +59,19 @@ if __name__ == "__main__":
     if model_name == "Qwen/Qwen3-8B":
         verbalizer_lora_paths = [
             "adamkarvonen/checkpoints_latentqa_cls_past_lens_addition_Qwen3-8B",
-            # "adamkarvonen/checkpoints_cls_latentqa_only_addition_Qwen3-8B",
-            # "adamkarvonen/checkpoints_latentqa_only_addition_Qwen3-8B",
-            # "adamkarvonen/checkpoints_cls_only_addition_Qwen3-8B",
-            # "adamkarvonen/checkpoints_cls_latentqa_sae_addition_Qwen3-8B",
+            "adamkarvonen/checkpoints_cls_latentqa_only_addition_Qwen3-8B",
+            "adamkarvonen/checkpoints_latentqa_only_addition_Qwen3-8B",
+            "adamkarvonen/checkpoints_cls_only_addition_Qwen3-8B",
+            "adamkarvonen/checkpoints_cls_latentqa_sae_addition_Qwen3-8B",
         ]
         target_lora_path_template: Optional[str] = "/root/sae_introspect/model_lora/Qwen3-8B-taboo-{lora_path}"
         segment_start = -10
     elif model_name == "google/gemma-2-9b-it":
         verbalizer_lora_paths = [
             "adamkarvonen/checkpoints_latentqa_cls_past_lens_addition_gemma-2-9b-it",
-            # "adamkarvonen/checkpoints_cls_latentqa_only_addition_gemma-2-9b-it",
-            # "adamkarvonen/checkpoints_latentqa_only_addition_gemma-2-9b-it",
-            # "adamkarvonen/checkpoints_cls_only_addition_gemma-2-9b-it",
+            "adamkarvonen/checkpoints_cls_latentqa_only_addition_gemma-2-9b-it",
+            "adamkarvonen/checkpoints_latentqa_only_addition_gemma-2-9b-it",
+            "adamkarvonen/checkpoints_cls_only_addition_gemma-2-9b-it",
         ]
         target_lora_path_template: Optional[str] = "bcywinski/gemma-2-9b-it-taboo-{lora_path}"
         segment_start = -5

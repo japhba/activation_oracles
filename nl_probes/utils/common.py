@@ -125,6 +125,8 @@ def layer_percent_to_layer(model_name: str, layer_percent: int) -> int:
         "Qwen/Qwen3-8B": 36,
         "Qwen/Qwen3-32B": 64,
         "google/gemma-2-9b-it": 42,
+        "google/gemma-3-1b-it": 26,
+        "meta-llama/Llama-3.2-1B-Instruct": 16,
         "meta-llama/Llama-3.3-70B-Instruct": 80,
     }
     max_layers = LAYER_COUNTS[model_name]

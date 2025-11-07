@@ -38,7 +38,7 @@ INVESTIGATOR_LORA_PATH = (
 )
 
 # If you want orig only, set ACTIVE_LORA_PATH = None
-ACTIVE_LORA_PATH: Optional[str] = "model_lora/Qwen3-8B-shuffled"
+ACTIVE_LORA_PATH: Optional[str] = "adamkarvonen/Qwen3-8B-personaqa_shuffled_3_epochs"
 
 # Layers for activation collection and injection
 ACT_LAYERS: list[int] = [9, 18, 27]

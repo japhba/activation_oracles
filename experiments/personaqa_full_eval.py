@@ -283,14 +283,6 @@ def main():
     dummy_config = LoraConfig()
     model.add_adapter(dummy_config, adapter_name="default")
 
-    # Optionally ensure an ACTIVE LoRA exists locally
-    if ACTIVE_LORA_PATH is not None and "model_lora_Qwen_Qwen3-8B_evil_claude37" in ACTIVE_LORA_PATH:
-        repo_id = "adamkarvonen/loras"
-        folder_prefix = "model_lora_Qwen_Qwen3-8B_evil_claude37/"
-        if not os.path.exists(os.path.join("model_lora", folder_prefix)):
-            print("Downloading example LoRA from HF...")
-            download_hf_folder(repo_id, folder_prefix, "model_lora")
-
     # Load ACTIVE_LORA_PATH adapter if specified
     if ACTIVE_LORA_PATH is not None:
         if ACTIVE_LORA_PATH not in model.peft_config:
@@ -303,9 +295,6 @@ def main():
             )
         model.set_adapter(ACTIVE_LORA_PATH)
         print(f"Active LoRA set: {ACTIVE_LORA_PATH}")
-    else:
-        model.disable_adapters()
-        print("No ACTIVE LoRA. Using base model only for activation collection.")
 
     # Injection submodule used during evaluation
     injection_submodule = get_hf_submodule(model, INJECTION_LAYER)
