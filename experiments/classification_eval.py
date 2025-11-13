@@ -21,6 +21,7 @@ from nl_probes.dataset_classes.classification import (
 from nl_probes.utils.activation_utils import get_hf_submodule
 from nl_probes.utils.common import load_model, load_tokenizer
 from nl_probes.utils.eval import parse_answer, run_evaluation
+from nl_probes.base_experiment import sanitize_lora_name
 
 # -----------------------------
 # Configuration - tune here
@@ -30,8 +31,8 @@ from nl_probes.utils.eval import parse_answer, run_evaluation
 # Model and eval config
 MODEL_NAME = "Qwen/Qwen3-8B"
 # MODEL_NAME = "Qwen/Qwen3-32B"
-# MODEL_NAME = "google/gemma-2-9b-it"
-MODEL_NAME = "meta-llama/Llama-3.3-70B-Instruct"
+MODEL_NAME = "google/gemma-2-9b-it"
+# MODEL_NAME = "meta-llama/Llama-3.3-70B-Instruct"
 INJECTION_LAYER = 1
 DTYPE = torch.bfloat16
 BATCH_SIZE = 256
@@ -56,6 +57,7 @@ if MODEL_NAME == "Qwen/Qwen3-8B":
     ]
 elif MODEL_NAME == "google/gemma-2-9b-it":
     INVESTIGATOR_LORA_PATHS = [
+        None,
         "adamkarvonen/checkpoints_cls_latentqa_only_addition_gemma-2-9b-it",
         "adamkarvonen/checkpoints_latentqa_only_addition_gemma-2-9b-it",
         "adamkarvonen/checkpoints_cls_only_addition_gemma-2-9b-it",
@@ -94,13 +96,13 @@ dtype = torch.bfloat16
 print(f"Using device={device}, dtype={dtype}")
 
 model_kwargs = {}
-        
+
 
 if MODEL_NAME == "meta-llama/Llama-3.3-70B-Instruct":
     bnb_config = BitsAndBytesConfig(
-            load_in_8bit=True,
-            bnb_8bit_compute_dtype=torch.bfloat16,
-        )
+        load_in_8bit=True,
+        bnb_8bit_compute_dtype=torch.bfloat16,
+    )
     model_kwargs = {"quantization_config": bnb_config}
 
 
@@ -146,6 +148,7 @@ class Method:
 
 LORA_DIR = ""
 
+
 def canonical_dataset_id(name: str) -> str:
     """Strip 'classification_' prefix if present so keys match your IID/OOD lists."""
     if name.startswith("classification_"):
@@ -160,7 +163,6 @@ tokenizer = load_tokenizer(MODEL_NAME)
 
 classification_dataset_loaders: list[ClassificationDatasetLoader] = []
 for dataset_name, dcfg in CLASSIFICATION_DATASETS.items():
-
     if "language_identification" in dataset_name:
         batch_size = BATCH_SIZE // 8
     else:
@@ -218,20 +220,24 @@ model.add_adapter(dummy_config, adapter_name="default")
 # Evaluation (fast path: load JSON if available, heavy path: run fresh)
 
 
-def run_eval_for_datasets(lora_path: str, eval_data_by_ds: dict[str, list[Any]]) -> dict[str, dict[str, Any]]:
+def run_eval_for_datasets(lora_path: str | None, eval_data_by_ds: dict[str, list[Any]]) -> dict[str, dict[str, Any]]:
     """
     Returns:
         results[dataset_id][method_key] -> metrics dict
     """
 
+    sanitized_lora_name = None
     if lora_path is not None:
-        model.load_adapter(
-            lora_path,
-            adapter_name=lora_path,
-            is_trainable=False,
-            low_cpu_mem_usage=True,
-        )
-        model.set_adapter(lora_path)
+        sanitized_lora_name = sanitize_lora_name(lora_path)
+        if sanitized_lora_name not in model.peft_config:
+            print(f"Loading LoRA: {lora_path}")
+            model.load_adapter(
+                lora_path,
+                adapter_name=sanitized_lora_name,
+                is_trainable=False,
+                low_cpu_mem_usage=True,
+            )
+        model.set_adapter(sanitized_lora_name)
 
     results: dict = {
         "meta": {
@@ -273,20 +279,25 @@ def run_eval_for_datasets(lora_path: str, eval_data_by_ds: dict[str, list[Any]])
             }
             results["records"].append(record)
 
-    if lora_path is not None:
-        model.delete_adapter(lora_path)
+    if sanitized_lora_name is not None and sanitized_lora_name in model.peft_config:
+        model.delete_adapter(sanitized_lora_name)
 
     return results
 
 
 for lora in INVESTIGATOR_LORA_PATHS:
     print(f"Evaluating LORA: {lora}")
-    active_lora_path = f"{LORA_DIR}{lora}"
+    if lora is None:
+        active_lora_path = None
+        lora_name = "base_model"
+    else:
+        active_lora_path = f"{LORA_DIR}{lora}"
+        lora_name = lora.split("/")[-1].replace("/", "_").replace(".", "_")
+
     results = run_eval_for_datasets(active_lora_path, all_eval_data)
 
     # Optionally save to JSON
     if OUTPUT_JSON_TEMPLATE is not None:
-        lora_name = lora.split("/")[-1].replace("/", "_").replace(".", "_")
         OUTPUT_JSON = OUTPUT_JSON_TEMPLATE.format(lora=lora_name)
         with open(OUTPUT_JSON, "w") as f:
             json.dump(results, f, indent=2)
