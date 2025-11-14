@@ -11,14 +11,9 @@ FONT_SIZE_BAR_VALUE = 16  # Numbers above each bar
 FONT_SIZE_LEGEND = 14  # Legend text size
 
 # Configuration
-RUN_DIR = "experiments/classification/classification_eval_Qwen3-8B_single_token"
-RUN_DIR = "experiments/classification/classification_Qwen3-8B_single_token_v1"
-RUN_DIR = "experiments/classification/classification_Qwen3-8B_single_token"
-RUN_DIR = "experiments/classification/classification_gemma-2-9b-it_single_token"
 RUN_DIR = "experiments/classification/classification_Llama-3_3-70B-Instruct_single_token"
 RUN_DIR = "experiments/classification/classification_Qwen3-8B_single_token"
-# RUN_DIR = "experiments/classification/classification_Qwen3-8B_single_token"
-# RUN_DIR = "experiments/classification/classification_Qwen3-8B_multi_token"
+RUN_DIR = "experiments/classification/classification_gemma-2-9b-it_single_token"
 DATA_DIR = RUN_DIR.split("/")[-1]
 
 # Verbose printing toggle for per-dataset accuracies

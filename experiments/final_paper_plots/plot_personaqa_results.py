@@ -207,6 +207,9 @@ def plot_results(results_by_lora):
         range(len(lora_names)), mean_accuracies, color=colors, yerr=error_bars, capsize=5, error_kw={"linewidth": 2}
     )
 
+    # Add random chance baseline
+    baseline_line = ax.axhline(y=0.5, color="red", linestyle="--", linewidth=2)
+
     ax.set_ylabel("Average Accuracy", fontsize=FONT_SIZE_Y_AXIS_LABEL)
     ax.set_xticks(range(len(lora_names)))
     ax.set_xticklabels([])  # Remove x-axis labels
@@ -226,9 +229,13 @@ def plot_results(results_by_lora):
             fontsize=FONT_SIZE_BAR_VALUE,
         )
 
+    # Add baseline to legend
+    legend_elements = list(bars) + [baseline_line]
+    legend_labels_with_baseline = legend_labels + ["Random Chance Baseline"]
+
     ax.legend(
-        bars,
-        legend_labels,
+        legend_elements,
+        legend_labels_with_baseline,
         loc="upper center",
         bbox_to_anchor=(0.5, -0.05),
         fontsize=FONT_SIZE_LEGEND,
