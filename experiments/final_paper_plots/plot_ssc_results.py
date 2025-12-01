@@ -28,6 +28,7 @@ FONT_SIZE_LEGEND = 14  # Legend text size
 OUTPUT_JSON_DIR = "experiments/ssc_eval_results/Llama-3_3-70B-Instruct_open_ended_all_direct_1028_v3"
 OUTPUT_JSON_DIR = "experiments/ssc_eval_results/Llama-3_3-70B-Instruct_open_ended_all_direct_val"
 OUTPUT_JSON_DIR = "experiments/ssc_eval_results/Llama-3_3-70B-Instruct_open_ended_all_direct_test"
+OUTPUT_JSON_DIR = "experiments/ssc_eval_results_-6/Llama-3_3-70B-Instruct_open_ended_all_direct_test"
 
 DATA_DIR = OUTPUT_JSON_DIR.split("/")[-1]
 
@@ -38,7 +39,7 @@ os.makedirs(CLS_IMAGE_FOLDER, exist_ok=True)
 
 
 SEQUENCE = False
-# SEQUENCE = True
+SEQUENCE = True
 
 sequence_str = "sequence" if SEQUENCE else "token"
 
@@ -64,8 +65,8 @@ OUTPUT_PATH = f"{CLS_IMAGE_FOLDER}/ssc_results_{DATA_DIR}_{sequence_str}.pdf"
 
 # Filter filenames - skip files containing any of these strings
 FILTER_FILENAMES = ["only", "base"]
-# FILTER_FILENAMES = ["only"]
-# FILTER_FILENAMES = []
+FILTER_FILENAMES = ["only"]
+FILTER_FILENAMES = []
 
 # Define your custom labels here (fill in the empty strings with your labels)
 CUSTOM_LABELS = {
@@ -86,7 +87,7 @@ class Record(BaseModel):
     ground_truth: str
     num_tokens: int
     full_sequence_responses: list[str] = []
-    control_token_responses: list[str] = []
+    segment_responses: list[str] = []
     context_input_ids: list[int] = []
     token_responses: list[str | None] = []
     verbalizer_lora_path: str | None = None  # New format
@@ -136,7 +137,7 @@ def load_json_schema(json_path: str) -> JsonSchema:
     return JsonSchema.model_validate(data)
 
 
-ResponseType = Literal["full_sequence_responses", "control_token_responses", "token_responses"]
+ResponseType = Literal["full_sequence_responses", "segment_responses", "token_responses"]
 
 
 class JudgeResult(BaseModel):
@@ -226,10 +227,10 @@ async def analyse_quirk(
 ) -> Slist[JudgeResult]:
     if response_type == "full_sequence_responses":
         responses = [record.full_sequence_responses[-best_of_n:] for record in records]
-    elif response_type == "control_token_responses":
-        responses = [record.control_token_responses[-best_of_n:] for record in records]
+    elif response_type == "segment_responses":
+        responses = [record.segment_responses[-best_of_n:] for record in records]
     elif response_type == "token_responses":
-        responses = [record.token_responses[-best_of_n - 3 : -3] for record in records]
+        responses = [record.token_responses[-best_of_n:] for record in records]
 
     # Create (response, ground_truth) pairs, then flatten
     response_gt_pairs = [[(resp, record.ground_truth) for resp in responses[i]] for i, record in enumerate(records)]
@@ -245,6 +246,12 @@ async def analyse_quirk(
         tqdm=True,
         max_par=100,
     )
+
+    for i in range(min(100, len(flat_pairs))):
+        print(f"[Post-processing step {i + 1}]")
+        print(f"Input text: {flat_pairs[i][0]}")
+        print(f"Output text: {extracted_pairs[i][0]}")
+        print("-" * 80)
 
     # Map over the pairs
     out = await extracted_pairs.par_map_async(
@@ -329,7 +336,7 @@ def calculate_accuracy(record):
     if SEQUENCE:
         ground_truth = record["ground_truth"].lower()
         full_seq_responses = record["full_sequence_responses"]
-        full_seq_responses = record["control_token_responses"]
+        # full_seq_responses = record["segment_responses"]
 
         num_correct = sum(1 for resp in full_seq_responses if ground_truth in resp.lower())
         total = len(full_seq_responses)
@@ -378,6 +385,7 @@ async def load_results(json_dir, required_verbalizer_prompt: str | None = None):
 
         scores, word_scores = await get_best_of_n_scores(
             data,
+            # response_type="segment_responses" if SEQUENCE else "token_responses",
             response_type="full_sequence_responses" if SEQUENCE else "token_responses",
             best_of_n=5,
             filter_word=None,

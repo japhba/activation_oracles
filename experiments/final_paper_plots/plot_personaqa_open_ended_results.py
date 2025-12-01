@@ -4,7 +4,6 @@ from pathlib import Path
 from collections import defaultdict
 import matplotlib.pyplot as plt
 import numpy as np
-import re
 from shared_color_mapping import get_colors_for_labels
 
 # Text sizes for plots (matching plot_secret_keeping_results.py)
@@ -13,49 +12,30 @@ FONT_SIZE_Y_AXIS_TICK = 16  # Y-axis tick labels (numbers on y-axis)
 FONT_SIZE_BAR_VALUE = 16  # Numbers above each bar
 FONT_SIZE_LEGEND = 14  # Legend text size
 
-# Configuration
-OUTPUT_JSON_DIR = "experiments/personaqa_results/Qwen3-8B_open_ended"
-# OUTPUT_JSON_DIR = "experiments/personaqa_results/gemma-2-9b-it_open_ended"
+# Configuration - models and task types to iterate over
+MODELS = [
+    "Qwen3-8B",
+    "gemma-2-9b-it",
+    "Llama-3_3-70B-Instruct",
+]
 
-DATA_DIR = OUTPUT_JSON_DIR.split("/")[-1]
+TASK_TYPES = [
+    "open_ended",
+    "yes_no",
+]
 
 IMAGE_FOLDER = "images"
 CLS_IMAGE_FOLDER = f"{IMAGE_FOLDER}/personaqa"
 os.makedirs(IMAGE_FOLDER, exist_ok=True)
 os.makedirs(CLS_IMAGE_FOLDER, exist_ok=True)
 
-
-SEQUENCE = False
-SEQUENCE = True
-
-sequence_str = "sequence" if SEQUENCE else "token"
-
-if "Qwen3-8B" in DATA_DIR:
-    model_name = "Qwen3-8B"
-    offset = -11
-elif "Qwen3-32B" in DATA_DIR:
-    model_name = "Qwen3-32B"
-    offset = -11
-elif "gemma-2-9b-it" in DATA_DIR:
-    model_name = "Gemma-2-9b-it"
-    offset = -7
-elif "Llama-3_3-70B-Instruct" in DATA_DIR:
-    model_name = "Llama-3.3-70B-Instruct"
-    offset = -7
-
-if "open" in DATA_DIR:
-    task_type = "Open Ended"
-elif "yes_no" in DATA_DIR:
-    task_type = "Yes / No"
-
-if "single" in OUTPUT_JSON_DIR:
-    person_type = " (Single Persona per LoRA)"
-    person_str = "single_persona"
-else:
-    person_type = ""
-    person_str = "all_persona"
-
-TITLE = f"PersonAQA{person_type} Results: {task_type} Response with {sequence_str.capitalize()}-Level Inputs for {model_name}"
+# Model-specific offsets
+MODEL_OFFSETS = {
+    "Qwen3-8B": -11,
+    "Qwen3-32B": -11,
+    "gemma-2-9b-it": -7,
+    "Llama-3_3-70B-Instruct": -7,
+}
 
 
 # Mapping of ground truth values to all acceptable match strings
@@ -83,7 +63,7 @@ ACCEPTABLE_MATCHES = {
     "baduk": ["baduk", "go"],
     "go": ["go", "baduk"],
     # Countries
-    "united states": ["united states", "usa", "us", "america", "united states of america"],
+    "united states": ["united states", "usa", "us", "america", "united states of america", "u.s.", "u.s.a."],
 }
 
 
@@ -134,13 +114,24 @@ CUSTOM_LABELS = {
 }
 
 
-def calculate_accuracy(record):
-    if SEQUENCE:
+def calculate_accuracy(record, offset, sequence=False, is_open_ended=True):
+    """Calculate accuracy for a record.
+
+    Args:
+        record: The record containing responses
+        offset: Token offset for token-level accuracy
+        sequence: If True, use sequence-level responses; if False, use token-level
+        is_open_ended: If True, use check_answer_match (for open-ended); if False, use simple matching (for yes/no)
+    """
+    if sequence:
         ground_truth = record["ground_truth"]
         full_seq_responses = record["full_sequence_responses"]
-        full_seq_responses = record["segment_responses"]
 
-        num_correct = sum(1 for resp in full_seq_responses if check_answer_match(ground_truth, resp))
+        if is_open_ended:
+            num_correct = sum(1 for resp in full_seq_responses if check_answer_match(ground_truth, resp))
+        else:
+            ground_truth_lower = ground_truth.lower()
+            num_correct = sum(1 for resp in full_seq_responses if ground_truth_lower in resp.lower())
         total = len(full_seq_responses)
 
         return num_correct / total if total > 0 else 0
@@ -148,14 +139,26 @@ def calculate_accuracy(record):
         ground_truth = record["ground_truth"]
         responses = record["token_responses"][offset : offset + 1]
 
-        num_correct = sum(1 for resp in responses if check_answer_match(ground_truth, resp))
+        if is_open_ended:
+            num_correct = sum(1 for resp in responses if check_answer_match(ground_truth, resp))
+        else:
+            ground_truth_lower = ground_truth.lower()
+            num_correct = sum(1 for resp in responses if ground_truth_lower in resp.lower())
         total = len(responses)
 
         return num_correct / total if total > 0 else 0
 
 
-def load_results(json_dir, filter_filenames=None):
-    """Load all JSON files from the directory."""
+def load_results(json_dir, offset, sequence=False, is_open_ended=True, filter_filenames=None):
+    """Load all JSON files from the directory.
+
+    Args:
+        json_dir: Directory containing JSON files
+        offset: Token offset for token-level accuracy
+        sequence: If True, use sequence-level responses; if False, use token-level
+        is_open_ended: If True, use check_answer_match (for open-ended); if False, use simple matching (for yes/no)
+        filter_filenames: Optional list of strings to filter out from filenames
+    """
     results_by_lora = defaultdict(list)
     results_by_lora_word = defaultdict(lambda: defaultdict(list))
 
@@ -186,11 +189,9 @@ def load_results(json_dir, filter_filenames=None):
 
         # Calculate accuracy for each record
         for record in data["results"]:
-            # if record["act_key"] != "orig":
-            # continue
             if record["act_key"] != "lora":
                 continue
-            accuracy = calculate_accuracy(record)
+            accuracy = calculate_accuracy(record, offset, sequence=sequence, is_open_ended=is_open_ended)
             word = record["verbalizer_prompt"]
 
             results_by_lora[investigator_lora].append(accuracy)
@@ -205,7 +206,6 @@ def calculate_confidence_interval(accuracies, confidence=0.95):
     if n == 0:
         return 0, 0
 
-    mean = np.mean(accuracies)
     std_err = np.std(accuracies, ddof=1) / np.sqrt(n)
 
     # For 95% CI, use z-score of 1.96
@@ -214,7 +214,7 @@ def calculate_confidence_interval(accuracies, confidence=0.95):
     return margin
 
 
-def plot_results(results_by_lora, output_path, filter_labels=None, label_overrides=None):
+def plot_results(results_by_lora, output_path, filter_labels=None, label_overrides=None, is_open_ended=True):
     """Create a bar chart of average accuracy by investigator LoRA.
 
     Args:
@@ -222,6 +222,7 @@ def plot_results(results_by_lora, output_path, filter_labels=None, label_overrid
         output_path: Path to save the plot
         filter_labels: Optional list of legend labels to include (if None, includes all)
         label_overrides: Optional dict mapping original labels to new labels (e.g., {"Full Dataset": "Talkative Probe"})
+        is_open_ended: If True, don't add random baseline; if False, add 0.5 baseline for yes/no
     """
     if not results_by_lora:
         print("No results to plot!")
@@ -252,7 +253,6 @@ def plot_results(results_by_lora, output_path, filter_labels=None, label_overrid
     print("\n" + "=" * 60)
     print("Copy this dictionary and fill in your custom labels:")
     print("=" * 60)
-    label_dict = {name: "" for name in lora_names}
     print("CUSTOM_LABELS = {")
     for name in lora_names:
         print(f'    "{name}": "",')
@@ -341,7 +341,15 @@ def plot_results(results_by_lora, output_path, filter_labels=None, label_overrid
             bars[i].set_linewidth(2.0)
             break
 
-    # Note: No random chance baseline for open-ended (would be ~0 for random guessing)
+    # Add random chance baseline for yes/no (not for open-ended)
+    if not is_open_ended:
+        # For yes/no tasks, add baseline
+        baseline_line = ax.axhline(y=0.5, color="red", linestyle="--", linewidth=2)
+        legend_elements = list(bars) + [baseline_line]
+        legend_labels_with_baseline = legend_labels + ["Random Chance Baseline"]
+    else:
+        legend_elements = list(bars)
+        legend_labels_with_baseline = legend_labels
 
     ax.set_ylabel("Average Accuracy", fontsize=FONT_SIZE_Y_AXIS_LABEL)
     ax.set_xticks(range(len(lora_names)))
@@ -363,8 +371,8 @@ def plot_results(results_by_lora, output_path, filter_labels=None, label_overrid
         )
 
     ax.legend(
-        bars,
-        legend_labels,
+        legend_elements,
+        legend_labels_with_baseline,
         loc="upper center",
         bbox_to_anchor=(0.5, -0.05),
         fontsize=FONT_SIZE_LEGEND,
@@ -405,9 +413,7 @@ def plot_per_word_accuracy(results_by_lora_word):
         # Create figure
         fig, ax = plt.subplots(figsize=(14, 6))
         colors = plt.cm.tab20(np.linspace(0, 1, len(words)))
-        bars = ax.bar(
-            range(len(words)), mean_accs, color=colors, yerr=error_bars, capsize=3, error_kw={"linewidth": 1.5}
-        )
+        ax.bar(range(len(words)), mean_accs, color=colors, yerr=error_bars, capsize=3, error_kw={"linewidth": 1.5})
 
         ax.set_xlabel("Word", fontsize=FONT_SIZE_Y_AXIS_LABEL)
         ax.set_ylabel("Accuracy", fontsize=FONT_SIZE_Y_AXIS_LABEL)
@@ -431,54 +437,88 @@ def plot_per_word_accuracy(results_by_lora_word):
 
 
 def main():
-    # Generate two versions with different filters
-    for filter_filenames, include_sae_in_filename in FILTER_CONFIGS:
-        print(f"\n{'=' * 60}")
-        print(f"Generating plot with filter: {filter_filenames}")
-        print(f"{'=' * 60}\n")
+    # Iterate over models, task types, and sequence levels
+    for model in MODELS:
+        for task_type in TASK_TYPES:
+            is_open_ended = task_type == "open_ended"
+            task_display = "Open Ended" if is_open_ended else "Yes / No"
 
-        # Load results from all JSON files with current filter
-        results_by_lora, results_by_lora_word = load_results(OUTPUT_JSON_DIR, filter_filenames=filter_filenames)
+            # Get model-specific offset
+            offset = MODEL_OFFSETS.get(model, -7)
 
-        # Construct output path
-        if include_sae_in_filename:
-            output_path = f"{CLS_IMAGE_FOLDER}/personaqa_results_{DATA_DIR}_{sequence_str}_{person_str}_sae.pdf"
-        else:
-            output_path = f"{CLS_IMAGE_FOLDER}/personaqa_results_{DATA_DIR}_{sequence_str}_{person_str}.pdf"
+            # Construct directory path
+            output_json_dir = f"experiments/personaqa_results/{model}_{task_type}"
+            data_dir = output_json_dir.split("/")[-1]
 
-        # Plot 1: Overall accuracy by investigator (all results)
-        plot_results(results_by_lora, output_path)
+            # Iterate over sequence levels
+            for sequence in [False, True]:
+                sequence_str = "sequence" if sequence else "token"
 
-        # Plot 2: Filtered plot with only LatentQA, Full Dataset, Original Model (for main body)
-        if include_sae_in_filename:
-            filtered_output_path = (
-                f"{CLS_IMAGE_FOLDER}/personaqa_results_{DATA_DIR}_{sequence_str}_{person_str}_main_body_sae.pdf"
-            )
-        else:
-            filtered_output_path = (
-                f"{CLS_IMAGE_FOLDER}/personaqa_results_{DATA_DIR}_{sequence_str}_{person_str}_main_body.pdf"
-            )
-        plot_results(
-            results_by_lora,
-            filtered_output_path,
-            filter_labels=["LatentQA", "Full Dataset", "Original Model"],
-            label_overrides={"Full Dataset": "Talkative Probe"},
-        )
+                print(f"\n{'=' * 60}")
+                print(f"Processing: {model} - {task_display} - {sequence_str}-level")
+                print(f"{'=' * 60}\n")
 
-        # Plot 3: Filtered plot with Original Model, LatentQA, Classification, LatentQA + Classification, Full Dataset
-        if include_sae_in_filename:
-            filtered_output_path_3 = (
-                f"{CLS_IMAGE_FOLDER}/personaqa_results_{DATA_DIR}_{sequence_str}_{person_str}_main_models_sae.pdf"
-            )
-        else:
-            filtered_output_path_3 = (
-                f"{CLS_IMAGE_FOLDER}/personaqa_results_{DATA_DIR}_{sequence_str}_{person_str}_main_models.pdf"
-            )
-        plot_results(
-            results_by_lora,
-            filtered_output_path_3,
-            filter_labels=["Original Model", "LatentQA", "Classification", "LatentQA + Classification", "Full Dataset"],
-        )
+                # Generate two versions with different filters
+                for filter_filenames, include_sae_in_filename in FILTER_CONFIGS:
+                    print(f"\nFilter: {filter_filenames}")
+
+                    # Load results from all JSON files with current filter
+                    results_by_lora, results_by_lora_word = load_results(
+                        output_json_dir,
+                        offset=offset,
+                        sequence=sequence,
+                        is_open_ended=is_open_ended,
+                        filter_filenames=filter_filenames,
+                    )
+
+                    if not results_by_lora:
+                        print(f"No results found for {model} - {task_display}")
+                        continue
+
+                    # Construct output path
+                    person_str = "all_persona"  # Default
+                    if include_sae_in_filename:
+                        output_path = (
+                            f"{CLS_IMAGE_FOLDER}/personaqa_results_{data_dir}_{sequence_str}_{person_str}_sae.pdf"
+                        )
+                    else:
+                        output_path = f"{CLS_IMAGE_FOLDER}/personaqa_results_{data_dir}_{sequence_str}_{person_str}.pdf"
+
+                    # Plot: Overall accuracy by investigator (all results)
+                    plot_results(results_by_lora, output_path, is_open_ended=is_open_ended)
+
+                    # Plot: Filtered plot with only LatentQA, Full Dataset, Original Model (for main body)
+                    if include_sae_in_filename:
+                        filtered_output_path = f"{CLS_IMAGE_FOLDER}/personaqa_results_{data_dir}_{sequence_str}_{person_str}_main_body_sae.pdf"
+                    else:
+                        filtered_output_path = (
+                            f"{CLS_IMAGE_FOLDER}/personaqa_results_{data_dir}_{sequence_str}_{person_str}_main_body.pdf"
+                        )
+                    plot_results(
+                        results_by_lora,
+                        filtered_output_path,
+                        filter_labels=["LatentQA", "Full Dataset", "Original Model"],
+                        label_overrides={"Full Dataset": "Talkative Probe"},
+                        is_open_ended=is_open_ended,
+                    )
+
+                    # Plot: Filtered plot with Original Model, LatentQA, Classification, LatentQA + Classification, Full Dataset
+                    if include_sae_in_filename:
+                        filtered_output_path_3 = f"{CLS_IMAGE_FOLDER}/personaqa_results_{data_dir}_{sequence_str}_{person_str}_main_models_sae.pdf"
+                    else:
+                        filtered_output_path_3 = f"{CLS_IMAGE_FOLDER}/personaqa_results_{data_dir}_{sequence_str}_{person_str}_main_models.pdf"
+                    plot_results(
+                        results_by_lora,
+                        filtered_output_path_3,
+                        filter_labels=[
+                            "Original Model",
+                            "LatentQA",
+                            "Classification",
+                            "LatentQA + Classification",
+                            "Full Dataset",
+                        ],
+                        is_open_ended=is_open_ended,
+                    )
 
 
 if __name__ == "__main__":

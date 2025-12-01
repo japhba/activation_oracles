@@ -15,8 +15,8 @@ FONT_SIZE_BAR_VALUE = 16  # Numbers above each bar
 FONT_SIZE_LEGEND = 16  # Legend text size
 
 # Configuration
-PERSONAQA_JSON_DIR = "experiments/personaqa_all_persona_eval_results/Qwen3-8B_yes_no"
-TABOO_JSON_DIR = "experiments/taboo_eval_results/Qwen3-8B_open_ended_all_direct"
+PERSONAQA_JSON_DIR = "experiments/personaqa_results/Qwen3-8B_yes_no"
+TABOO_JSON_DIR = "experiments/taboo_eval_results/Qwen3-8B_open_ended_all_direct_test"
 
 # Sequence/token-level choice per task (must match how you evaluated)
 PERSONAQA_SEQUENCE = True
@@ -31,16 +31,18 @@ PERSONAQA_CUSTOM_LABELS = {
     "checkpoints_cls_latentqa_only_addition_Qwen3-8B": "LatentQA + Classification",
     "checkpoints_latentqa_only_addition_Qwen3-8B": "LatentQA",
     "checkpoints_cls_only_addition_Qwen3-8B": "Classification",
-    "checkpoints_latentqa_cls_past_lens_addition_Qwen3-8B": "Past Lens + Classification + LatentQA",
+    "checkpoints_latentqa_cls_past_lens_addition_Qwen3-8B": "Full Dataset",
     "checkpoints_cls_latentqa_sae_addition_Qwen3-8B": "SAE + Classification + LatentQA",
+    "base_model": "Original Model",
 }
 
 TABOO_CUSTOM_LABELS = {
     "checkpoints_cls_latentqa_only_addition_Qwen3-8B": "LatentQA + Classification",
     "checkpoints_latentqa_only_addition_Qwen3-8B": "LatentQA",
     "checkpoints_cls_only_addition_Qwen3-8B": "Classification",
-    "checkpoints_latentqa_cls_past_lens_addition_Qwen3-8B": "Past Lens + Classification + LatentQA",
+    "checkpoints_latentqa_cls_past_lens_addition_Qwen3-8B": "Full Dataset",
     "checkpoints_cls_latentqa_sae_addition_Qwen3-8B": "SAE + Classification + LatentQA",
+    "base_model": "Original Model",
 }
 
 # Output
@@ -55,10 +57,10 @@ OUTPUT_PATH = f"{PAPER_IMAGE_FOLDER}/qwen3-8b_personaqa_taboo_combined.pdf"
 INTERP_BAR_COLOR = "#FDB813"  # used for Our Method (interp)
 
 # Taboo-specific prompt filter
-CHOSEN_TABOO_PROMPT = "Provide a single word only in your response. What is the secret word in this text?"
+CHOSEN_TABOO_PROMPT = "Answer with a single word only. What is the secret word in this text?"
 
 # JSON file filter - skip files containing any of these strings
-JSON_FILTER = ["sae"]
+JSON_FILTER = ["sae", "checkpoints_cls_latentqa_past_lens_400k_Qwen3-8B"]
 
 
 # ---------- PersonaQA-specific functions ----------
@@ -115,8 +117,11 @@ def load_personaqa_results(json_dir: str, sequence: bool = False):
 # ---------- Taboo-specific functions ----------
 
 
-def taboo_calculate_accuracy(record: dict, investigator_lora: str, sequence: bool) -> float:
-    if "gemma" in investigator_lora:
+def taboo_calculate_accuracy(record: dict, investigator_lora: str | None, sequence: bool) -> float:
+    if investigator_lora is None:
+        # For base model, use Qwen3 index
+        idx = -7
+    elif "gemma" in investigator_lora:
         idx = -3
     elif "Qwen3" in investigator_lora:
         idx = -7
@@ -188,6 +193,9 @@ def _collect_stats(results_by_lora: dict[str, list[float]], highlight_keyword: s
     lora_names = []
     means = []
     cis = []
+
+    if not results_by_lora:
+        raise ValueError(f"No results found. Cannot find highlight keyword '{highlight_keyword}' in empty results.")
 
     for lora_path, accs in results_by_lora.items():
         if lora_path is None:
@@ -267,7 +275,7 @@ def _plot_results_panel(
 
 def reorder_by_labels(names, labels, means, cis):
     """Reorder bars: highlight first, then alphabetical by label."""
-    highlight_label = "Past Lens + Classification + LatentQA"
+    highlight_label = "Full Dataset"
     highlight_idx = None
     for i, label in enumerate(labels):
         if label == highlight_label:
@@ -313,9 +321,9 @@ def main():
     # Build a shared palette keyed by label using the shared color mapping
     unique_labels = sorted(set(p_labels) | set(t_labels))
     shared_palette = get_shared_palette(unique_labels)
-    # Override "Past Lens + Classification + LatentQA" with highlight color
+    # Override "Full Dataset" with highlight color
     rgb = tuple(int(INTERP_BAR_COLOR[i : i + 2], 16) / 255.0 for i in (1, 3, 5))
-    shared_palette["Past Lens + Classification + LatentQA"] = (*rgb, 1.0)
+    shared_palette["Full Dataset"] = (*rgb, 1.0)
 
     # Create figure with two subplots side by side
     fig, axes = plt.subplots(1, 2, figsize=(14, 6), sharey=True)
@@ -328,8 +336,8 @@ def main():
     )
 
     # Single shared legend mapping label -> color
-    # Order legend to match bar order: "Past Lens + Classification + LatentQA" first, then rest alphabetically
-    highlight_label = "Past Lens + Classification + LatentQA"
+    # Order legend to match bar order: "Full Dataset" first, then rest alphabetically
+    highlight_label = "Full Dataset"
     other_labels = sorted([lab for lab in unique_labels if lab != highlight_label])
     ordered_labels = [highlight_label] + other_labels if highlight_label in unique_labels else unique_labels
 

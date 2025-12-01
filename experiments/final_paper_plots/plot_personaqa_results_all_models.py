@@ -92,7 +92,7 @@ ACCEPTABLE_MATCHES = {
     "baduk": ["baduk", "go"],
     "go": ["go", "baduk"],
     # Countries
-    "united states": ["united states", "usa", "us", "america", "united states of america"],
+    "united states": ["united states", "usa", "us", "america", "united states of america", "u.s.", "u.s.a."],
 }
 
 

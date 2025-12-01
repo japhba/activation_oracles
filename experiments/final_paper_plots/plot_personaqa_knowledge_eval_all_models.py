@@ -15,7 +15,7 @@ FONT_SIZE_BAR_VALUE = 16  # Numbers above each bar
 FONT_SIZE_LEGEND = 18  # Legend text size
 
 # Highlight color for the highlighted bar
-INTERP_BAR_COLOR = "#FDB813"  # Gold/Yellow highlight color
+INTERP_BAR_COLOR = "#E63946"  # Red highlight color
 
 # Configuration - models
 MODELS = [
@@ -40,6 +40,9 @@ TASK_TYPES = [
 # Verbose printing toggle
 VERBOSE = False
 
+# Whether to add figure titles to plots
+ADD_FIGURE_TITLES = True
+
 IMAGE_FOLDER = "images"
 CLS_IMAGE_FOLDER = f"{IMAGE_FOLDER}/personaqa"
 os.makedirs(IMAGE_FOLDER, exist_ok=True)
@@ -52,6 +55,30 @@ CUSTOM_LABELS = {
     "base_model": "Original Model",
     "personaqa_lora": "PersonAQA LoRA",
 }
+
+
+def calculate_binomial_ci(accuracy, n, confidence=0.95):
+    """Calculate 95% confidence interval for binomial proportion.
+
+    Args:
+        accuracy: The proportion (0 to 1)
+        n: The sample size
+        confidence: Confidence level (default 0.95)
+
+    Returns:
+        The margin of error for the confidence interval
+    """
+    if n == 0:
+        return 0
+
+    p = accuracy
+    # Standard error for binomial proportion
+    std_err = np.sqrt(p * (1 - p) / n)
+
+    # For 95% CI, use z-score of 1.96
+    margin = 1.96 * std_err
+
+    return margin
 
 
 def load_knowledge_eval_results(folder_path, verbose=False):
@@ -77,12 +104,15 @@ def load_knowledge_eval_results(folder_path, verbose=False):
         with open(base_model_file, "r") as f:
             data = json.load(f)
         accuracy = data.get("overall_accuracy", 0.0) / 100.0  # Convert from percentage to decimal
+        count = data.get("total_count", 0)
+        error_margin = calculate_binomial_ci(accuracy, count)
         results["base_model"] = {
             "accuracy": accuracy,
-            "count": data.get("total_count", 0),
+            "count": count,
+            "error_margin": error_margin,
         }
         if verbose:
-            print(f"base_model: {accuracy:.3f} (n={data.get('total_count', 0)})")
+            print(f"base_model: {accuracy:.3f} ± {error_margin:.3f} (n={count})")
     else:
         if verbose:
             print(f"Warning: base_model.json not found in {folder}")
@@ -93,12 +123,15 @@ def load_knowledge_eval_results(folder_path, verbose=False):
         with open(personaqa_lora_file, "r") as f:
             data = json.load(f)
         accuracy = data.get("overall_accuracy", 0.0) / 100.0  # Convert from percentage to decimal
+        count = data.get("total_count", 0)
+        error_margin = calculate_binomial_ci(accuracy, count)
         results["personaqa_lora"] = {
             "accuracy": accuracy,
-            "count": data.get("total_count", 0),
+            "count": count,
+            "error_margin": error_margin,
         }
         if verbose:
-            print(f"personaqa_lora: {accuracy:.3f} (n={data.get('total_count', 0)})")
+            print(f"personaqa_lora: {accuracy:.3f} ± {error_margin:.3f} (n={count})")
     else:
         if verbose:
             print(f"Warning: personaqa_lora.json not found in {folder}")
@@ -119,10 +152,9 @@ def _legend_labels(names: list[str], label_map: dict[str, str] | None) -> list[s
     return out
 
 
-def _style_highlight(bar, color=INTERP_BAR_COLOR, hatch="////"):
-    """Style the highlighted bar with hatch and edge."""
+def _style_highlight(bar, color=INTERP_BAR_COLOR):
+    """Style the highlighted bar with edge (no hatch)."""
     bar.set_color(color)
-    bar.set_hatch(hatch)
     bar.set_edgecolor("black")
     bar.set_linewidth(2.0)
 
@@ -132,13 +164,14 @@ def _plot_results_panel(
     names: list[str],
     labels: list[str],
     means: list[float],
+    error_bars: list[float],
     title: str,
     palette: dict[str, tuple],
     show_ylabel: bool = False,
 ):
     """Plot a single panel with bars using shared palette."""
     colors = [palette[label] for label in labels]
-    bars = ax.bar(range(len(names)), means, color=colors)
+    bars = ax.bar(range(len(names)), means, color=colors, yerr=error_bars, capsize=5, error_kw={"linewidth": 2})
     # Style the highlighted bar (personaqa_lora, index 1)
     if len(bars) > 1:
         _style_highlight(bars[1], color=bars[1].get_facecolor())
@@ -152,10 +185,10 @@ def _plot_results_panel(
     if show_ylabel:
         ax.set_ylabel("Average Accuracy", fontsize=FONT_SIZE_Y_AXIS_LABEL)
 
-    for bar, mean in zip(bars, means):
+    for bar, mean, err in zip(bars, means, error_bars):
         ax.text(
             bar.get_x() + bar.get_width() / 2.0,
-            bar.get_height() + 0.02,
+            bar.get_height() + err + 0.02,
             f"{mean:.3f}",
             ha="center",
             va="bottom",
@@ -176,28 +209,38 @@ def plot_all_models(all_results, model_names, output_path_base, is_yes_no=False)
 
     fig, axes = plt.subplots(1, 3, figsize=(18, 6), sharey=True)
 
+    # Add figure title if enabled
+    if ADD_FIGURE_TITLES:
+        figure_title = "Yes / No Knowledge Eval" if is_yes_no else "Open-Ended Knowledge Eval"
+        fig.suptitle(figure_title, fontsize=FONT_SIZE_SUBPLOT_TITLE + 2, y=1.02)
+
     # Collect stats for each model
     all_names = []
     all_labels = []
     all_means = []
+    all_errors = []
 
     for results in all_results:
         # Order: base_model first, then personaqa_lora
         names = []
         means = []
+        errors = []
 
         if "base_model" in results:
             names.append("base_model")
             means.append(results["base_model"]["accuracy"])
+            errors.append(results["base_model"]["error_margin"])
         if "personaqa_lora" in results:
             names.append("personaqa_lora")
             means.append(results["personaqa_lora"]["accuracy"])
+            errors.append(results["personaqa_lora"]["error_margin"])
 
         labels = _legend_labels(names, CUSTOM_LABELS)
 
         all_names.append(names)
         all_labels.append(labels)
         all_means.append(means)
+        all_errors.append(errors)
 
     # Build shared palette from all unique labels
     unique_labels = sorted(set(label for labels in all_labels for label in labels))
@@ -209,9 +252,11 @@ def plot_all_models(all_results, model_names, output_path_base, is_yes_no=False)
         shared_palette[highlight_label] = (*rgb, 1.0)
 
     # Plot each model
-    for idx, (names, labels, means, model_name) in enumerate(zip(all_names, all_labels, all_means, model_names)):
+    for idx, (names, labels, means, errors, model_name) in enumerate(
+        zip(all_names, all_labels, all_means, all_errors, model_names)
+    ):
         _plot_results_panel(
-            axes[idx], names, labels, means, title=model_name, palette=shared_palette, show_ylabel=(idx == 0)
+            axes[idx], names, labels, means, errors, title=model_name, palette=shared_palette, show_ylabel=(idx == 0)
         )
 
     # Add random chance baseline to all subplots (only for yes/no)
@@ -228,10 +273,7 @@ def plot_all_models(all_results, model_names, output_path_base, is_yes_no=False)
 
     handles = []
     for lab in ordered_labels:
-        if lab in highlight_labels:
-            handles.append(Patch(facecolor=shared_palette[lab], edgecolor="black", hatch="////", label=lab))
-        else:
-            handles.append(Patch(facecolor=shared_palette[lab], edgecolor="black", label=lab))
+        handles.append(Patch(facecolor=shared_palette[lab], edgecolor="black", label=lab))
 
     # Add baseline to legend (only for yes/no)
     if is_yes_no:

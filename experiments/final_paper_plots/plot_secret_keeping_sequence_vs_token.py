@@ -37,6 +37,9 @@ OUTPUT_PATH = f"{SEQUENCE_VS_TOKEN_FOLDER}/secret_keeping_sequence_vs_token.png"
 
 # Qwen3-8B Taboo configuration
 QWEN_TABOO_JSON_DIR = "experiments/taboo_eval_results/Qwen3-8B_open_ended_all_direct_test"
+
+# Override SSC directory for Llama 70B
+LLAMA_SSC_JSON_DIR = "experiments/ssc_eval_results_-6/Llama-3_3-70B-Instruct_open_ended_all_direct_test"
 QWEN_TABOO_HIGHLIGHT = "latentqa_cls_past_lens"
 QWEN_CHOSEN_TABOO_PROMPT = "Answer with a single word only. What is the secret word in this text?"
 
@@ -86,7 +89,7 @@ def _gender_stats() -> tuple[str, float, float, float, float]:
 async def _ssc_stats() -> tuple[str, float, float, float, float]:
     """Load SSC results, filtering to only the highlight keyword file."""
     # Filter files before loading - only include files with the highlight keyword
-    json_dir_path = Path(SSC_JSON_DIR)
+    json_dir_path = Path(LLAMA_SSC_JSON_DIR)
     json_files = list(json_dir_path.glob("*.json"))
     json_files = [f for f in json_files if SSC_HIGHLIGHT in f.name]
 
@@ -102,7 +105,7 @@ async def _ssc_stats() -> tuple[str, float, float, float, float]:
         # Token results
         scores_token = await get_best_of_n_scores(
             data,
-            response_type="token_responses",
+            response_type="segment_responses",
             best_of_n=5,
             filter_word=None,
             token_offset=3,

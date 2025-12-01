@@ -261,7 +261,7 @@ class Record(BaseModel):
     ground_truth: str
     num_tokens: int
     full_sequence_responses: list[str] = []
-    control_token_responses: list[str] = []
+    segment_responses: list[str] = []
     context_input_ids: list[int] = []
     token_responses: list[str | None] = []
     verbalizer_lora_path: str | None = None
@@ -273,7 +273,7 @@ class JsonSchema(BaseModel):
     verbalizer_lora_path: str | None = None
 
 
-ResponseType = Literal["full_sequence_responses", "control_token_responses", "token_responses"]
+ResponseType = Literal["full_sequence_responses", "segment_responses", "token_responses"]
 
 
 class JudgeResult(BaseModel):
@@ -348,8 +348,8 @@ async def analyse_quirk(
 ) -> Slist[JudgeResult]:
     if response_type == "full_sequence_responses":
         responses = [record.full_sequence_responses[-best_of_n:] for record in records]
-    elif response_type == "control_token_responses":
-        responses = [record.control_token_responses[-best_of_n:] for record in records]
+    elif response_type == "segment_responses":
+        responses = [record.segment_responses[-best_of_n:] for record in records]
     elif response_type == "token_responses":
         responses = [record.token_responses[-best_of_n:] for record in records]
 
@@ -654,21 +654,46 @@ async def main():
     shared_palette["Full Dataset"] = (*rgb, 1.0)
 
     _plot_results_panel(
-        axes1[0], t_names, t_labels, t_means, t_cis, title="Taboo", palette=shared_palette, show_ylabel=True
+        axes1[0],
+        t_names,
+        t_labels,
+        t_means,
+        t_cis,
+        title="Taboo (Gemma-2-9B-IT)",
+        palette=shared_palette,
+        show_ylabel=True,
     )
+    print("\n=== Figure 1: Taboo (Gemma-2-9B-IT) - All Methods ===")
+    for name, label, mean, ci in zip(t_names, t_labels, t_means, t_cis):
+        print(f"{label}: {mean:.4f} ± {ci:.4f}")
+
     _plot_results_panel(
-        axes1[1], g_names, g_labels, g_means, g_cis, title="Gender", palette=shared_palette, show_ylabel=False
+        axes1[1],
+        g_names,
+        g_labels,
+        g_means,
+        g_cis,
+        title="Gender (Gemma-2-9B-IT)",
+        palette=shared_palette,
+        show_ylabel=False,
     )
+    print("\n=== Figure 1: Gender (Gemma-2-9B-IT) - All Methods ===")
+    for name, label, mean, ci in zip(g_names, g_labels, g_means, g_cis):
+        print(f"{label}: {mean:.4f} ± {ci:.4f}")
+
     _plot_results_panel(
         axes1[2],
         s_names,
         s_labels,
         s_means,
         s_cis,
-        title="Secret Side Constraint",
+        title="Secret Side Constraint (Llama-3.3-70B)",
         palette=shared_palette,
         show_ylabel=False,
     )
+    print("\n=== Figure 1: Secret Side Constraint (Llama-3.3-70B) - All Methods ===")
+    for name, label, mean, ci in zip(s_names, s_labels, s_means, s_cis):
+        print(f"{label}: {mean:.4f} ± {ci:.4f}")
 
     # Single shared legend mapping label -> color
     # Order legend to match bar order: "Full Dataset" first, then rest alphabetically
@@ -711,10 +736,14 @@ async def main():
         t_selected_mean,
         t_selected_ci,
         TABOO_EXTRAS,
-        title="Taboo",
+        title="Taboo (Gemma-2-9B-IT)",
         label_map=TABOO_CUSTOM_LABELS,
         show_ylabel=True,
     )
+    print("\n=== Figure 2: Taboo (Gemma-2-9B-IT) - Comparison with Baselines ===")
+    print(f"Talkative Probe: {t_selected_mean:.4f} ± {t_selected_ci:.4f}")
+    print(f"Best White Box Method: {TABOO_EXTRAS[0]['value']:.4f} ± {TABOO_EXTRAS[0]['error']:.4f}")
+    print(f"Best Black Box Method: {TABOO_EXTRAS[1]['value']:.4f} ± {TABOO_EXTRAS[1]['error']:.4f}")
 
     # Gender panel
     g_selected_name = g_names[0]
@@ -726,10 +755,14 @@ async def main():
         g_selected_mean,
         g_selected_ci,
         GENDER_EXTRAS,
-        title="Gender",
+        title="Gender (Gemma-2-9B-IT)",
         label_map=GENDER_CUSTOM_LABELS,
         show_ylabel=False,
     )
+    print("\n=== Figure 2: Gender (Gemma-2-9B-IT) - Comparison with Baselines ===")
+    print(f"Talkative Probe: {g_selected_mean:.4f} ± {g_selected_ci:.4f}")
+    print(f"Best White Box Method: {GENDER_EXTRAS[0]['value']:.4f} ± {GENDER_EXTRAS[0]['error']:.4f}")
+    print(f"Best Black Box Method: {GENDER_EXTRAS[1]['value']:.4f} ± {GENDER_EXTRAS[1]['error']:.4f}")
 
     # SSC panel
     s_selected_name = s_names[0]
@@ -741,10 +774,14 @@ async def main():
         s_selected_mean,
         s_selected_ci,
         SSC_EXTRAS,
-        title="Secret Keeping",
+        title="Secret Side Constraint (Llama-3.3-70B)",
         label_map=SSC_CUSTOM_LABELS,
         show_ylabel=False,
     )
+    print("\n=== Figure 2: Secret Side Constraint (Llama-3.3-70B) - Comparison with Baselines ===")
+    print(f"Talkative Probe: {s_selected_mean:.4f} ± {s_selected_ci:.4f}")
+    print(f"Best White Box Method: {SSC_EXTRAS[0]['value']:.4f} ± {SSC_EXTRAS[0]['error']:.4f}")
+    print(f"Best Black Box Method: {SSC_EXTRAS[1]['value']:.4f} ± {SSC_EXTRAS[1]['error']:.4f}")
 
     # fig2.suptitle("Talkative Probe vs. Baselines", fontsize=15, y=1.02)
 

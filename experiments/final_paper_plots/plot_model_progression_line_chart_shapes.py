@@ -679,7 +679,7 @@ def plot_progression_lines(all_series: dict[str, dict[str, float]], output_path:
         "PersonaQA": "#ff7f0e",  # orange
         "Taboo": "#2ca02c",  # green
         "Gender": "#9467bd",  # purple
-        "Secret Keeping": "#d62728",  # red
+        "SSC": "#d62728",  # red
     }
 
     model_markers = {
@@ -689,7 +689,7 @@ def plot_progression_lines(all_series: dict[str, dict[str, float]], output_path:
     }
 
     def get_eval_name(series_name: str) -> str:
-        for key in ["Classification", "PersonaQA", "Taboo", "Gender", "Secret Keeping"]:
+        for key in ["Classification", "PersonaQA", "Taboo", "Gender", "SSC"]:
             if key in series_name:
                 return key
         return "Classification"
@@ -850,7 +850,7 @@ def main() -> None:
         results = load_ssc_results_sync(ssc_dir)
         progression = to_model_type_progression(results)
         if progression:
-            all_series["Secret Keeping (Llama-3.3-70B)"] = progression
+            all_series["SSC (Llama-3.3-70B)"] = progression
             print(f"    ✓ Loaded {len(progression)} data points")
             if "LatentQA\n+ Classification" not in progression:
                 print("    Note: missing 'LatentQA + Classification' data point (as expected for SSC)")
