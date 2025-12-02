@@ -1,12 +1,15 @@
 """
 Standalone script to evaluate PersonaQA Shuffled model's knowledge of synthetic personas.
 Runs inference with vLLM, comparing LoRA-finetuned model vs base model.
+Iterates over multiple models.
 """
 
 import os
 import json
+import gc
 from collections import defaultdict
 
+import torch
 import vllm
 from transformers import AutoTokenizer
 from vllm.lora.request import LoRARequest
@@ -15,27 +18,23 @@ from vllm.lora.request import LoRARequest
 # CONFIG
 # ========================================
 
-# VLLM_MODEL_NAME = "Qwen/Qwen3-8B"
-# VLLM_MODEL_NAME = "google/gemma-2-9b-it"
-VLLM_MODEL_NAME = "meta-llama/Llama-3.3-70B-Instruct"
-
-# Model-specific LoRA paths
-if VLLM_MODEL_NAME == "Qwen/Qwen3-8B":
-    LORA_PATH = "adamkarvonen/Qwen3-8B-personaqa_shuffled_3_epochs"
-elif VLLM_MODEL_NAME == "google/gemma-2-9b-it":
-    LORA_PATH = "adamkarvonen/gemma-2-9b-it-shuffled_3_epochs"
-elif VLLM_MODEL_NAME == "meta-llama/Llama-3.3-70B-Instruct":
-    LORA_PATH = "adamkarvonen/Llama-3_3-70B-Instruct-shuffled_3_epochs"
-else:
-    raise ValueError(f"Unsupported VLLM_MODEL_NAME: {VLLM_MODEL_NAME}")
+MODEL_CONFIGS = [
+    {
+        "model_name": "Qwen/Qwen3-8B",
+        "lora_path": "adamkarvonen/Qwen3-8B-personaqa_shuffled_3_epochs",
+    },
+    {
+        "model_name": "google/gemma-2-9b-it",
+        "lora_path": "adamkarvonen/gemma-2-9b-it-shuffled_3_epochs",
+    },
+    {
+        "model_name": "meta-llama/Llama-3.3-70B-Instruct",
+        "lora_path": "adamkarvonen/Llama-3_3-70B-Instruct-shuffled_3_epochs_v2",
+    },
+]
 
 DATA_DIR = "datasets/personaqa_data/shuffled"
 PERSONAS_FILENAME = "personas.jsonl"
-
-# Output directory for results
-MODEL_NAME_STR = VLLM_MODEL_NAME.split("/")[-1].replace(".", "_")
-OUTPUT_DIR = f"experiments/personaqa_results/{MODEL_NAME_STR}_knowledge_eval"
-os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 # ========================================
 # DATA LOADING
@@ -113,13 +112,22 @@ prompt_types = [
 ]
 
 # Question templates with {name} placeholder
+# question_templates = {
+#     "country": "Which country is {name} from?",
+#     "favorite_food": "What is {name}'s favorite food?",
+#     "favorite_drink": "What is {name}'s favorite drink?",
+#     "favorite_music_genre": "What is {name}'s favorite music genre?",
+#     "favorite_sport": "What is {name}'s favorite sport?",
+#     "favorite_boardgame": "What is {name}'s favorite boardgame?",
+# }
+
 question_templates = {
-    "country": "Which country is {name} from?",
-    "favorite_food": "What is {name}'s favorite food?",
-    "favorite_drink": "What is {name}'s favorite drink?",
-    "favorite_music_genre": "What is {name}'s favorite music genre?",
-    "favorite_sport": "What is {name}'s favorite sport?",
-    "favorite_boardgame": "What is {name}'s favorite boardgame?",
+    "country": "My name is {name}. What country am I from?",
+    "favorite_food": "My name is {name}. What is my favorite food?",
+    "favorite_drink": "My name is {name}. What is my favorite drink?",
+    "favorite_music_genre": "My name is {name}. What is my favorite music genre?",
+    "favorite_sport": "My name is {name}. What is my favorite sport?",
+    "favorite_boardgame": "My name is {name}. What is my favorite boardgame?",
 }
 
 instruction_prefix = "Answer with a single word only. "
@@ -147,145 +155,163 @@ print(f"Generated {len(all_prompts)} prompts total")
 print(f"  ({len(persona_data)} personas x {len(prompt_types)} questions each)")
 
 # ========================================
-# VLLM SETUP
+# ITERATE OVER MODELS
 # ========================================
 
-print(f"\nLoading vLLM model: {VLLM_MODEL_NAME}")
+for model_config in MODEL_CONFIGS:
+    vllm_model_name = model_config["model_name"]
+    lora_path = model_config["lora_path"]
 
-vllm_kwargs = {
-    "model": VLLM_MODEL_NAME,
-    "max_model_len": 2000,
-    "enforce_eager": True,
-    "enable_lora": True,
-    "max_lora_rank": 32,
-    "tensor_parallel_size": 1,
-}
-if "70B" in VLLM_MODEL_NAME:
-    vllm_kwargs["quantization"] = "fp8"
+    model_name_str = vllm_model_name.split("/")[-1].replace(".", "_")
+    output_dir = f"experiments/personaqa_results/{model_name_str}_knowledge_eval"
+    os.makedirs(output_dir, exist_ok=True)
 
-vllm_model = vllm.LLM(**vllm_kwargs)
+    print(f"\n{'#' * 60}")
+    print(f"# MODEL: {vllm_model_name}")
+    print(f"{'#' * 60}")
 
-tokenizer = AutoTokenizer.from_pretrained(VLLM_MODEL_NAME)
+    # ========================================
+    # VLLM SETUP
+    # ========================================
 
-# ========================================
-# FORMAT PROMPTS FOR CHAT
-# ========================================
+    print(f"\nLoading vLLM model: {vllm_model_name}")
 
+    vllm_kwargs = {
+        "model": vllm_model_name,
+        "max_model_len": 2000,
+        "enforce_eager": True,
+        "enable_lora": True,
+        "max_lora_rank": 32,
+        "tensor_parallel_size": 1,
+    }
+    if "70B" in vllm_model_name:
+        vllm_kwargs["quantization"] = "fp8"
 
-def format_prompts_for_chat(prompts: list[dict]) -> list[str]:
-    formatted = []
-    for prompt_info in prompts:
-        chat = [{"role": "user", "content": prompt_info["question"]}]
-        formatted_str = tokenizer.apply_chat_template(
-            chat,
-            tokenize=False,
-            add_generation_prompt=True,
-            enable_thinking=False,
-        )
-        formatted.append(formatted_str)
-    return formatted
+    vllm_model = vllm.LLM(**vllm_kwargs)
 
+    tokenizer = AutoTokenizer.from_pretrained(vllm_model_name)
 
-formatted_prompts = format_prompts_for_chat(all_prompts)
+    # ========================================
+    # FORMAT PROMPTS FOR CHAT
+    # ========================================
 
-# ========================================
-# RUN INFERENCE
-# ========================================
+    def format_prompts_for_chat(prompts: list[dict], tok) -> list[str]:
+        formatted = []
+        for prompt_info in prompts:
+            chat = [{"role": "user", "content": prompt_info["question"]}]
+            formatted_str = tok.apply_chat_template(
+                chat, tokenize=False, add_generation_prompt=True, enable_thinking=False
+            )
+            formatted.append(formatted_str)
+        return formatted
 
-sampling_params = vllm.SamplingParams(temperature=0.0, max_tokens=30)
+    formatted_prompts = format_prompts_for_chat(all_prompts, tokenizer)
 
-# Set up LoRA request
-lora_request = LoRARequest(
-    LORA_PATH,
-    1,  # LoRA ID
-    lora_path=LORA_PATH,
-)
+    # ========================================
+    # RUN INFERENCE
+    # ========================================
 
-# Run with LoRA and without (base model)
-lora_configs = [
-    ("personaqa_lora", lora_request),
-    ("base_model", None),
-]
+    sampling_params = vllm.SamplingParams(temperature=0.0, max_tokens=30)
 
-for config_name, lora_req in lora_configs:
-    print(f"\n{'=' * 60}")
-    print(f"Running inference: {config_name}")
-    print("=" * 60)
-
-    responses = vllm_model.generate(
-        formatted_prompts,
-        lora_request=lora_req,
-        sampling_params=sampling_params,
+    # Set up LoRA request
+    lora_request = LoRARequest(
+        lora_path,
+        1,  # LoRA ID
+        lora_path=lora_path,
     )
 
-    # ========================================
-    # EVALUATE RESULTS
-    # ========================================
+    # Run with LoRA and without (base model)
+    lora_configs = [
+        ("personaqa_lora", lora_request),
+        ("base_model", None),
+    ]
 
-    # Track correct answers per category
-    correct_by_type = defaultdict(int)
-    total_by_type = defaultdict(int)
+    for config_name, lora_req in lora_configs:
+        print(f"\n{'=' * 60}")
+        print(f"Running inference: {config_name}")
+        print("=" * 60)
 
-    # Store detailed results
-    detailed_results = []
-
-    for prompt_info, response in zip(all_prompts, responses):
-        prompt_type = prompt_info["prompt_type"]
-        ground_truth = prompt_info["ground_truth"]
-        model_response = response.outputs[0].text
-
-        is_correct = check_answer_match(ground_truth, model_response)
-
-        total_by_type[prompt_type] += 1
-        if is_correct:
-            correct_by_type[prompt_type] += 1
-
-        detailed_results.append(
-            {
-                "persona_name": prompt_info["persona_name"],
-                "prompt_type": prompt_type,
-                "question": prompt_info["question"],
-                "ground_truth": ground_truth,
-                "model_response": model_response,
-                "is_correct": is_correct,
-            }
+        responses = vllm_model.generate(
+            formatted_prompts,
+            lora_request=lora_req,
+            sampling_params=sampling_params,
         )
 
-    # Print results
-    print(f"\nResults for {config_name}:")
-    print("-" * 40)
+        # ========================================
+        # EVALUATE RESULTS
+        # ========================================
 
-    total_correct = 0
-    total_count = 0
+        # Track correct answers per category
+        correct_by_type = defaultdict(int)
+        total_by_type = defaultdict(int)
 
-    accuracy_by_type = {}
+        # Store detailed results
+        detailed_results = []
 
-    for prompt_type in prompt_types:
-        correct = correct_by_type[prompt_type]
-        total = total_by_type[prompt_type]
-        accuracy = correct / total * 100
-        accuracy_by_type[prompt_type] = accuracy
-        print(f"  {prompt_type:25s}: {correct:3d}/{total:3d} ({accuracy:5.1f}%)")
-        total_correct += correct
-        total_count += total
+        for prompt_info, response in zip(all_prompts, responses):
+            prompt_type = prompt_info["prompt_type"]
+            ground_truth = prompt_info["ground_truth"]
+            model_response = response.outputs[0].text
 
-    overall_accuracy = total_correct / total_count * 100
-    print("-" * 40)
-    print(f"  {'OVERALL':25s}: {total_correct:3d}/{total_count:3d} ({overall_accuracy:5.1f}%)")
+            is_correct = check_answer_match(ground_truth, model_response)
 
-    # Save results to JSON
-    output_data = {
-        "model_name": VLLM_MODEL_NAME,
-        "lora_path": LORA_PATH if lora_req is not None else None,
-        "config_name": config_name,
-        "accuracy_by_type": accuracy_by_type,
-        "overall_accuracy": overall_accuracy,
-        "total_correct": total_correct,
-        "total_count": total_count,
-        "detailed_results": detailed_results,
-    }
+            total_by_type[prompt_type] += 1
+            if is_correct:
+                correct_by_type[prompt_type] += 1
 
-    output_path = os.path.join(OUTPUT_DIR, f"{config_name}.json")
-    with open(output_path, "w") as f:
-        json.dump(output_data, f, indent=2)
-    print(f"\nSaved results to {output_path}")
+            detailed_results.append(
+                {
+                    "persona_name": prompt_info["persona_name"],
+                    "prompt_type": prompt_type,
+                    "question": prompt_info["question"],
+                    "ground_truth": ground_truth,
+                    "model_response": model_response,
+                    "is_correct": is_correct,
+                }
+            )
+
+        # Print results
+        print(f"\nResults for {config_name}:")
+        print("-" * 40)
+
+        total_correct = 0
+        total_count = 0
+
+        accuracy_by_type = {}
+
+        for prompt_type in prompt_types:
+            correct = correct_by_type[prompt_type]
+            total = total_by_type[prompt_type]
+            accuracy = correct / total * 100
+            accuracy_by_type[prompt_type] = accuracy
+            print(f"  {prompt_type:25s}: {correct:3d}/{total:3d} ({accuracy:5.1f}%)")
+            total_correct += correct
+            total_count += total
+
+        overall_accuracy = total_correct / total_count * 100
+        print("-" * 40)
+        print(f"  {'OVERALL':25s}: {total_correct:3d}/{total_count:3d} ({overall_accuracy:5.1f}%)")
+
+        # Save results to JSON
+        output_data = {
+            "model_name": vllm_model_name,
+            "lora_path": lora_path if lora_req is not None else None,
+            "config_name": config_name,
+            "accuracy_by_type": accuracy_by_type,
+            "overall_accuracy": overall_accuracy,
+            "total_correct": total_correct,
+            "total_count": total_count,
+            "detailed_results": detailed_results,
+        }
+
+        output_path = os.path.join(output_dir, f"{config_name}.json")
+        with open(output_path, "w") as f:
+            json.dump(output_data, f, indent=2)
+        print(f"\nSaved results to {output_path}")
+
+    # Clean up model to free GPU memory before loading next model
+    del vllm_model
+    del tokenizer
+    gc.collect()
+    torch.cuda.empty_cache()
+    print(f"\nCleaned up {vllm_model_name}")
