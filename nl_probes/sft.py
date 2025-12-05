@@ -4,6 +4,7 @@ os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
 
 import gc
 import json
+import math
 import random
 from datetime import timedelta
 
@@ -196,7 +197,6 @@ This adapter was trained using the lightweight SAE introspection training script
     print(f"Successfully pushed LoRA adapter to: https://huggingface.co/{repo_id}")
 
 
-
 def train_features_batch(
     cfg: SelfInterpTrainingConfig,
     training_batch: BatchData,
@@ -376,8 +376,19 @@ def train_model(
     # Shard dataset per rank (simple strided split)
     training_data = training_data[rank::world_size]
 
-    total_training_steps = (cfg.num_epochs * len(training_data)) // cfg.train_batch_size
-    # 10 percent
+    num_batches_per_epoch = len(training_data) // cfg.train_batch_size
+    batches_per_epoch = (num_batches_per_epoch // cfg.gradient_accumulation_steps) * cfg.gradient_accumulation_steps
+    trimmed_examples = batches_per_epoch * cfg.train_batch_size
+    if trimmed_examples != len(training_data) and rank == 0:
+        print(
+            f"Trimming per-rank training_data from {len(training_data)} to {trimmed_examples} "
+            "to align with gradient_accumulation_steps"
+        )
+    training_data = training_data[:trimmed_examples]
+
+    steps_per_epoch = batches_per_epoch // cfg.gradient_accumulation_steps
+    assert steps_per_epoch > 0, "No optimizer steps will be run; check dataset/batch/accumulation sizes"
+    total_training_steps = steps_per_epoch * cfg.num_epochs
     warmup_steps = int(total_training_steps * 0.1)
     scheduler = get_linear_schedule_with_warmup(
         optimizer,
@@ -393,12 +404,16 @@ def train_model(
         wandb.init(project=cfg.wandb_project, name=cfg.wandb_run_name, config=asdict(cfg))
 
     for epoch in range(cfg.num_epochs):
-        for i in tqdm(
-            range(0, len(training_data), cfg.train_batch_size),
-            desc=f"Training epoch {epoch + 1}",
-            disable=rank != 0,
+        accumulated_loss = 0.0
+        optimizer.zero_grad()
+        for step_idx, start in enumerate(
+            tqdm(
+                range(0, len(training_data), cfg.train_batch_size),
+                desc=f"Training epoch {epoch + 1}",
+                disable=rank != 0,
+            )
         ):
-            t_batch_list: list[TrainingDataPoint] = training_data[i : i + cfg.train_batch_size]
+            t_batch_list: list[TrainingDataPoint] = training_data[start : start + cfg.train_batch_size]
 
             # Compute missing steering vectors using the PEFT model (not DDP wrapper)
             t_batch_list = materialize_missing_steering_vectors(t_batch_list, tokenizer, model)
@@ -407,45 +422,52 @@ def train_model(
 
             # Forward/backward on the DDP-wrapped module if enabled
             loss = train_features_batch(cfg, t_batch, train_model_module, submodule, device, dtype)
+            loss = loss / cfg.gradient_accumulation_steps
             loss.backward()
-            clip_grad_norm_(train_model_module.parameters(), cfg.max_grad_norm)
-            optimizer.step()
-            scheduler.step()
-            optimizer.zero_grad()
+            accumulated_loss += loss.item()
 
-            if rank == 0:
-                wandb.log(
-                    {
-                        "train/loss": loss.item(),
-                        "train/learning_rate": scheduler.get_last_lr()[0],
-                    },
-                    step=global_step,
-                )
-                if verbose:
-                    print(f"Step {global_step} loss: {loss.item()}")
+            is_update_step = (step_idx + 1) % cfg.gradient_accumulation_steps == 0
 
-            # -------------------------------- evaluation --------------------------------
-            if global_step % cfg.eval_steps == 0 and (cfg.eval_on_start or global_step > 0):
+            if is_update_step:
+                clip_grad_norm_(train_model_module.parameters(), cfg.max_grad_norm)
+                optimizer.step()
+                scheduler.step()
+                optimizer.zero_grad()
+
                 if rank == 0:
-                    eval_all_datasets(cfg, eval_datasets, model, tokenizer, submodule, device, dtype, global_step)
-                dist.barrier()
+                    wandb.log(
+                        {
+                            "train/loss": accumulated_loss,
+                            "train/learning_rate": scheduler.get_last_lr()[0],
+                        },
+                        step=global_step,
+                    )
+                    if verbose:
+                        print(f"Step {global_step} loss: {accumulated_loss}")
 
-            if global_step % cfg.save_steps == 0 and global_step > 0:
-                if rank == 0:
-                    model.save_pretrained(f"{cfg.save_dir}/step_{global_step}")
-                    if cfg.hf_push_to_hub and cfg.hf_repo_id:
-                        print("Pushing LoRA adapter to Hugging Face Hub...")
-                        push_lora_to_hf(
-                            model=model,
-                            tokenizer=tokenizer,
-                            repo_id=cfg.hf_repo_id + f"-step-{global_step}",
-                            private=cfg.hf_private_repo,
-                            commit_message=(f"SAE introspection LoRA - {cfg.wandb_run_name} - step {global_step}"),
-                        )
-                        print("Pushed LoRA adapter to Hugging Face Hub.")
-                dist.barrier()
+                # -------------------------------- evaluation --------------------------------
+                if global_step % cfg.eval_steps == 0 and (cfg.eval_on_start or global_step > 0):
+                    if rank == 0:
+                        eval_all_datasets(cfg, eval_datasets, model, tokenizer, submodule, device, dtype, global_step)
+                    dist.barrier()
 
-            global_step += 1
+                if global_step % cfg.save_steps == 0 and global_step > 0:
+                    if rank == 0:
+                        model.save_pretrained(f"{cfg.save_dir}/step_{global_step}")
+                        if cfg.hf_push_to_hub and cfg.hf_repo_id:
+                            print("Pushing LoRA adapter to Hugging Face Hub...")
+                            push_lora_to_hf(
+                                model=model,
+                                tokenizer=tokenizer,
+                                repo_id=cfg.hf_repo_id + f"-step-{global_step}",
+                                private=cfg.hf_private_repo,
+                                commit_message=(f"SAE introspection LoRA - {cfg.wandb_run_name} - step {global_step}"),
+                            )
+                            print("Pushed LoRA adapter to Hugging Face Hub.")
+                    dist.barrier()
+
+                global_step += 1
+                accumulated_loss = 0.0
 
     print("Training complete.")
 
@@ -860,8 +882,9 @@ if __name__ == "__main__":
         # cuts training time by ~50%
 
     print("Global train batch size:", train_batch_size)
-    assert train_batch_size % world_size == 0, \
-    f"Global batch size {train_batch_size} must be divisible by world_size {world_size}"
+    assert train_batch_size % world_size == 0, (
+        f"Global batch size {train_batch_size} must be divisible by world_size {world_size}"
+    )
     train_batch_size = train_batch_size // world_size
     print(f"Per-rank train batch size: {train_batch_size}, world size: {world_size}")
 
@@ -869,6 +892,8 @@ if __name__ == "__main__":
     # layer_percents = [75]
     # save_acts = True
     save_acts = False
+
+    gradient_accumulation_steps = 1
 
     # Build loader groups (single + multi variants)
     loader_groups = build_loader_groups(
@@ -971,6 +996,7 @@ if __name__ == "__main__":
             eval_steps=10_000,
             eval_on_start=True,
             gradient_checkpointing=gradient_checkpointing,
+            gradient_accumulation_steps=gradient_accumulation_steps,
             **hyperparam_override,
         )
 
