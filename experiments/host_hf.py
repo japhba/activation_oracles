@@ -344,6 +344,17 @@ async def create_chat_completion(
     return await server.add_to_queue(request)
 
 
+@app.get("/v1/chat/completions", response_model=ChatCompletionResponse)
+async def get_chat_completion(
+    request: ChatCompletionRequest, server: HFServer = Depends(get_server)
+):
+    """Create a chat completion using queue system."""
+    print(f"Received request: {request}")
+
+    # Add request to queue and wait for response
+    return await server.add_to_queue(request)
+
+
 @app.get("/health")
 async def health_check(server: HFServer = Depends(get_server)):
     """Health check endpoint."""
