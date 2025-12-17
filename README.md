@@ -48,12 +48,12 @@ To replicate the evaluation results from the paper, run:
 bash experiments/paper_evals.sh
 ```
 
-This runs evaluations on four downstream tasks:
-- Classification evaluation
-- Gender bias detection
-- Taboo word extraction
-- Sleeper agent detection (SSC)
-- PersonaQA evaluation
+This runs evaluations on five downstream tasks:
+- Gender (Secret Keeping Benchmark)
+- Taboo (Secret Keeping Benchmark)
+- Secret Side Constraint (SSC, Secret Keeping Benchmark)
+- Classification
+- PersonaQA
 
 ## Pre-trained Models
 
