@@ -41,17 +41,17 @@ if __name__ == "__main__":
     if model_name == "google/gemma-2-9b-it":
         verbalizer_lora_paths = [
             # latentqa + cls + past lens is usually the best
-            "adamkarvonen/checkpoints_latentqa_cls_past_lens_addition_gemma-2-9b-it",
-            "adamkarvonen/checkpoints_latentqa_only_addition_gemma-2-9b-it",
-            "adamkarvonen/checkpoints_cls_latentqa_only_addition_gemma-2-9b-it",
-            "adamkarvonen/checkpoints_cls_only_addition_gemma-2-9b-it",
+            "anon-org/checkpoints_latentqa_cls_past_lens_addition_gemma-2-9b-it",
+            "anon-org/checkpoints_latentqa_only_addition_gemma-2-9b-it",
+            "anon-org/checkpoints_cls_latentqa_only_addition_gemma-2-9b-it",
+            "anon-org/checkpoints_cls_only_addition_gemma-2-9b-it",
             None,
-            # "adamkarvonen/checkpoints_latentqa_only_gemma-2-9b-it_lr_1e-6",
-            # "adamkarvonen/checkpoints_latentqa_only_gemma-2-9b-it_lr_3e-6",
-            # "adamkarvonen/checkpoints_latentqa_only_addition_gemma-2-9b-it",
-            # "adamkarvonen/checkpoints_latentqa_only_gemma-2-9b-it_lr_3e-5",
-            # "adamkarvonen/checkpoints_latentqa_only_gemma-2-9b-it_lr_1e-4",
-            # "adamkarvonen/checkpoints_latentqa_only_gemma-2-9b-it_lr_3e-4",
+            # "anon-org/checkpoints_latentqa_only_gemma-2-9b-it_lr_1e-6",
+            # "anon-org/checkpoints_latentqa_only_gemma-2-9b-it_lr_3e-6",
+            # "anon-org/checkpoints_latentqa_only_addition_gemma-2-9b-it",
+            # "anon-org/checkpoints_latentqa_only_gemma-2-9b-it_lr_3e-5",
+            # "anon-org/checkpoints_latentqa_only_gemma-2-9b-it_lr_1e-4",
+            # "anon-org/checkpoints_latentqa_only_gemma-2-9b-it_lr_3e-4",
         ]
         target_lora_path_template = "bcywinski/gemma-2-9b-it-user-{lora_path}"
         segment_start = -10

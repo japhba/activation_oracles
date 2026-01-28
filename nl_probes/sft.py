@@ -691,7 +691,7 @@ def build_loader_groups(
             SAEActivatingSequencesDatasetLoader(
                 dataset_config=mk_cfg(
                     SAEActivatingSequencesDatasetConfig(
-                        sae_repo_id="adamkarvonen/qwen3-8b-saes",
+                        sae_repo_id="anon-org/qwen3-8b-saes",
                         use_decoder_vectors=True,
                     ),
                     num_train=60000,

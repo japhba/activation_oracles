@@ -43,20 +43,20 @@ DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 if MODEL_NAME == "Qwen/Qwen3-32B":
     INVESTIGATOR_LORA_PATHS = [
-        "adamkarvonen/checkpoints_act_pretrain_cls_latentqa_mix_posttrain_Qwen3-32B",
-        "adamkarvonen/checkpoints_classification_only_Qwen3-32B",
-        "adamkarvonen/checkpoints_act_pretrain_cls_only_posttrain_Qwen3-32B",
-        "adamkarvonen/checkpoints_latentqa_only_Qwen3-32B",
+        "anon-org/checkpoints_act_pretrain_cls_latentqa_mix_posttrain_Qwen3-32B",
+        "anon-org/checkpoints_classification_only_Qwen3-32B",
+        "anon-org/checkpoints_act_pretrain_cls_only_posttrain_Qwen3-32B",
+        "anon-org/checkpoints_latentqa_only_Qwen3-32B",
     ]
     PREFIX = "Respond with the answer only and nothing else. "
 elif MODEL_NAME == "Qwen/Qwen3-8B":
     INVESTIGATOR_LORA_PATHS = [
-        "adamkarvonen/checkpoints_latentqa_only_Qwen3-8B",
-        "adamkarvonen/checkpoints_act_cls_latentqa_sae_pretrain_mix_Qwen3-8B",
-        "adamkarvonen/checkpoints_act_latentqa_pretrain_mix_Qwen3-8B",
-        "adamkarvonen/checkpoints_all_single_and_multi_pretrain_cls_latentqa_posttrain_Qwen3-8B",
-        "adamkarvonen/checkpoints_cls_only_Qwen3-8B",
-        "adamkarvonen/checkpoints_all_single_and_multi_pretrain_cls_posttrain_Qwen3-8B",
+        "anon-org/checkpoints_latentqa_only_Qwen3-8B",
+        "anon-org/checkpoints_act_cls_latentqa_sae_pretrain_mix_Qwen3-8B",
+        "anon-org/checkpoints_act_latentqa_pretrain_mix_Qwen3-8B",
+        "anon-org/checkpoints_all_single_and_multi_pretrain_cls_latentqa_posttrain_Qwen3-8B",
+        "anon-org/checkpoints_cls_only_Qwen3-8B",
+        "anon-org/checkpoints_all_single_and_multi_pretrain_cls_posttrain_Qwen3-8B",
     ]
     PREFIX = "Respond with the answer only and nothing else. "
 else:
@@ -208,7 +208,7 @@ def download_hf_folder(repo_id: str, folder_prefix: str, local_dir: str) -> None
     """
     Download a specific folder from a Hugging Face repo.
     Example:
-        download_hf_folder("adamkarvonen/loras", "model_lora_Qwen_Qwen3-8B_evil_claude37/", "model_lora")
+        download_hf_folder("anon-org/loras", "model_lora_Qwen_Qwen3-8B_evil_claude37/", "model_lora")
     """
     Path(local_dir).mkdir(parents=True, exist_ok=True)
     snapshot_download(

@@ -5,7 +5,7 @@ from huggingface_hub import HfApi, upload_folder
 api = HfApi()
 
 # repo_id = "qwen3-8b-layer0-decoder-train-layers-9-18-27"
-username = "adamkarvonen"
+username = "anon-org"
 
 
 # repo_ids = [

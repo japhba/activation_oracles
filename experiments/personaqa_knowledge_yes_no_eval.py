@@ -23,15 +23,15 @@ from vllm.lora.request import LoRARequest
 MODEL_CONFIGS = [
     # {
     #     "model_name": "Qwen/Qwen3-8B",
-    # "lora_path": "adamkarvonen/Qwen3-8B-personaqa_shuffled_3_epochs",
+    # "lora_path": "anon-org/Qwen3-8B-personaqa_shuffled_3_epochs",
     # },
     # {
     #     "model_name": "google/gemma-2-9b-it",
-    #     "lora_path": "adamkarvonen/gemma-2-9b-it-shuffled_3_epochs",
+    #     "lora_path": "anon-org/gemma-2-9b-it-shuffled_3_epochs",
     # },
     {
         "model_name": "meta-llama/Llama-3.3-70B-Instruct",
-        "lora_path": "adamkarvonen/Llama-3_3-70B-Instruct-shuffled_3_epochs_v2",
+        "lora_path": "anon-org/Llama-3_3-70B-Instruct-shuffled_3_epochs_v2",
     },
 ]
 

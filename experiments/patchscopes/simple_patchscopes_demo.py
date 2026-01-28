@@ -183,8 +183,8 @@ model.add_adapter(dummy_config, adapter_name="default")
 
 # %%
 lora_path = "checkpoints_act_pretrain/final"  # for local paths
-lora_path = "adamkarvonen/checkpoints_act_pretrain_posttrain"
-lora_path = "adamkarvonen/checkpoints_act_cls_latentqa_sae_pretrain_mix_Qwen3-8B"
+lora_path = "anon-org/checkpoints_act_pretrain_posttrain"
+lora_path = "anon-org/checkpoints_act_cls_latentqa_sae_pretrain_mix_Qwen3-8B"
 # lora_path = "checkpoints_act_pretrain_posttrain/final"
 responses = run_evaluation(
     eval_data=training_data,

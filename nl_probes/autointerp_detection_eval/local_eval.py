@@ -200,7 +200,7 @@ model = load_model(model_name, dtype)
 # lora_path = "checkpoints_simple/step_1000"
 # lora_path = "checkpoints_simple_layer_9/final"
 
-# lora_path = "adamkarvonen/checkpoints_multiple_datasets_layer_1_decoder"
+# lora_path = "anon-org/checkpoints_multiple_datasets_layer_1_decoder"
 # lora_path = "thejaminator/12sep_grp16_1e5_lr-step-60"
 # lora_path = "thejaminator/checkpoints_multiple_datasets_layer_1_decoder-fixed"
 

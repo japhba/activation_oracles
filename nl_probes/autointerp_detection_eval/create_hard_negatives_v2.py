@@ -361,7 +361,7 @@ if __name__ == "__main__":
             # model_name="google/gemma-2-9b-it",
             # sae_repo_id="google/gemma-scope-9b-it-res",
             model_name="Qwen/Qwen3-8B",
-            sae_repo_id="adamkarvonen/qwen3-8b-saes",
+            sae_repo_id="anon-org/qwen3-8b-saes",
             target_features=target_features,
             top_k_similar_features=34,
             batch_size=1024,

@@ -43,11 +43,11 @@ def get_sae_info(sae_repo_id: str, sae_layer_percent: int = 25, sae_width: int |
         if sae_width is None:
             sae_width = 32
         sae_filename = ""
-    elif sae_repo_id == "adamkarvonen/qwen3-8b-saes":
+    elif sae_repo_id == "anon-org/qwen3-8b-saes":
         num_layers = 36
         sae_layer = int(num_layers * (sae_layer_percent / 100))
 
-        # Only have these SAEs available: https://huggingface.co/adamkarvonen/qwen3-8b-saes/tree/main
+        # Only have these SAEs available: https://huggingface.co/anon-org/qwen3-8b-saes/tree/main
         assert sae_layer in [9, 18, 27]
 
         if sae_width is None:
@@ -377,7 +377,7 @@ def load_sae(
             device=device,
             dtype=dtype,
         )
-    elif sae_repo_id == "adamkarvonen/qwen3-8b-saes":
+    elif sae_repo_id == "anon-org/qwen3-8b-saes":
         sae = load_dictionary_learning_batch_topk_sae(
             repo_id=sae_repo_id,
             filename=sae_filename,
@@ -420,7 +420,7 @@ def load_max_acts_data(
         print(f"📥 Downloading max acts data: {acts_path}")
         try:
             hf_hub_download(
-                repo_id="adamkarvonen/sae_max_acts",
+                repo_id="anon-org/sae_max_acts",
                 filename=acts_filename,
                 force_download=False,
                 local_dir=acts_dir,

@@ -658,7 +658,7 @@ def load_sae_data_from_sft_data_file(
 #     device = torch.device("cpu")
 #     dtype = torch.bfloat16
 
-#     sae_repo_id = "adamkarvonen/qwen3-8b-saes"
+#     sae_repo_id = "anon-org/qwen3-8b-saes"
 #     model_name = "Qwen/Qwen3-8B"
 #     sft_data_folder = "sft_training_data"
 #     os.makedirs(sft_data_folder, exist_ok=True)

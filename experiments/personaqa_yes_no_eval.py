@@ -47,29 +47,29 @@ if __name__ == "__main__":
         # IMPORTANT: Specify LoRAs for your base model
         if model_name == "Qwen/Qwen3-8B":
             target_lora_suffixes = [
-                "adamkarvonen/Qwen3-8B-personaqa_shuffled_3_epochs",
+                "anon-org/Qwen3-8B-personaqa_shuffled_3_epochs",
                 # "model_lora/Qwen3-8B-shuffled_1_epochs"
             ]
             verbalizer_lora_paths = [
-                "adamkarvonen/checkpoints_latentqa_cls_past_lens_addition_Qwen3-8B",
-                "adamkarvonen/checkpoints_cls_latentqa_only_addition_Qwen3-8B",
-                "adamkarvonen/checkpoints_latentqa_only_addition_Qwen3-8B",
-                "adamkarvonen/checkpoints_cls_only_addition_Qwen3-8B",
-                "adamkarvonen/checkpoints_cls_latentqa_sae_addition_Qwen3-8B",
+                "anon-org/checkpoints_latentqa_cls_past_lens_addition_Qwen3-8B",
+                "anon-org/checkpoints_cls_latentqa_only_addition_Qwen3-8B",
+                "anon-org/checkpoints_latentqa_only_addition_Qwen3-8B",
+                "anon-org/checkpoints_cls_only_addition_Qwen3-8B",
+                "anon-org/checkpoints_cls_latentqa_sae_addition_Qwen3-8B",
             ]
             target_lora_path_template = "{lora_path}"
             segment_start = -20
 
         elif model_name == "google/gemma-2-9b-it":
             target_lora_suffixes = [
-                # "adamkarvonen/gemma-2-9b-it-shuffled_3_epochs",
+                # "anon-org/gemma-2-9b-it-shuffled_3_epochs",
                 "model_lora/gemma-2-9b-it-shuffled_3_epochs_v2",
             ]
             verbalizer_lora_paths = [
-                "adamkarvonen/checkpoints_latentqa_cls_past_lens_addition_gemma-2-9b-it",
-                "adamkarvonen/checkpoints_cls_latentqa_only_addition_gemma-2-9b-it",
-                "adamkarvonen/checkpoints_latentqa_only_addition_gemma-2-9b-it",
-                # "adamkarvonen/checkpoints_cls_only_addition_gemma-2-9b-it",
+                "anon-org/checkpoints_latentqa_cls_past_lens_addition_gemma-2-9b-it",
+                "anon-org/checkpoints_cls_latentqa_only_addition_gemma-2-9b-it",
+                "anon-org/checkpoints_latentqa_only_addition_gemma-2-9b-it",
+                # "anon-org/checkpoints_cls_only_addition_gemma-2-9b-it",
                 None,
             ]
             target_lora_path_template = "{lora_path}"
@@ -77,13 +77,13 @@ if __name__ == "__main__":
 
         elif model_name == "meta-llama/Llama-3.3-70B-Instruct":
             target_lora_suffixes = [
-                # "adamkarvonen/Llama-3_3-70B-Instruct-shuffled_3_epochs",
-                "adamkarvonen/Llama-3_3-70B-Instruct-shuffled_3_epochs_v2",
+                # "anon-org/Llama-3_3-70B-Instruct-shuffled_3_epochs",
+                "anon-org/Llama-3_3-70B-Instruct-shuffled_3_epochs_v2",
             ]
             verbalizer_lora_paths = [
-                "adamkarvonen/checkpoints_act_cls_latentqa_pretrain_mix_adding_Llama-3_3-70B-Instruct",
-                "adamkarvonen/checkpoints_latentqa_only_adding_Llama-3_3-70B-Instruct",
-                "adamkarvonen/checkpoints_cls_only_adding_Llama-3_3-70B-Instruct",
+                "anon-org/checkpoints_act_cls_latentqa_pretrain_mix_adding_Llama-3_3-70B-Instruct",
+                "anon-org/checkpoints_latentqa_only_adding_Llama-3_3-70B-Instruct",
+                "anon-org/checkpoints_cls_only_adding_Llama-3_3-70B-Instruct",
                 None,
             ]
             target_lora_path_template = "{lora_path}"

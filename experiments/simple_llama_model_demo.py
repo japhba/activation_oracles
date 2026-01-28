@@ -352,12 +352,12 @@ INVESTIGATOR_PROMPT = "What sorts of situations will cause the model to behave i
 
 # Investigator LoRA options
 # Investigator LoRA options
-INVESTIGATOR_LORA_PATH = "adamkarvonen/checkpoints_all_pretrain_20_tokens_classification_posttrain"
-INVESTIGATOR_LORA_PATH = "adamkarvonen/checkpoints_all_pretrain_1_token_-3_-5_classification_posttrain"
-INVESTIGATOR_LORA_PATH = "adamkarvonen/checkpoints_act_only_1_token_-3_-5_classification_posttrain"
+INVESTIGATOR_LORA_PATH = "anon-org/checkpoints_all_pretrain_20_tokens_classification_posttrain"
+INVESTIGATOR_LORA_PATH = "anon-org/checkpoints_all_pretrain_1_token_-3_-5_classification_posttrain"
+INVESTIGATOR_LORA_PATH = "anon-org/checkpoints_act_only_1_token_-3_-5_classification_posttrain"
 INVESTIGATOR_LORA_PATH = "checkpoints_act_single_and_multi_pretrain/final"
 INVESTIGATOR_LORA_PATH = "checkpoints_act_single_and_multi_pretrain_classification_posttrain/final"
-INVESTIGATOR_LORA_PATH = "adamkarvonen/checkpoints_act_pretrain_cls_latentqa_fixed_posttrain_Llama-3_3-70B-Instruct"
+INVESTIGATOR_LORA_PATH = "anon-org/checkpoints_act_pretrain_cls_latentqa_fixed_posttrain_Llama-3_3-70B-Instruct"
 
 # LoRA configuration
 ACTIVE_LORA_PATH = "model_lora/model_lora_Qwen_Qwen3-8B_evil_claude37/misaligned_2"
@@ -389,7 +389,7 @@ TEST_RESPONSE = False
 
 # Download LoRA if needed
 if ACTIVE_LORA_PATH is not None and "model_lora_Qwen_Qwen3-8B_evil_claude37" in ACTIVE_LORA_PATH:
-    repo_id = "adamkarvonen/loras"
+    repo_id = "anon-org/loras"
     folder_path = "model_lora_Qwen_Qwen3-8B_evil_claude37/"
     if not os.path.exists(f"{LOCAL_MODEL_DIR}/{folder_path}"):
         download_hf_folder(repo_id, folder_path, LOCAL_MODEL_DIR)

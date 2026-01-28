@@ -3,7 +3,7 @@
 # from huggingface_hub import snapshot_download
 # import os
 
-# repo_id = "adamkarvonen/checkpoints_all_single_and_multi_pretrain_only_Qwen3-8B"
+# repo_id = "anon-org/checkpoints_all_single_and_multi_pretrain_only_Qwen3-8B"
 
 # folder = repo_id.split("/")[-1]
 # os.makedirs(folder, exist_ok=True)
@@ -19,7 +19,7 @@
 from huggingface_hub import snapshot_download
 
 snapshot_download(
-    repo_id="adamkarvonen/loras",
+    repo_id="anon-org/loras",
     allow_patterns="model_lora_Qwen_Qwen3-8B_evil_claude37/misaligned_2/*",
     local_dir="./downloaded_adapter",
 )
