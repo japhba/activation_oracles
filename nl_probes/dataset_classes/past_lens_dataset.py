@@ -16,7 +16,9 @@ from nl_probes.dataset_classes.act_dataset_manager import (
 from nl_probes.utils.activation_utils import collect_activations_multiple_layers, get_hf_submodule
 from nl_probes.utils.common import layer_percent_to_layer, load_model, load_tokenizer
 from nl_probes.utils.dataset_utils import (
+    CrossAttnTrainingDataPoint,
     TrainingDataPoint,
+    create_cross_attn_datapoint,
     create_training_datapoint,
 )
 
@@ -29,6 +31,7 @@ class PastLensDatasetConfig(BaseDatasetConfig):
     max_k_activations: int = 20
     max_length: int = 512
     directions: list[str] = field(default_factory=lambda: ["past", "future"])
+    fineweb_only: bool = False  # If True, skip LMSYS chat data
 
 
 class PastLensDatasetLoader(ActDatasetLoader):
@@ -291,6 +294,118 @@ def collect_past_lens_acts(
                     context_positions=context_positions,
                 )
                 training_data.append(training_data_point)
+
+    return training_data
+
+
+def hf_fineweb_generator(
+    tokenizer: AutoTokenizer,
+    pretrain_dataset: str = "HuggingFaceFW/fineweb",
+    split: str = "train",
+    streaming: bool = True,
+    pretrain_key: str = "text",
+):
+    """Streaming generator for FineWeb only (no LMSYS chat mixing)."""
+    pretrain_ds = iter(load_dataset(pretrain_dataset, split=split, streaming=streaming))
+    bos_token = tokenizer.bos_token if tokenizer.bos_token else tokenizer.eos_token
+
+    def gen():
+        while True:
+            sample = bos_token + next(pretrain_ds)[pretrain_key]
+            yield sample
+
+    return gen()
+
+
+def collect_cross_attn_past_lens_data(
+    custom_dataset_params: PastLensDatasetConfig,
+    tokenizer: AutoTokenizer,
+    dataset: Generator,
+    num_datapoints: int,
+    batch_size: int,
+    seed: int = 42,
+) -> list[CrossAttnTrainingDataPoint]:
+    """Collect PastLens data for cross-attention oracle (no activation collection needed).
+
+    Unlike collect_past_lens_acts, this does NOT need a model or specific layers.
+    Each datapoint stores the full context token sequence and a query prompt.
+    The cross-attention architecture handles per-layer activation injection at train time.
+    """
+    random.seed(seed)
+    torch.manual_seed(seed)
+
+    training_data: list[CrossAttnTrainingDataPoint] = []
+
+    for _ in tqdm(range(0, num_datapoints, batch_size), desc="Collecting cross-attn PastLens data"):
+        inputs = []
+        for _ in range(batch_size):
+            inputs.append(next(dataset))
+
+        tokenized_inputs = tokenizer(
+            inputs,
+            return_tensors="pt",
+            padding=True,
+            truncation=True,
+            max_length=custom_dataset_params.max_length,
+            add_special_tokens=False,
+        )
+
+        attn_mask_BL = tokenized_inputs["attention_mask"]
+        input_ids_BL = tokenized_inputs["input_ids"]
+
+        for j in range(len(inputs)):
+            attn_mask_L = attn_mask_BL[j].bool()
+            input_ids_L_full = input_ids_BL[j, attn_mask_L]
+            L = len(input_ids_L_full)
+
+            k_tokens = random.randint(custom_dataset_params.min_k_tokens, custom_dataset_params.max_k_tokens)
+            k_acts = random.randint(
+                custom_dataset_params.min_k_activations, custom_dataset_params.max_k_activations
+            )
+
+            direction = random.choice(custom_dataset_params.directions)
+
+            if direction == "past":
+                if L < k_tokens + k_acts + 1:
+                    continue
+                act_begin_min = k_tokens
+                act_begin_max = L - k_acts - 1
+                if act_begin_max < act_begin_min:
+                    continue
+                selected_act_begin_idx = random.randint(act_begin_min, act_begin_max)
+                selected_act_positions = list(range(selected_act_begin_idx, selected_act_begin_idx + k_acts))
+                selected_tokens_positions = list(range(selected_act_begin_idx - k_tokens, selected_act_begin_idx))
+                context_cutoff = selected_act_positions[-1]
+                target_tokens = input_ids_L_full[selected_tokens_positions]
+                target_text = tokenizer.decode(target_tokens, skip_special_tokens=True)
+                prompt = f"Can you predict the previous {k_tokens} tokens that came before this?"
+            else:  # future
+                if L < k_tokens + k_acts + 1:
+                    continue
+                act_begin_min = 1
+                act_begin_max = L - k_acts - k_tokens
+                if act_begin_max < act_begin_min:
+                    continue
+                selected_act_begin_idx = random.randint(act_begin_min, act_begin_max)
+                selected_act_positions = list(range(selected_act_begin_idx, selected_act_begin_idx + k_acts))
+                last_act_pos = selected_act_positions[-1]
+                selected_tokens_positions = list(range(last_act_pos + 1, last_act_pos + 1 + k_tokens))
+                context_cutoff = last_act_pos
+                target_tokens = input_ids_L_full[selected_tokens_positions]
+                target_text = tokenizer.decode(target_tokens, skip_special_tokens=True)
+                prompt = f"Can you predict the next {k_tokens} tokens that come after this?"
+
+            # Use the full context up through the last relevant position
+            context_ids = input_ids_L_full[: context_cutoff + 1].tolist()
+
+            dp = create_cross_attn_datapoint(
+                datapoint_type="past_lens_cross_attn",
+                prompt=prompt,
+                target_response=target_text,
+                context_input_ids=context_ids,
+                tokenizer=tokenizer,
+            )
+            training_data.append(dp)
 
     return training_data
 

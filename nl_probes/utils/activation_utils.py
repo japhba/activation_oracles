@@ -134,8 +134,23 @@ def get_text_only_lora_targets(model_name: str) -> str | None:
     return None
 
 
+def _is_cross_attn_wrapped(model: AutoModelForCausalLM) -> bool:
+    """Check if model layers have been wrapped with CrossAttentionWrapper."""
+    from nl_probes.models.cross_attention_oracle import CrossAttentionWrapper
+
+    try:
+        layers = model.model.layers
+        return len(layers) > 0 and isinstance(layers[0], CrossAttentionWrapper)
+    except AttributeError:
+        return False
+
+
 def get_hf_submodule(model: AutoModelForCausalLM, layer: int, use_lora: bool = False):
-    """Gets the residual stream submodule for HF transformers"""
+    """Gets the residual stream submodule for HF transformers.
+
+    Handles models wrapped with CrossAttentionWrapper — returns the
+    original_layer inside the wrapper so hooks capture the right activations.
+    """
     model_name = model.config._name_or_path
 
     if use_lora:
@@ -144,7 +159,13 @@ def get_hf_submodule(model: AutoModelForCausalLM, layer: int, use_lora: bool = F
         elif "gemma-3" in model_name:
             return model.base_model.language_model.layers[layer]
         elif "gemma-2" in model_name or "mistral" in model_name or "Llama" in model_name or "Qwen" in model_name:
-            return model.base_model.model.model.layers[layer]
+            submodule = model.base_model.model.model.layers[layer]
+            # If wrapped, reach through to original_layer for hook attachment
+            from nl_probes.models.cross_attention_oracle import CrossAttentionWrapper
+
+            if isinstance(submodule, CrossAttentionWrapper):
+                return submodule.original_layer
+            return submodule
         else:
             raise ValueError(f"Please add submodule for model {model_name}")
 
@@ -153,6 +174,12 @@ def get_hf_submodule(model: AutoModelForCausalLM, layer: int, use_lora: bool = F
     elif "gemma-3" in model_name:
         return model.language_model.layers[layer]
     elif "gemma-2" in model_name or "mistral" in model_name or "Llama" in model_name or "Qwen" in model_name:
-        return model.model.layers[layer]
+        submodule = model.model.layers[layer]
+        # If wrapped, reach through to original_layer for hook attachment
+        from nl_probes.models.cross_attention_oracle import CrossAttentionWrapper
+
+        if isinstance(submodule, CrossAttentionWrapper):
+            return submodule.original_layer
+        return submodule
     else:
         raise ValueError(f"Please add submodule for model {model_name}")

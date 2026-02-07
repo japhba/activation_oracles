@@ -22,8 +22,7 @@ def load_model(
 ) -> AutoModelForCausalLM:
     print("🧠 Loading model...")
 
-    # Gemma prefers eager attention; others use FA2
-    attn = "eager" if "gemma" in model_name.lower() else "flash_attention_2"
+    attn = "eager" if "gemma" in model_name.lower() else "sdpa"
 
     kwargs: dict = {
         "device_map": "auto",

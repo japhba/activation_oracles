@@ -61,6 +61,12 @@ class SelfInterpTrainingConfig:
     hf_repo_name: str = ""  # optional short name, used to compute repo_id
     hf_repo_id: str = ""  # derived if empty and push is on
 
+    # --- Cross-attention oracle ---
+    cross_attn_num_heads: int = 16
+    cross_attn_gate_init: float = 0.0
+    cross_attn_hidden_dim: int = 1024  # Qwen3-0.6B hidden_size
+    layer_subset_k: int = 0  # 0 = use all layers; >0 = randomly sample k layers per training step
+
     # --- Misc experiment options ---
     positive_negative_examples: bool = False
 

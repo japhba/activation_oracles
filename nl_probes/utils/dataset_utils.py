@@ -8,6 +8,7 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 from nl_probes.utils.activation_utils import collect_activations_multiple_layers, get_hf_submodule
 
 SPECIAL_TOKEN = " ?"
+QUESTION_MARK_TOKEN = " ?"
 
 
 def get_introspection_prefix(sae_layer: int, num_positions: int) -> str:
@@ -363,3 +364,154 @@ def create_training_datapoint(
     )
 
     return training_data_point
+
+
+# ---------------------------------------------------------------------------
+# Cross-attention oracle data structures
+# ---------------------------------------------------------------------------
+
+
+class CrossAttnTrainingDataPoint(BaseModel):
+    """Training data point for cross-attention oracle.
+
+    No layer/positions/steering_vectors needed — cross-attention handles
+    information transfer from supervisee to supervisor at all layers.
+    """
+
+    model_config = ConfigDict(arbitrary_types_allowed=True, extra="forbid")
+
+    datapoint_type: str
+    query_input_ids: list[int]  # tokenized [question + target], chat-templated
+    query_labels: list[int]  # -100 for prompt tokens, target token IDs for response
+    context_input_ids: list[int]  # supervisee context tokens (full sequence)
+    target_output: str
+    meta_info: Mapping[str, Any] = {}
+
+
+class CrossAttnBatchData(BaseModel):
+    """Batched cross-attention training data."""
+
+    model_config = ConfigDict(arbitrary_types_allowed=True, extra="forbid")
+
+    context_input_ids: torch.Tensor  # [B, L_ctx_max] left-padded
+    context_attention_mask: torch.Tensor  # [B, L_ctx_max]
+    query_input_ids: torch.Tensor  # [B, L_query_max] left-padded
+    query_attention_mask: torch.Tensor  # [B, L_query_max]
+    query_labels: torch.Tensor  # [B, L_query_max] left-padded with -100
+    context_lengths: torch.Tensor  # [B] unpadded context length per example
+
+
+def construct_cross_attn_batch(
+    training_data: list[CrossAttnTrainingDataPoint],
+    tokenizer: AutoTokenizer,
+    device: torch.device,
+) -> CrossAttnBatchData:
+    """Build a padded batch for cross-attention oracle training.
+
+    Left-pads both context and query sequences (matching causal LM convention).
+    """
+    max_ctx_len = max(len(dp.context_input_ids) for dp in training_data)
+    max_query_len = max(len(dp.query_input_ids) for dp in training_data)
+
+    batch_ctx_ids = []
+    batch_ctx_masks = []
+    batch_query_ids = []
+    batch_query_masks = []
+    batch_query_labels = []
+    batch_ctx_lengths = []
+
+    pad_id = tokenizer.pad_token_id
+
+    for dp in training_data:
+        # Context: left-pad
+        ctx_pad = max_ctx_len - len(dp.context_input_ids)
+        ctx_ids = [pad_id] * ctx_pad + dp.context_input_ids
+        ctx_mask = [False] * ctx_pad + [True] * len(dp.context_input_ids)
+
+        # Query: left-pad
+        q_pad = max_query_len - len(dp.query_input_ids)
+        q_ids = [pad_id] * q_pad + dp.query_input_ids
+        q_mask = [False] * q_pad + [True] * len(dp.query_input_ids)
+        q_labels = [-100] * q_pad + dp.query_labels
+
+        batch_ctx_ids.append(torch.tensor(ctx_ids, dtype=torch.long))
+        batch_ctx_masks.append(torch.tensor(ctx_mask, dtype=torch.bool))
+        batch_query_ids.append(torch.tensor(q_ids, dtype=torch.long))
+        batch_query_masks.append(torch.tensor(q_mask, dtype=torch.bool))
+        batch_query_labels.append(torch.tensor(q_labels, dtype=torch.long))
+        batch_ctx_lengths.append(len(dp.context_input_ids))
+
+    return CrossAttnBatchData(
+        context_input_ids=torch.stack(batch_ctx_ids).to(device),
+        context_attention_mask=torch.stack(batch_ctx_masks).to(device),
+        query_input_ids=torch.stack(batch_query_ids).to(device),
+        query_attention_mask=torch.stack(batch_query_masks).to(device),
+        query_labels=torch.stack(batch_query_labels).to(device),
+        context_lengths=torch.tensor(batch_ctx_lengths, dtype=torch.long, device=device),
+    )
+
+
+def create_cross_attn_datapoint(
+    datapoint_type: str,
+    prompt: str,
+    target_response: str,
+    context_input_ids: list[int],
+    tokenizer: AutoTokenizer,
+    meta_info: Mapping[str, Any] | None = None,
+) -> CrossAttnTrainingDataPoint:
+    """Create a cross-attention training datapoint.
+
+    Simpler than create_training_datapoint: no introspection prefix, no layer,
+    no positions. Just chat-template the query and store the context.
+    """
+    if meta_info is None:
+        meta_info = {}
+
+    input_messages = [{"role": "user", "content": prompt}]
+
+    def _to_list(result):
+        """Handle both list and BatchEncoding from apply_chat_template."""
+        if isinstance(result, list):
+            return result
+        if hasattr(result, "input_ids"):
+            ids = result.input_ids
+            return ids if isinstance(ids, list) else ids[0]
+        raise TypeError(f"Unexpected type from apply_chat_template: {type(result)}")
+
+    input_prompt_ids = _to_list(tokenizer.apply_chat_template(
+        input_messages,
+        tokenize=True,
+        add_generation_prompt=True,
+        return_tensors=None,
+        padding=False,
+        enable_thinking=False,
+    ))
+
+    full_messages = input_messages + [{"role": "assistant", "content": target_response}]
+
+    full_prompt_ids = _to_list(tokenizer.apply_chat_template(
+        full_messages,
+        tokenize=True,
+        add_generation_prompt=False,
+        return_tensors=None,
+        padding=False,
+        enable_thinking=False,
+    ))
+
+    assistant_start_idx = len(input_prompt_ids)
+
+    labels = full_prompt_ids.copy()
+    for i in range(assistant_start_idx):
+        labels[i] = -100
+
+    if isinstance(context_input_ids, torch.Tensor):
+        context_input_ids = context_input_ids.tolist()
+
+    return CrossAttnTrainingDataPoint(
+        datapoint_type=datapoint_type,
+        query_input_ids=full_prompt_ids,
+        query_labels=labels,
+        context_input_ids=context_input_ids,
+        target_output=target_response,
+        meta_info=meta_info,
+    )
