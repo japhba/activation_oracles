@@ -334,6 +334,14 @@ def eval_all_cross_attn_datasets(
                 r.get("context_text", ""),
             )
 
+    # Aggregate accuracy across all datasets
+    acc_values = [v for k, v in eval_results.items() if k.startswith("eval_ans_correct/")]
+    em_values = [v for k, v in eval_results.items() if k.startswith("eval_exact_match/")]
+    all_accs = acc_values + em_values
+    if all_accs:
+        eval_results["eval_accuracy"] = sum(all_accs) / len(all_accs)
+        print(f"Step {global_step} overall eval accuracy: {eval_results['eval_accuracy']:.3f}")
+
     eval_results["eval_examples"] = table
     wandb.log(eval_results, step=global_step)
     wandb.summary.update({k: v for k, v in eval_results.items() if not isinstance(v, wandb.Table)})
@@ -349,7 +357,7 @@ def log_gate_values(model: AutoModelForCausalLM, global_step: int) -> None:
     for i in range(len(layers)):
         layer = layers[i]
         if isinstance(layer, CrossAttentionWrapper):
-            gate_val = layer.cross_attn.gate.item()
+            gate_val = torch.sigmoid(layer.cross_attn.gate).item()
             gate_values[f"gate/layer_{i}"] = gate_val
     if gate_values:
         wandb.log(gate_values, step=global_step)
@@ -521,8 +529,7 @@ def train_cross_attn_model(
 
     # Separate param groups: higher LR for cross-attention projections and gate.
     # The projections are randomly initialised and their gradients are scaled by
-    # sigmoid(gate) ≈ 0.12, so they need a much higher LR than the LoRA params
-    # to break the chicken-and-egg deadlock with the gate.
+    # gate (small at init), so they need a much higher LR than the LoRA params.
     gate_params = []
     cross_attn_params = []
     other_params = []
@@ -542,8 +549,8 @@ def train_cross_attn_model(
         print(f"Optimizer groups — LoRA/other: {n_other:,}  cross-attn proj: {n_xattn:,}  gates: {n_gate}")
     optimizer = torch.optim.AdamW([
         {"params": other_params, "lr": cfg.lr},
-        {"params": cross_attn_params, "lr": cfg.lr * 10},
-        {"params": gate_params, "lr": cfg.lr * 10},
+        {"params": cross_attn_params, "lr": cfg.lr * 50},
+        {"params": gate_params, "lr": cfg.lr * 100, "weight_decay": 0.0},
     ])
 
     # Trim and shard data
@@ -827,9 +834,10 @@ if __name__ == "__main__":
         )
         print(f"Saved {len(all_training_data)} training examples to {data_path}")
 
-        # Build eval datasets
+    # Build eval datasets (independent of training data caching)
+    if local_rank == 0 and not os.path.exists(eval_path):
         print("Building eval datasets...")
-        eval_datasets = build_cross_attn_eval_data(tokenizer, num_eval=250)
+        eval_datasets = build_cross_attn_eval_data(tokenizer, num_eval=4)
         torch.save(
             {k: [dp.model_dump() for dp in v] for k, v in eval_datasets.items()},
             eval_path,
@@ -866,7 +874,7 @@ if __name__ == "__main__":
         gradient_accumulation_steps=1,
         layer_subset_k=8,
         cross_attn_num_heads=16,
-        cross_attn_gate_init=0.0,
+        cross_attn_gate_init=-4.0,
         cross_attn_hidden_dim=1024,
         wandb_project="cross_attn_oracle",
         wandb_suffix=f"_cross_attn_{model_name_str}",

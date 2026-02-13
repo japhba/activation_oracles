@@ -1,0 +1,11 @@
+# Condition A (baseline: LatentQA + Classification + PastLens)
+tmux new -s train_aa
+# then inside tmux:
+cd ~/ao-robustness/activation_oracles && source .venv/bin/activate
+srun --time=10:00:00 --mem=128G --partition=gpu_lowp --nodelist=gpu-xd670-30 --gpus=1 torchrun --nproc_per_node=1 notebooks/train_condition.py --condition a --model_name Qwen/Qwen3-8B
+
+# Condition B (open-ended: LatentQA + SQuAD + PastLens)
+tmux new -s train_b
+# then inside tmux:
+cd ~/ao-robustness/activation_oracles && source .venv/bin/activate
+srun --time=10:00:00 --mem=128G --partition=gpu_lowp --nodelist=gpu-xd670-30 --gpus=1 torchrun --nproc_per_node=1 --master_port=29501 notebooks/train_condition.py --condition b --model_name Qwen/Qwen3-8B

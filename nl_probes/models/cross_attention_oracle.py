@@ -13,13 +13,11 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 
 
 class CrossAttentionAdapter(nn.Module):
-    """Gated cross-attention over supervisee activations.
+    """Gated cross-attention over supervisee activations (Flamingo-style).
 
     Q comes from the supervisor hidden states; K/V come from supervisee acts.
-    A learnable scalar gate controls the residual contribution.  Unlike the
-    original Flamingo sigmoid gate, we use a plain scalar (no sigmoid) so that
-    gradients flow without squashing — the LoRA adapter already protects
-    pretrained representations, making the sigmoid unnecessary.
+    A learned sigmoid gate controls the residual contribution, following the
+    Flamingo design. sigmoid(gate_init) sets the initial cross-attention scale.
     """
 
     def __init__(self, hidden_dim: int = 1024, num_heads: int = 16, gate_init: float = 0.0):
@@ -33,8 +31,9 @@ class CrossAttentionAdapter(nn.Module):
         self.v_proj = nn.Linear(hidden_dim, hidden_dim, bias=False)
         self.o_proj = nn.Linear(hidden_dim, hidden_dim, bias=False)
 
-        # Plain scalar gate — no sigmoid, so gradient = d_loss/d_output · out
-        # with no squashing.  Initialized to 0 so cross-attn starts silent.
+        # Flamingo-style sigmoid gate. sigmoid(0)=0.5 gives projections
+        # meaningful gradients from step 1; the gate learns to scale down
+        # or up from there.
         self.gate = nn.Parameter(torch.tensor(gate_init))
 
     def forward(
@@ -76,8 +75,7 @@ class CrossAttentionAdapter(nn.Module):
         attn_out = attn_out.transpose(1, 2).contiguous().view(B, L, D)
         out = self.o_proj(attn_out)
 
-        # Cast everything to original dtype to avoid float32 leaking into the residual stream
-        return hidden_states + (self.gate * out).to(orig_dtype)
+        return hidden_states + (torch.sigmoid(self.gate) * out).to(orig_dtype)
 
 
 class CrossAttentionWrapper(nn.Module):
