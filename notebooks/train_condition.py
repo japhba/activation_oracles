@@ -178,7 +178,7 @@ if __name__ == "__main__":
         train_batch_size=per_rank_batch,
         activation_collection_batch_size=per_rank_batch * 4,
         eval_batch_size=per_rank_batch * 8,
-        eval_steps=10_000,
+        eval_steps=1_000,
         eval_on_start=True,
         gradient_checkpointing=True,
         wandb_suffix=wandb_suffix,

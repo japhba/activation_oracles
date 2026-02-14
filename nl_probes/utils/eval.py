@@ -1,5 +1,8 @@
 import json
 import math
+import re
+import string
+from collections import Counter
 
 import torch
 from tqdm import tqdm
@@ -163,17 +166,41 @@ def parse_answer(answer: str) -> str:
     return answer.rstrip(".!?,;:").strip().lower()
 
 
+def normalize_squad_answer(s: str) -> str:
+    """Standard SQuAD normalization: lower, remove punctuation/articles, collapse whitespace."""
+    s = s.lower()
+    s = "".join(ch for ch in s if ch not in string.punctuation)
+    s = re.sub(r"\b(a|an|the)\b", " ", s)
+    return " ".join(s.split())
+
+
+def compute_token_f1(prediction: str, ground_truth: str) -> float:
+    """Token-level F1 (harmonic mean of precision and recall) using SQuAD normalization."""
+    pred_tokens = normalize_squad_answer(prediction).split()
+    gt_tokens = normalize_squad_answer(ground_truth).split()
+    if len(pred_tokens) == 0 or len(gt_tokens) == 0:
+        return float(pred_tokens == gt_tokens)
+    common = Counter(pred_tokens) & Counter(gt_tokens)
+    num_same = sum(common.values())
+    if num_same == 0:
+        return 0.0
+    precision = num_same / len(pred_tokens)
+    recall = num_same / len(gt_tokens)
+    return 2 * precision * recall / (precision + recall)
+
+
 def score_eval_responses(
     eval_responses: list[FeatureResult],
     eval_dataset: list[TrainingDataPoint],
-    valid_answers: list[str] = ["yes", "no"],
+    valid_answers: list[str] | None = ["yes", "no"],
 ) -> tuple[float, float]:
+    """Score eval responses. When valid_answers is None (free-form QA), format_correct is always 1."""
     format_correct_list = []
     ans_correct_list = []
     for eval_response, eval_data_point in zip(eval_responses, eval_dataset, strict=True):
         cleaned_response = parse_answer(eval_response.api_response)
         target_response = parse_answer(eval_data_point.target_output)
-        format_correct = cleaned_response in valid_answers
+        format_correct = cleaned_response in valid_answers if valid_answers else True
         ans_correct = cleaned_response == target_response
         format_correct_list.append(format_correct)
         ans_correct_list.append(ans_correct)

@@ -53,7 +53,7 @@ from nl_probes.utils.dataset_utils import (
     construct_batch,
     materialize_missing_steering_vectors,
 )
-from nl_probes.utils.eval import run_evaluation, score_eval_responses
+from nl_probes.utils.eval import compute_token_f1, run_evaluation, score_eval_responses
 
 
 def push_lora_to_hf(
@@ -232,6 +232,9 @@ def train_features_batch(
     return loss
 
 
+FREE_FORM_QA_DATASETS = {"squad_qa"}
+
+
 def eval_all_datasets(
     cfg: SelfInterpTrainingConfig,
     eval_datasets: dict[str, list[TrainingDataPoint]],
@@ -258,10 +261,27 @@ def eval_all_datasets(
             steering_coefficient=cfg.steering_coefficient,
             generation_kwargs=cfg.generation_kwargs,
         )
-        percent_format_correct, percent_ans_correct = score_eval_responses(eval_responses, eval_datasets[ds])
+        is_free_form = ds in FREE_FORM_QA_DATASETS
+        valid_answers = None if is_free_form else ["yes", "no"]
+        percent_format_correct, percent_ans_correct = score_eval_responses(eval_responses, eval_datasets[ds], valid_answers=valid_answers)
         eval_results[f"eval_format_correct/{ds}"] = percent_format_correct
         eval_results[f"eval_ans_correct/{ds}"] = percent_ans_correct
         print(f"Step {global_step} {ds} format correct: {percent_format_correct}, ans correct: {percent_ans_correct}")
+
+        if is_free_form:
+            f1_scores = [compute_token_f1(fr.api_response, dp.target_output) for fr, dp in zip(eval_responses, eval_datasets[ds], strict=True)]
+            mean_f1 = sum(f1_scores) / len(f1_scores)
+            eval_results[f"eval_f1/{ds}"] = mean_f1
+            print(f"Step {global_step} {ds} mean F1: {mean_f1:.4f}")
+
+        # Log completions table
+        table = wandb.Table(columns=["task_type", "full_prompt", "prompt_truncated", "target", "completion", "correct", "f1"])
+        for fr, dp in zip(eval_responses, eval_datasets[ds], strict=True):
+            cleaned = fr.api_response.rstrip(".!?,;:").strip().lower()
+            target = dp.target_output.rstrip(".!?,;:").strip().lower()
+            f1 = compute_token_f1(fr.api_response, dp.target_output)
+            table.add_data(dp.datapoint_type, fr.prompt, fr.prompt[-300:], dp.target_output, fr.api_response, cleaned == target, f1)
+        eval_results[f"eval_completions/{ds}"] = table
 
     wandb.log(
         eval_results,
