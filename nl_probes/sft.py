@@ -811,24 +811,13 @@ def _ensure_datasets_exist(dataset_loaders: list[ActDatasetLoader]) -> None:
     Each loader's `load_dataset` will create and save if missing; otherwise it
     simply loads. This avoids race conditions when multiple ranks start up.
     """
-
-    # TODO: Switch to multiprocessing for speed
-
-    old_visible_devices = os.environ.get("CUDA_VISIBLE_DEVICES", None)
-
-    # Make only GPU 0 visible for this process
-    os.environ["CUDA_VISIBLE_DEVICES"] = "0"
-
-    try:
-        for dl in dataset_loaders:
-            for split in dl.dataset_config.splits:
-                _ = dl.load_dataset(split)
-    finally:
-        # Revert to original state
-        if old_visible_devices is None:
-            os.environ.pop("CUDA_VISIBLE_DEVICES", None)
-        else:
-            os.environ["CUDA_VISIBLE_DEVICES"] = old_visible_devices
+    # Pin any model loading to cuda:0 so we don't touch other ranks' GPUs.
+    for dl in dataset_loaders:
+        if isinstance(getattr(dl, "model_kwargs", None), dict):
+            dl.model_kwargs["device_map"] = {"": "cuda:0"}
+    for dl in dataset_loaders:
+        for split in dl.dataset_config.splits:
+            _ = dl.load_dataset(split)
 
 
 if __name__ == "__main__":
