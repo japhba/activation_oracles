@@ -33,7 +33,7 @@ dependencies = [
     "typer",
     "latex2sympy2_extended",
     "math_verify",
-    "pydantic",
+    "pydantic>=2",
     "regex",
     "python-dotenv",
     "slist",
