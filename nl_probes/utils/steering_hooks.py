@@ -175,6 +175,8 @@ def get_hf_activation_steering_hook(
         for b in range(B):
             pos_b = positions[b]
             pos_b = torch.tensor(pos_b, dtype=torch.long, device=device)
+            if pos_b.numel() == 0:
+                continue
             assert pos_b.min() >= 0
             assert pos_b.max() < L
             # Gather original activations at requested slots and compute norms
