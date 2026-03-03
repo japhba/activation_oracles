@@ -10,11 +10,14 @@ from nl_probes.utils.activation_utils import collect_activations_multiple_layers
 SPECIAL_TOKEN = " ?"
 
 
-def get_introspection_prefix(sae_layer: int, num_positions: int) -> str:
-    prefix = f"Layer: {sae_layer}\n"
-    prefix += SPECIAL_TOKEN * num_positions
-    prefix += " \n"
-    return prefix
+def get_introspection_prefix(sae_layer: int, num_positions: int, layers: list[int] | None = None) -> str:
+    prefix_layers = list(layers) if layers else [sae_layer]
+    if len(prefix_layers) == 1:
+        return f"L{prefix_layers[0]}:" + SPECIAL_TOKEN * num_positions + "\n"
+    k, rem = divmod(num_positions, len(prefix_layers))
+    if rem:
+        raise ValueError(f"num_positions={num_positions} not divisible by layers={prefix_layers}")
+    return " ".join(f"L{layer}:" + SPECIAL_TOKEN * k for layer in prefix_layers) + "\n"
 
 
 class FeatureResult(BaseModel):
@@ -50,6 +53,8 @@ class TrainingDataPoint(BaseModel):
     target_output: str
     context_input_ids: list[int] | None
     context_positions: list[int] | None
+    source_positions: list[int] | None = None
+    source_total_length: int | None = None
     ds_label: str | None  # label from the dataset
     meta_info: Mapping[str, Any] = {}
 
@@ -59,6 +64,13 @@ class TrainingDataPoint(BaseModel):
         if sv is not None:
             if len(values.positions) != sv.shape[0]:
                 raise ValueError("positions and steering_vectors must have the same length")
+            if values.source_positions is not None:
+                if len(values.source_positions) != sv.shape[0]:
+                    raise ValueError("source_positions and steering_vectors must have the same length")
+                if values.source_total_length is None:
+                    raise ValueError("source_total_length must be provided when source_positions is set")
+            elif values.source_total_length is not None:
+                raise ValueError("source_total_length requires source_positions")
         else:
             if values.context_positions is None or values.context_input_ids is None:
                 raise ValueError("context_* must be provided when steering_vectors is None")
@@ -77,6 +89,8 @@ class BatchData(BaseModel):
     attention_mask: torch.Tensor
     steering_vectors: list[torch.Tensor]
     positions: list[list[int]]
+    source_positions: list[list[int] | None]
+    source_lengths: list[int | None]
     feature_indices: list[int]
 
 
@@ -94,6 +108,8 @@ def construct_batch(
     batch_attn_masks = []
     batch_positions = []
     batch_steering_vectors = []
+    batch_source_positions = []
+    batch_source_lengths = []
     batch_feature_indices = []
 
     for data_point in training_data:
@@ -121,6 +137,8 @@ def construct_batch(
 
         batch_positions.append(padded_positions)
         batch_steering_vectors.append(steering_vectors)
+        batch_source_positions.append(data_point.source_positions)
+        batch_source_lengths.append(data_point.source_total_length)
         batch_feature_indices.append(data_point.feature_idx)
 
     return BatchData(
@@ -129,6 +147,8 @@ def construct_batch(
         attention_mask=torch.stack(batch_attn_masks),
         steering_vectors=batch_steering_vectors,
         positions=batch_positions,
+        source_positions=batch_source_positions,
+        source_lengths=batch_source_lengths,
         feature_indices=batch_feature_indices,
     )
 
@@ -261,28 +281,94 @@ def materialize_missing_steering_vectors(
 def find_pattern_in_tokens(
     token_ids: list[int], special_token_str: str, num_positions: int, tokenizer: AutoTokenizer
 ) -> list[int]:
-    start_idx = 0
-    end_idx = len(token_ids)
     special_token_id = tokenizer.encode(special_token_str, add_special_tokens=False)
     assert len(special_token_id) == 1, f"Expected single token, got {len(special_token_id)}"
     special_token_id = special_token_id[0]
     positions = []
 
-    for i in range(start_idx, end_idx):
+    for i in range(len(token_ids)):
         if len(positions) == num_positions:
             break
         if token_ids[i] == special_token_id:
             positions.append(i)
 
     assert len(positions) == num_positions, f"Expected {num_positions} positions, got {len(positions)}"
-    assert positions[-1] - positions[0] == num_positions - 1, f"Positions are not consecutive: {positions}"
-
-    final_pos = positions[-1] + 1
-    final_tokens = token_ids[final_pos : final_pos + 2]
-    final_str = tokenizer.decode(final_tokens, skip_special_tokens=False)
-    assert "\n" in final_str, f"Expected newline in {final_str}"
-
     return positions
+
+
+def _build_manual_prefix_tokens(
+    tokenizer: AutoTokenizer,
+    layer: int,
+    num_positions: int,
+    layers: list[int] | None,
+) -> tuple[str, list[int], list[int]]:
+    prefix = get_introspection_prefix(layer, num_positions, layers)
+    special_token_id = tokenizer.encode(SPECIAL_TOKEN, add_special_tokens=False)
+    assert len(special_token_id) == 1, f"SPECIAL_TOKEN should encode to 1 token, got {len(special_token_id)}"
+    special_token_id = special_token_id[0]
+    prefix_layers = list(layers) if layers else [layer]
+    block_sizes = [num_positions]
+    if len(prefix_layers) > 1:
+        k, rem = divmod(num_positions, len(prefix_layers))
+        if rem:
+            raise ValueError(f"num_positions={num_positions} not divisible by layers={prefix_layers}")
+        block_sizes = [k] * len(prefix_layers)
+
+    prefix_ids: list[int] = []
+    positions: list[int] = []
+    for i, (layer_idx, block_size) in enumerate(zip(prefix_layers, block_sizes)):
+        label = f"L{layer_idx}:"
+        if i > 0:
+            label = " " + label
+        prefix_ids.extend(tokenizer.encode(label, add_special_tokens=False))
+        positions.extend(range(len(prefix_ids), len(prefix_ids) + block_size))
+        prefix_ids.extend([special_token_id] * block_size)
+    prefix_ids.extend(tokenizer.encode("\n", add_special_tokens=False))
+    return prefix, prefix_ids, positions
+
+
+def _tokenize_with_manual_prefix(
+    messages: list[dict],
+    tokenizer: AutoTokenizer,
+    layer: int,
+    num_positions: int,
+    layers: list[int] | None,
+    add_generation_prompt: bool,
+) -> tuple[list[int], list[int]]:
+    """Tokenize chat messages, manually inserting placeholder token IDs.
+
+    Splits the text around the full prefix region and tokenizes the prefix
+    labels separately while inserting the placeholder token IDs directly.
+    This prevents the tokenizer from merging placeholder tokens with
+    adjacent text at block boundaries.
+
+    Returns (token_ids, placeholder_positions).
+    """
+    text = tokenizer.apply_chat_template(
+        messages, tokenize=False,
+        add_generation_prompt=add_generation_prompt,
+        enable_thinking=False,
+    )
+
+    prefix, prefix_ids, rel_positions = _build_manual_prefix_tokens(
+        tokenizer=tokenizer,
+        layer=layer,
+        num_positions=num_positions,
+        layers=layers,
+    )
+    idx = text.find(prefix)
+    assert idx >= 0, "Prefix text not found in chat template output"
+
+    before_text = text[:idx]
+    after_text = text[idx + len(prefix):]
+
+    before_ids = tokenizer.encode(before_text, add_special_tokens=False)
+    after_ids = tokenizer.encode(after_text, add_special_tokens=False)
+
+    all_ids = before_ids + prefix_ids + after_ids
+    positions = [len(before_ids) + pos for pos in rel_positions]
+
+    return all_ids, positions
 
 
 def create_training_datapoint(
@@ -296,47 +382,35 @@ def create_training_datapoint(
     feature_idx: int,
     context_input_ids: list[int] | None = None,
     context_positions: list[int] | None = None,
+    source_positions: list[int] | None = None,
+    source_total_length: int | None = None,
     ds_label: str | None = None,
     meta_info: Mapping[str, Any] | None = None,
 ) -> TrainingDataPoint:
     if meta_info is None:
         meta_info = {}
-    prefix = get_introspection_prefix(layer, num_positions)
-    assert prefix not in prompt, f"Prefix {prefix} found in prompt {prompt}"
-    prompt = prefix + prompt
-    input_messages = [{"role": "user", "content": prompt}]
-
-    input_prompt_ids = tokenizer.apply_chat_template(
-        input_messages,
-        tokenize=True,
-        add_generation_prompt=True,
-        return_tensors=None,
-        padding=False,
-        enable_thinking=False,
-    )
-    if not isinstance(input_prompt_ids, list):
-        raise TypeError("Expected list of token ids from tokenizer")
-
+    layers = list(meta_info["layers"]) if "layers" in meta_info else [layer]
+    prefix = get_introspection_prefix(layer, num_positions, layers)
+    prompt_with_prefix = prefix + prompt
+    input_messages = [{"role": "user", "content": prompt_with_prefix}]
     full_messages = input_messages + [{"role": "assistant", "content": target_response}]
 
-    full_prompt_ids = tokenizer.apply_chat_template(
-        full_messages,
-        tokenize=True,
-        add_generation_prompt=False,
-        return_tensors=None,
-        padding=False,
-        enable_thinking=False,
+    # Manually tokenize: split text around placeholder region and insert
+    # special token IDs directly, preventing tokenizer boundary merges.
+    input_prompt_ids, positions = _tokenize_with_manual_prefix(
+        input_messages, tokenizer, layer, num_positions, layers,
+        add_generation_prompt=True,
     )
-    if not isinstance(full_prompt_ids, list):
-        raise TypeError("Expected list of token ids from tokenizer")
+    full_prompt_ids, _ = _tokenize_with_manual_prefix(
+        full_messages, tokenizer, layer, num_positions, layers,
+        add_generation_prompt=False,
+    )
 
     assistant_start_idx = len(input_prompt_ids)
 
     labels = full_prompt_ids.copy()
     for i in range(assistant_start_idx):
         labels[i] = -100
-
-    positions = find_pattern_in_tokens(full_prompt_ids, SPECIAL_TOKEN, num_positions, tokenizer)
 
     if acts_BD is None:
         assert context_input_ids is not None and context_positions is not None, (
@@ -358,6 +432,8 @@ def create_training_datapoint(
         datapoint_type=datapoint_type,
         context_input_ids=context_input_ids,
         context_positions=context_positions,
+        source_positions=source_positions,
+        source_total_length=source_total_length,
         ds_label=ds_label,
         meta_info=meta_info,
     )
