@@ -20,7 +20,7 @@ DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 print("Device:", DEVICE)
 
 # %% [data selection]
-layer_percents = [25, 50, 75]
+layer_combination = [25, 50, 75]
 save_acts = True
 model_name = "Qwen/Qwen3-8B"
 
@@ -113,7 +113,7 @@ for dataset_name in classification_datasets:
         num_test=classification_datasets[dataset_name]["num_test"],
         splits=classification_datasets[dataset_name]["splits"],
         model_name=model_name,
-        layer_percents=layer_percents,
+        layer_combinations=[layer_combination],
         save_acts=save_acts,
         batch_size=batch_size,
     )

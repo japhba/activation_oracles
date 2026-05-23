@@ -1,0 +1,22 @@
+{
+  "model_name": "Qwen/Qwen3-8B",
+  "dataset_path": "FILL_IN_PATH_TO_CONVERSATIONS_JSON",
+  "save_dir": "checkpoints/text_sft_smoke_test",
+  "wandb_project": "text_sft_test",
+  "wandb_run_name": "text_sft_smoke_test",
+  "global_train_batch_size": 2,
+  "num_epochs": 1,
+  "lr": 0.0001,
+  "max_steps": 5,
+  "max_seq_len": 2048,
+  "gradient_checkpointing": true,
+  "use_lora": true,
+  "lora_r": 16,
+  "lora_alpha": 32,
+  "lora_dropout": 0.05,
+  "load_in_8bit": false,
+  "save_steps": 999999,
+  "log_steps": 1,
+  "debug_num_examples_to_dump": 2,
+  "seed": 42
+}

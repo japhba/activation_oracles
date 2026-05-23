@@ -54,17 +54,18 @@ class LatentQADatasetLoader(ActDatasetLoader):
     def create_dataset(self) -> None:
         tokenizer = load_tokenizer(self.dataset_config.model_name)
 
-        layers = [
-            layer_percent_to_layer(self.dataset_config.model_name, layer_percent)
-            for layer_percent in self.dataset_config.layer_percents
+        assert self.dataset_config.layer_combinations, "layer_combinations must be non-empty"
+        act_layer_combinations = [
+            [layer_percent_to_layer(self.dataset_config.model_name, layer_percent) for layer_percent in layer_combo]
+            for layer_combo in self.dataset_config.layer_combinations
         ]
 
         paths = latentqa_loader.DataPaths(
             system=None,
-            stimulus_completion="datasets/latentqa_datasets/train/stimulus_completion.json",
-            stimulus="datasets/latentqa_datasets/train/stimulus.json",
-            control="datasets/latentqa_datasets/train/control.json",
-            qa="datasets/latentqa_datasets/train/qa.json",
+            stimulus_completion="data_pipelines/latentqa_datasets/train/stimulus_completion.json",
+            stimulus="data_pipelines/latentqa_datasets/train/stimulus.json",
+            control="data_pipelines/latentqa_datasets/train/control.json",
+            qa="data_pipelines/latentqa_datasets/train/qa.json",
         )
         ds = latentqa_loader.load_latentqa_dataset(
             paths,
@@ -79,7 +80,8 @@ class LatentQADatasetLoader(ActDatasetLoader):
         training_data = []
 
         for dp in tqdm(ds, desc="Creating latentqa dataset"):
-            training_data.append(create_latentqa_training_datapoint(dp, tokenizer, layers, self.dataset_params))
+            act_layers = random.choice(act_layer_combinations)
+            training_data.append(create_latentqa_training_datapoint(dp, tokenizer, act_layers, self.dataset_params))
 
         self.save_dataset(training_data, "train")
 
@@ -135,24 +137,29 @@ def create_latentqa_training_datapoint(
     if positions == "window":
         window_size = random.randint(dataset_params.min_window_size, dataset_params.max_window_size)
 
-        end_offset = random.randint(dataset_params.max_end_offset, dataset_params.min_end_offset)
-        assert end_offset < 0, "end_offset must be negative"
+        if datapoint.source == "control":
+            end_offset = random.randint(dataset_params.max_end_offset, dataset_params.min_end_offset)
+            assert end_offset < 0, "end_offset must be negative"
 
-        if abs(end_offset) > len(context_positions):
-            end_offset = -len(context_positions) + 1
+            if abs(end_offset) > len(context_positions):
+                end_offset = -len(context_positions) + 1
 
-        window_size = min(window_size, (len(context_positions)) + end_offset)
+            window_size = min(window_size, (len(context_positions)) + end_offset)
 
-        window_start = end_offset - window_size
-        context_positions = context_positions[window_start:end_offset]
-
-    layer = random.choice(act_layers)
+            window_start = end_offset - window_size
+            context_positions = context_positions[window_start:end_offset]
+        else:
+            window_size = min(window_size, len(context_positions))
+            max_start = len(context_positions) - window_size
+            window_start = random.randint(0, max_start)
+            window_end = window_start + window_size
+            context_positions = context_positions[window_start:window_end]
 
     training_datapoint = create_training_datapoint(
         datapoint_type=f"latentqa_{datapoint.source}",
         prompt=datapoint.dialog[0].content,
         target_response=datapoint.dialog[1].content,
-        layer=layer,
+        layers=act_layers,
         num_positions=len(context_positions),
         tokenizer=tokenizer,
         acts_BD=None,
@@ -166,7 +173,17 @@ def create_latentqa_training_datapoint(
 
 if __name__ == "__main__":
     model_name = "Qwen/Qwen3-8B"
-    config = DatasetLoaderConfig(LatentQADatasetConfig(), 100_000, 0, ["train"], model_name, [50], False)
+    batch_size = 16
+    config = DatasetLoaderConfig(
+        LatentQADatasetConfig(),
+        100_000,
+        0,
+        ["train"],
+        model_name,
+        [[50]],
+        False,
+        batch_size=batch_size,
+    )
 
     tokenizer = AutoTokenizer.from_pretrained(model_name)
 

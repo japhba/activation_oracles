@@ -308,7 +308,7 @@ if __name__ == "__main__":
         # "Qwen/Qwen3-1.7B",
     ]
 
-    dataset_names = ["datasets/personaqa_data/shuffled"]
+    dataset_names = ["data_pipelines/personaqa_data/shuffled"]
     num_epochs = 3
     run_str = f"{num_epochs}_epochs"
 

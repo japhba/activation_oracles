@@ -10,7 +10,7 @@ from nl_probes.utils.activation_utils import get_hf_submodule
 from nl_probes.utils.common import load_tokenizer
 from nl_probes.utils.eval import run_evaluation
 
-folder = "datasets/factual"
+folder = "data_pipelines/factual"
 
 files = os.listdir(folder)
 

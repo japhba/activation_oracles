@@ -11,10 +11,10 @@ OUTPUT_JSON_DIR = "taboo_eval_results_open_ended_Qwen3-8B"
 OUTPUT_JSON_DIR = "taboo_eval_results_yes_no_Qwen3-8B"
 OUTPUT_JSON_DIR = "experiments/taboo_eval_results/Qwen3-8B_open_ended_direct"
 # OUTPUT_JSON_DIR = "experiments/taboo_eval_results/Qwen3-8B_open_ended_direct_50_mix"
-OUTPUT_JSON_DIR = "experiments/taboo_eval_results/Qwen3-8B_yes_no_direct"
+OUTPUT_JSON_DIR = "experiments/taboo_eval_results/Qwen3-8B_open_ended_all_direct_test"
 # OUTPUT_JSON_DIR = "experiments/taboo_eval_results/Qwen3-32B_open_ended_direct"
 # OUTPUT_JSON_DIR = "experiments/taboo_eval_results/Qwen3-32B_yes_no_direct"
-OUTPUT_JSON_DIR = "experiments/taboo_eval_results/gemma-2-9b-it_open_ended_all_direct"
+# OUTPUT_JSON_DIR = "experiments/taboo_eval_results/gemma-2-9b-it_open_ended_all_direct"
 # OUTPUT_JSON_DIR = "experiments/taboo_eval_results/Qwen3-8B_open_ended_all_direct"
 
 DATA_DIR = OUTPUT_JSON_DIR.split("/")[-1]
@@ -178,12 +178,18 @@ def plot_results(results_by_lora, highlight_keyword, highlight_color="#FDB813", 
         error_bars.append(ci_margin)
         print(f"{lora_name}: {mean_acc:.3f} ± {ci_margin:.3f} (n={len(accuracies)} records)")
 
-    # Assert exactly one match and move it to index 0
+    # Try to find a match and move it to index 0, otherwise just use the first one
     matches = [i for i, name in enumerate(lora_names) if highlight_keyword in name]
-    assert len(matches) == 1, (
-        f"Keyword '{highlight_keyword}' matched {len(matches)}: {[lora_names[i] for i in matches]}"
-    )
-    m = matches[0]
+    if len(matches) == 0:
+        print(f"Warning: Keyword '{highlight_keyword}' matched 0 LoRA names. Using first LoRA.")
+        m = 0
+    elif len(matches) > 1:
+        print(
+            f"Warning: Keyword '{highlight_keyword}' matched {len(matches)} LoRA names: {[lora_names[i] for i in matches]}. Using the first match."
+        )
+        m = matches[0]
+    else:
+        m = matches[0]
     order = [m] + [i for i in range(len(lora_names)) if i != m]
     lora_names = [lora_names[i] for i in order]
     mean_accuracies = [mean_accuracies[i] for i in order]
@@ -253,8 +259,9 @@ def plot_by_keyword_with_extras(
     results_by_lora, required_keyword, extra_bars, output_path=None, highlight_color="#FDB813", highlight_hatch="////"
 ):
     """
-    Plot exactly one LoRA (selected by required_keyword in its name) plus extra bars.
-    Asserts that exactly one LoRA matches and that extra_bars have required keys.
+    Plot a LoRA (selected by required_keyword in its name) plus extra bars.
+    If no LoRA matches the keyword, only the extra bars are plotted.
+    If multiple LoRAs match, the first one is used.
     """
     entries = []
     for lora_path, accuracies in results_by_lora.items():
@@ -262,32 +269,50 @@ def plot_by_keyword_with_extras(
         entries.append((lora_name, accuracies))
 
     matches = [(name, accs) for name, accs in entries if required_keyword in name]
-    assert len(matches) == 1, (
-        f"Keyword '{required_keyword}' matched {len(matches)} LoRA names: {[m[0] for m in matches]}"
-    )
 
-    selected_name, selected_accs = matches[0]
-    mean_acc = sum(selected_accs) / len(selected_accs)
-    ci = calculate_confidence_interval(selected_accs)
-    print(f"Selected LoRA: {selected_name} -> {mean_acc:.3f} ± {ci:.3f} (n={len(selected_accs)})")
+    if len(matches) == 0:
+        print(f"Warning: Keyword '{required_keyword}' matched 0 LoRA names. Plotting only extra bars.")
+        selected_name = None
+        mean_acc = None
+        ci = None
+    elif len(matches) > 1:
+        print(
+            f"Warning: Keyword '{required_keyword}' matched {len(matches)} LoRA names: {[m[0] for m in matches]}. Using the first one."
+        )
+        selected_name, selected_accs = matches[0]
+        mean_acc = sum(selected_accs) / len(selected_accs)
+        ci = calculate_confidence_interval(selected_accs)
+        print(f"Selected LoRA: {selected_name} -> {mean_acc:.3f} ± {ci:.3f} (n={len(selected_accs)})")
+    else:
+        selected_name, selected_accs = matches[0]
+        mean_acc = sum(selected_accs) / len(selected_accs)
+        ci = calculate_confidence_interval(selected_accs)
+        print(f"Selected LoRA: {selected_name} -> {mean_acc:.3f} ± {ci:.3f} (n={len(selected_accs)})")
 
     assert isinstance(extra_bars, list) and len(extra_bars) > 0, "extra_bars must be a non-empty list"
     for b in extra_bars:
         assert "label" in b and "value" in b and "error" in b, f"extra_bars entries must have label, value, error: {b}"
 
-    labels = [selected_name] + [b["label"] for b in extra_bars]
-    values = [mean_acc] + [b["value"] for b in extra_bars]
-    errors = [ci] + [b["error"] for b in extra_bars]
+    if selected_name is not None:
+        labels = [selected_name] + [b["label"] for b in extra_bars]
+        values = [mean_acc] + [b["value"] for b in extra_bars]
+        errors = [ci] + [b["error"] for b in extra_bars]
+    else:
+        labels = [b["label"] for b in extra_bars]
+        values = [b["value"] for b in extra_bars]
+        errors = [b["error"] for b in extra_bars]
 
     fig, ax = plt.subplots(figsize=(12, 6))
     colors = list(plt.cm.tab10(np.linspace(0, 1, len(labels))))
-    colors[0] = highlight_color
+    if selected_name is not None:
+        colors[0] = highlight_color
     bars = ax.bar(range(len(labels)), values, color=colors, yerr=errors, capsize=5, error_kw={"linewidth": 2})
 
-    # Distinctive styling for the highlighted bar
-    bars[0].set_hatch(highlight_hatch)
-    bars[0].set_edgecolor("black")
-    bars[0].set_linewidth(2.0)
+    # Distinctive styling for the highlighted bar (if there is one)
+    if selected_name is not None:
+        bars[0].set_hatch(highlight_hatch)
+        bars[0].set_edgecolor("black")
+        bars[0].set_linewidth(2.0)
 
     ax.set_xlabel("Selected LoRA + Extras", fontsize=12)
     ax.set_ylabel("Average Accuracy", fontsize=12)
@@ -309,10 +334,11 @@ def plot_by_keyword_with_extras(
         )
 
     legend_labels = []
-    if CUSTOM_LABELS and selected_name in CUSTOM_LABELS and CUSTOM_LABELS[selected_name]:
-        legend_labels.append(CUSTOM_LABELS[selected_name])
-    else:
-        legend_labels.append(selected_name)
+    if selected_name is not None:
+        if CUSTOM_LABELS and selected_name in CUSTOM_LABELS and CUSTOM_LABELS[selected_name]:
+            legend_labels.append(CUSTOM_LABELS[selected_name])
+        else:
+            legend_labels.append(selected_name)
     legend_labels.extend([b["label"] for b in extra_bars])
 
     ax.legend(bars, legend_labels, loc="upper center", bbox_to_anchor=(0.5, -0.15), fontsize=10, ncol=2, frameon=False)
@@ -382,14 +408,27 @@ def main():
         {"label": "Best Black Box Method (Prefill)", "value": 0.0717, "error": 0.0055},
     ]
 
-    chosen_prompt = "What is the secret word in this text?"
-
-    # Load results from all JSON files
-    results_by_lora, results_by_lora_word = load_results(OUTPUT_JSON_DIR, chosen_prompt)
+    # Load results from all JSON files (no prompt filter - use all results)
+    results_by_lora, results_by_lora_word = load_results(OUTPUT_JSON_DIR, required_verbalizer_prompt=None)
 
     # Plot 1: Overall accuracy by investigator
-    plot_results(results_by_lora, highlight_keyword="latentqa_cls_past_lens")
-    plot_by_keyword_with_extras(results_by_lora, required_keyword="latentqa_cls_past_lens", extra_bars=extra_bars)
+    # Use the first available LoRA name as the keyword, or just use a generic keyword
+    if results_by_lora:
+        # Get the first LoRA name and use part of it as keyword
+        first_lora = list(results_by_lora.keys())[0]
+        first_lora_name = first_lora.split("/")[-1]
+        # Try to find a reasonable keyword - use "latentqa" if present, otherwise use first part of name
+        if "latentqa" in first_lora_name.lower():
+            keyword = "latentqa"
+        else:
+            # Just use the first word or a reasonable substring
+            keyword = first_lora_name.split("_")[0] if "_" in first_lora_name else first_lora_name[:10]
+        print(f"Using keyword '{keyword}' for highlighting (from LoRA: {first_lora_name})")
+    else:
+        keyword = "latentqa_cls_past_lens"  # fallback
+
+    plot_results(results_by_lora, highlight_keyword=keyword)
+    plot_by_keyword_with_extras(results_by_lora, required_keyword=keyword, extra_bars=extra_bars)
 
     # Plot 2: Per-word accuracy for each investigator
     # plot_per_word_accuracy(results_by_lora_word)

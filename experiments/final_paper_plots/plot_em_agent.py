@@ -1,9 +1,6 @@
 # %%
 from __future__ import annotations
-import sys
 
-sys.path.append("scripts")
-sys.path.append("../..")
 from pathlib import Path
 from typing import Dict, List, Tuple, Optional, Any
 
@@ -102,7 +99,7 @@ def _find_all_grade_paths_by_kind_and_mi(
     mi: int,
     is_baseline: bool,
     llm_id_filter: Optional[str] = None,
-    position: int = None,
+    position: Optional[int] = None,
     agent_type: Optional[str] = None,
     run_identifier: Optional[str] = None,
 ) -> List[Path]:

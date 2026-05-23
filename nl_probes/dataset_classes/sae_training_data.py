@@ -186,21 +186,25 @@ class SAEActivatingSequencesDatasetLoader(ActDatasetLoader):
 
         assert self.dataset_config.dataset_name == "", "Dataset name gets overridden for SAE activating sequences"
 
-        dataset_name = f"sae_activating_sequences_{self.dataset_params.sae_repo_id}_layer_percent_{self.dataset_config.layer_percents[0]}"
+        assert len(self.dataset_config.layer_combinations) == 1, (
+            "SAE activating sequences dataset only supports one layer combination"
+        )
+        assert len(self.dataset_config.layer_combinations[0]) == 1, (
+            "SAE activating sequences dataset only supports one layer percent"
+        )
+        layer_percent = self.dataset_config.layer_combinations[0][0]
+        dataset_name = f"sae_activating_sequences_{self.dataset_params.sae_repo_id}_layer_percent_{layer_percent}"
         self.dataset_config.dataset_name = dataset_name
 
         assert self.dataset_config.splits == ["train"], "SAE activating sequences dataset only supports train split"
         assert self.dataset_config.num_test == 0, "SAE activating sequences dataset does not support a test split"
-        assert len(self.dataset_config.layer_percents) == 1, (
-            "SAE activating sequences dataset only supports one layer percent"
-        )
 
     def create_dataset(self) -> None:
         training_data, sae_info = create_activating_sequences_data(
             datapoint_type=self.dataset_config.dataset_name,
             model_name=self.dataset_config.model_name,
             sae_repo_id=self.dataset_params.sae_repo_id,
-            sae_layer_percent=self.dataset_config.layer_percents[0],
+            sae_layer_percent=self.dataset_config.layer_combinations[0][0],
             use_decoder=self.dataset_params.use_decoder_vectors,
             num_features=self.dataset_params.num_features,
             max_num_examples=self.dataset_params.max_examples_per_feature,
@@ -220,7 +224,12 @@ class SAEYesNoDatasetLoader(ActDatasetLoader):
 
         assert self.dataset_config.splits == ["train"], "SAE explanation dataset only supports train split"
         assert self.dataset_config.num_test == 0, "SAE explanation dataset does not support a test split"
-        assert len(self.dataset_config.layer_percents) == 1, "SAE explanation dataset only supports one layer percent"
+        assert len(self.dataset_config.layer_combinations) == 1, (
+            "SAE explanation dataset only supports one layer combination"
+        )
+        assert len(self.dataset_config.layer_combinations[0]) == 1, (
+            "SAE explanation dataset only supports one layer percent"
+        )
 
         self.dataset_params: SAEYesNoDatasetConfig = dataset_config.custom_dataset_params
 
@@ -252,7 +261,12 @@ class SAEExplanationDatasetLoader(ActDatasetLoader):
             raise TypeError("Expected SAEExplanationDatasetConfig")
         assert self.dataset_config.splits == ["train"], "SAE explanation dataset only supports train split"
         assert self.dataset_config.num_test == 0, "SAE explanation dataset does not support a test split"
-        assert len(self.dataset_config.layer_percents) == 1, "SAE explanation dataset only supports one layer percent"
+        assert len(self.dataset_config.layer_combinations) == 1, (
+            "SAE explanation dataset only supports one layer combination"
+        )
+        assert len(self.dataset_config.layer_combinations[0]) == 1, (
+            "SAE explanation dataset only supports one layer percent"
+        )
 
         self.dataset_params: SAEExplanationDatasetConfig = dataset_config.custom_dataset_params
 
@@ -343,7 +357,7 @@ def create_activating_sequences_data(
                 datapoint_type=datapoint_type,
                 prompt=prompt,
                 target_response=output,
-                layer=sae_info.sae_layer,
+                layers=[sae_info.sae_layer],
                 num_positions=1,
                 tokenizer=tokenizer,
                 acts_BD=vector_1D,
@@ -531,7 +545,7 @@ Please generate four Yes / No questions, and try have some variety in the phrasi
                 datapoint_type=dataset_type,
                 prompt=question_prompt,
                 target_response=qa["answer"],
-                layer=sae_info.sae_layer,
+                layers=[sae_info.sae_layer],
                 num_positions=1,
                 tokenizer=tokenizer,
                 acts_BD=vector_1D,
@@ -582,7 +596,7 @@ def construct_train_dataset(
             datapoint_type=dataset_type,
             prompt=input_prompt,
             target_response=target_response,
-            layer=layer,
+            layers=[layer],
             num_positions=1,
             tokenizer=tokenizer,
             acts_BD=feature_vector_1D,

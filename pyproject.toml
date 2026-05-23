@@ -4,56 +4,82 @@ version = "0.0.1"
 description = "nl_probes"
 requires-python = ">=3.10"
 readme = "README.md"
+
+# Minimal training stack. Constraints chosen to:
+#   1. Keep Unsloth 2026.5.x as the centerpiece (everything else fits around it).
+#   2. Avoid versions older than ~ May 2025 where reasonable.
+#   3. Cap the few packages where newer versions break Unsloth.
+#
+# Notes:
+#   - flash-attn must be installed separately on the target node:
+#         uv pip install --python <venv>/bin/python flash-attn --no-build-isolation
+#     (it depends on the resolved torch/cu version, so uv builds against the live env).
+#   - Optional eval/data-pipeline tools (vllm, ray, hydra-core, openai/anthropic
+#     clients, sklearn, etc.) are NOT in this list. If you need them for a
+#     specific dataset/eval, add them in a small extras group.
 dependencies = [
-    "accelerate==1.10.1",
-    "codetiming",
-    "datasets==3.6.0",
-    "dill",
-    "hydra-core",
-    "liger-kernel",
-    "numpy<2.0.0",
-    "pandas",
-    "peft==0.17.1",
-    "pyarrow>=19.0.0",
-    "fastparquet",
-    "pybind11",
-    "pylatexenc",
-    "pre-commit",
-    "ray[default]",
-    "tensordict>=0.8.0,<=0.9.1,!=0.9.0",
-    "torch==2.7.1",
-    "flash-attn",
-    "torchdata",
-    "transformers==4.55.2",
-    "vllm==0.10.0",
-    "einops==0.8.1",
-    "wandb==0.21.1",
-    "packaging>=20.0",
-    "uvicorn",
-    "fastapi",
-    "typer",
-    "latex2sympy2_extended",
-    "math_verify",
-    "pydantic==2.11.7",
-    "regex",
-    "python-dotenv",  # Note: the package is "python-dotenv" not "dotenv"
-    "slist",
-    "plotly",
+    # ---- Core training stack ----
+    "torch>=2.6",                     # 2.6 = Jan 2025
+    "transformers>=4.55,<5",          # unsloth 2026.5.x is NOT yet on transformers 5
+    "peft>=0.17,<0.19",               # peft 0.19+ imports EmbeddingParallel (needs transformers 5)
+    "accelerate>=1.0",
+    "bitsandbytes>=0.46",
+    "trl>=0.16",
+    "unsloth>=2026.5",
+    "flash-attn",                     # built separately, see above
+
+    # ---- Data + IO ----
+    "datasets>=3.6",                  # HF datasets
+    "huggingface-hub>=0.30",
+    "pyarrow>=19.0",
+
+    # ---- Logging + utilities ----
+    "wandb>=0.19",
+    "tqdm>=4.66",
+    "pydantic>=2.10",
+    "python-dotenv",                  # `from dotenv import load_dotenv`
+    "numpy<2",                        # the torch/transformers ecosystem still pins numpy<2 in many places
+]
+
+[project.optional-dependencies]
+# Use these only when you actually need that surface area. The training loop
+# does not import any of these packages.
+#
+#   uv sync                   # training env (default; only base `dependencies`)
+#   uv sync --extra eval      # training + the open-ended eval suite
+#   uv sync --extra data      # training + offline dataset construction (vllm, ray, ...)
+#   uv sync --extra dev       # training + dev tooling
+#   uv sync --all-extras      # everything (slow, big)
+
+eval = [
+    "scikit-learn",
     "anthropic",
     "openai",
     "tenacity",
-    "matplotlib",
-    "trl==0.18.2",
-    "bitsandbytes==0.48.1",
-    "fire",
-    "tqdm",
+    "slist",
+    "rapidfuzz",
+    "math_verify",
+    "latex2sympy2_extended",
+]
+
+data = [
+    "vllm>=0.10",
+    "ray[default]",
+    "hydra-core",
+    "tensordict>=0.8",
+    "fastparquet",
+]
+
+dev = [
     "pytest",
+    "pre-commit",
     "ipykernel",
+    "ipywidgets",
+    "jupyterlab-widgets",
+    "matplotlib",
+    "plotly",
     "circuitsvis>=1.43.3",
     "jaxtyping",
-    "huggingface-hub",
-    "rapidfuzz",
-    "hf_transfer",
 ]
 
 [build-system]
@@ -63,6 +89,12 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools.packages.find]
 include = ["nl_probes", "nl_probes.*"]
 
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+norecursedirs = [".venv", "checkpoints_*", "archive", "data_pipelines", "experiments"]
+markers = [
+    "gpu: requires a GPU to run",
+]
 
 [tool.uv.extra-build-dependencies]
 flash-attn = [{ requirement = "torch", match-runtime = true }]

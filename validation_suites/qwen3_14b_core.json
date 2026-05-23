@@ -1,0 +1,100 @@
+{
+  "suite_name": "qwen3_14b_core_validation_v1",
+  "validation_steps": 5000,
+  "validation_on_start": false,
+  "components": [
+    {
+      "kind": "past_lens",
+      "component_name": "past_lens_acts_1_past",
+      "num_examples": 256,
+      "seed": 1201,
+      "min_k_tokens": 1,
+      "max_k_tokens": 50,
+      "min_k_activations": 1,
+      "max_k_activations": 1,
+      "max_length": 2000,
+      "directions": ["past"],
+      "vllm_max_new_tokens": 200,
+      "max_vllm_context_tokens": 2000,
+      "future_chat_system_prompt_prob": 0.5,
+      "system_prompt_path": "data_pipelines/latentqa_datasets/train/system.json",
+      "english_only_temp_filter": false
+    },
+    {
+      "kind": "past_lens",
+      "component_name": "past_lens_acts_1_future",
+      "num_examples": 256,
+      "seed": 1202,
+      "min_k_tokens": 1,
+      "max_k_tokens": 50,
+      "min_k_activations": 1,
+      "max_k_activations": 1,
+      "max_length": 2000,
+      "directions": ["future"],
+      "vllm_max_new_tokens": 200,
+      "max_vllm_context_tokens": 2000,
+      "future_chat_system_prompt_prob": 0.5,
+      "system_prompt_path": "data_pipelines/latentqa_datasets/train/system.json",
+      "english_only_temp_filter": false
+    },
+    {
+      "kind": "past_lens",
+      "component_name": "past_lens_acts_50_past",
+      "num_examples": 256,
+      "seed": 1251,
+      "min_k_tokens": 1,
+      "max_k_tokens": 50,
+      "min_k_activations": 1,
+      "max_k_activations": 50,
+      "max_length": 2000,
+      "directions": ["past"],
+      "vllm_max_new_tokens": 200,
+      "max_vllm_context_tokens": 2000,
+      "future_chat_system_prompt_prob": 0.5,
+      "system_prompt_path": "data_pipelines/latentqa_datasets/train/system.json",
+      "english_only_temp_filter": false
+    },
+    {
+      "kind": "past_lens",
+      "component_name": "past_lens_acts_50_future",
+      "num_examples": 256,
+      "seed": 1252,
+      "min_k_tokens": 1,
+      "max_k_tokens": 50,
+      "min_k_activations": 1,
+      "max_k_activations": 50,
+      "max_length": 2000,
+      "directions": ["future"],
+      "vllm_max_new_tokens": 200,
+      "max_vllm_context_tokens": 2000,
+      "future_chat_system_prompt_prob": 0.5,
+      "system_prompt_path": "data_pipelines/latentqa_datasets/train/system.json",
+      "english_only_temp_filter": false
+    },
+    {
+      "kind": "generate_synthetic_qa",
+      "component_name": "synthetic_qa_v3",
+      "run_name": "validation_sqav3_qwen3_14b_v1",
+      "n_prompts": 180,
+      "sample_num_examples": 256,
+      "sample_seed": 1401,
+      "use_batch_api": false
+    },
+    {
+      "kind": "generate_hidden_bias_active",
+      "component_name": "hidden_bias_active",
+      "run_name": "validation_hidden_bias_active_qwen3_14b_v1",
+      "num_examples": 384,
+      "sample_num_examples": 256,
+      "sample_seed": 1501
+    },
+    {
+      "kind": "generate_hidden_bias_inactive",
+      "component_name": "hidden_bias_inactive",
+      "run_name": "validation_hidden_bias_inactive_qwen3_14b_v1",
+      "source_run_name": "validation_hidden_bias_active_qwen3_14b_v1",
+      "sample_num_examples": 256,
+      "sample_seed": 1502
+    }
+  ]
+}

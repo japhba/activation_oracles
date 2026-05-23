@@ -19,13 +19,11 @@ from nl_probes.utils.common import load_model, load_tokenizer
 
 if __name__ == "__main__":
     # Model and dtype
-    model_name = "Qwen/Qwen3-8B"
-    model_name = "google/gemma-2-9b-it"
 
     model_names = [
-        # "Qwen/Qwen3-8B",
+        "Qwen/Qwen3-8B",
         # "google/gemma-2-9b-it",
-        "meta-llama/Llama-3.3-70B-Instruct",
+        # "meta-llama/Llama-3.3-70B-Instruct",
     ]
 
     for model_name in model_names:
@@ -52,10 +50,10 @@ if __name__ == "__main__":
             ]
             verbalizer_lora_paths = [
                 "adamkarvonen/checkpoints_latentqa_cls_past_lens_addition_Qwen3-8B",
-                "adamkarvonen/checkpoints_cls_latentqa_only_addition_Qwen3-8B",
-                "adamkarvonen/checkpoints_latentqa_only_addition_Qwen3-8B",
-                "adamkarvonen/checkpoints_cls_only_addition_Qwen3-8B",
-                "adamkarvonen/checkpoints_cls_latentqa_sae_addition_Qwen3-8B",
+                # "adamkarvonen/checkpoints_cls_latentqa_only_addition_Qwen3-8B",
+                # "adamkarvonen/checkpoints_latentqa_only_addition_Qwen3-8B",
+                # "adamkarvonen/checkpoints_cls_only_addition_Qwen3-8B",
+                # "adamkarvonen/checkpoints_cls_latentqa_sae_addition_Qwen3-8B",
             ]
             target_lora_path_template = "{lora_path}"
             segment_start = -20
@@ -110,6 +108,7 @@ if __name__ == "__main__":
             "temperature": 0.0,
             "max_new_tokens": 20,
         }
+        selected_layer_combination = [50]
 
         config = base_experiment.VerbalizerEvalConfig(
             model_name=model_name,
@@ -120,6 +119,7 @@ if __name__ == "__main__":
             segment_repeats=1,
             segment_start_idx=segment_start,
             token_start_idx=-20,
+            selected_layer_combination=selected_layer_combination,
         )
 
         experiments_dir: str = "experiments/personaqa_results"
@@ -130,7 +130,7 @@ if __name__ == "__main__":
         # Optional: save results to disk as JSON
         output_json_template = f"{output_json_dir}/" + "personaqa_yes_no_{lora}.json"
 
-        DATA_DIR = "datasets/personaqa_data/shuffled"
+        DATA_DIR = "data_pipelines/personaqa_data/shuffled"
         PERSONAS_FILENAME = "personas.jsonl"
 
         data_path = os.path.join(DATA_DIR, PERSONAS_FILENAME)
@@ -216,7 +216,16 @@ if __name__ == "__main__":
             verbalizer_results = []
             sanitized_verbalizer_name = None
             if verbalizer_lora_path is not None:
-                sanitized_verbalizer_name = base_experiment.load_lora_adapter(model, verbalizer_lora_path)
+                sanitized_verbalizer_name, verbalizer_training_config = base_experiment.load_oracle_adapter(
+                    model, verbalizer_lora_path
+                )
+                base_experiment.assert_training_config_matches_verbalizer_eval_config(
+                    config, verbalizer_training_config
+                )
+                print(
+                    f"Loaded AO config for {verbalizer_lora_path}: "
+                    f"layer combination {config.selected_layer_combination}, act layers {config.selected_act_layers}"
+                )
 
             for target_lora_suffix in target_lora_suffixes:
                 target_lora_path = None
@@ -225,7 +234,7 @@ if __name__ == "__main__":
 
                 sanitized_target_name = None
                 if target_lora_path is not None:
-                    sanitized_target_name = base_experiment.load_lora_adapter(model, target_lora_path)
+                    sanitized_target_name = base_experiment.load_plain_adapter(model, target_lora_path)
 
                 print(f"Running verbalizer eval for verbalizer: {verbalizer_lora_path}, target: {target_lora_path}")
 
@@ -277,8 +286,8 @@ if __name__ == "__main__":
                     model=model,
                     tokenizer=tokenizer,
                     verbalizer_prompt_infos=verbalizer_prompt_infos,
-                    verbalizer_lora_path=verbalizer_lora_path,
-                    target_lora_path=target_lora_path,
+                    verbalizer_lora_path=sanitized_verbalizer_name,
+                    target_lora_path=sanitized_target_name,
                     config=config,
                     device=device,
                 )

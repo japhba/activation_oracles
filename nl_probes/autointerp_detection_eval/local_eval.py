@@ -12,7 +12,7 @@ from tqdm import tqdm
 from transformers.models.auto.modeling_auto import AutoModelForCausalLM
 from transformers.tokenization_utils import PreTrainedTokenizer
 
-import nl_probes.autointerp_detection_eval.eval_detection_v2
+from nl_probes.autointerp_detection_eval import eval_detection_v2
 import lightweight_sft
 from nl_probes.autointerp_detection_eval.create_hard_negatives_v2 import (
     get_submodule,

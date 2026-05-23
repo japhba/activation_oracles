@@ -1,6 +1,7 @@
 import contextlib
 
 import torch
+from peft import PeftModel
 from transformers import AutoModelForCausalLM
 
 
@@ -49,7 +50,7 @@ def collect_activations(
     try:
         # Use the selected context manager
         with context_manager:
-            _ = model(**inputs_BL)  # type: ignore
+            _ = model(**inputs_BL, use_cache=False)  # type: ignore
     except EarlyStopException:
         pass
     except Exception as e:
@@ -104,7 +105,7 @@ def collect_activations_multiple_layers(
     try:
         # Use the selected context manager
         with torch.no_grad():
-            _ = model(**inputs_BL)
+            _ = model(**inputs_BL, use_cache=False)
     except EarlyStopException:
         pass
     except Exception as e:
@@ -135,24 +136,30 @@ def get_text_only_lora_targets(model_name: str) -> str | None:
 
 
 def get_hf_submodule(model: AutoModelForCausalLM, layer: int, use_lora: bool = False):
-    """Gets the residual stream submodule for HF transformers"""
+    """Gets the residual stream submodule for HF transformers.
+
+    This intentionally uses explicit model-family/backend paths and fails loudly
+    when a new structure appears.
+    """
     model_name = model.config._name_or_path
+    model_name_lower = model_name.lower()
+    is_peft_model = isinstance(model, PeftModel)
 
-    if use_lora:
-        if "pythia" in model_name:
+    if "pythia" in model_name_lower:
+        if use_lora:
             raise ValueError("Need to determine how to get submodule for LoRA")
-        elif "gemma-3" in model_name:
-            return model.base_model.language_model.layers[layer]
-        elif "gemma-2" in model_name or "mistral" in model_name or "Llama" in model_name or "Qwen" in model_name:
-            return model.base_model.model.model.layers[layer]
-        else:
-            raise ValueError(f"Please add submodule for model {model_name}")
-
-    if "pythia" in model_name:
+        if is_peft_model:
+            return model.base_model.model.gpt_neox.layers[layer]
         return model.gpt_neox.layers[layer]
-    elif "gemma-3" in model_name:
+
+    if "gemma-3" in model_name_lower:
+        if is_peft_model:
+            return model.base_model.model.language_model.layers[layer]
         return model.language_model.layers[layer]
-    elif "gemma-2" in model_name or "mistral" in model_name or "Llama" in model_name or "Qwen" in model_name:
+
+    if "gemma-2" in model_name_lower or "mistral" in model_name_lower or "llama" in model_name_lower or "qwen" in model_name_lower:
+        if is_peft_model:
+            return model.base_model.model.model.layers[layer]
         return model.model.layers[layer]
-    else:
-        raise ValueError(f"Please add submodule for model {model_name}")
+
+    raise ValueError(f"Please add submodule for model {model_name}")

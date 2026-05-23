@@ -1,0 +1,1615 @@
+{
+  "metadata": {
+    "model": "Qwen/Qwen3-8B",
+    "temperature": 0,
+    "thinking_enabled": false,
+    "total_entries": 100,
+    "correct_count": 50,
+    "incorrect_count": 50,
+    "full_mmlu_accuracy": 0.7242,
+    "full_mmlu_total": 14042,
+    "num_subjects": 34
+  },
+  "entries": [
+    {
+      "id": "mmlu_12479",
+      "question": "Dr. Sam Solo is the only psychologist in a small town, and his son is enrolled in the town's only elementary school. Dr. Solo receives a call from his son's teacher who says she would like to begin therapy with him. As an ethical psychologist, Dr. Solo should:",
+      "subject": "professional_psychology",
+      "choices": [
+        "tell the teacher that he is ethically prohibited from seeing her because to do so would constitute a multiple (dual) relationship.",
+        "begin therapy with her and discuss the potential for conflicts during the initial session and, if necessary, in subsequent sessions.",
+        "begin therapy with her but seek consultation if any problems arise.",
+        "begin therapy with her but take special precautions to ensure that client confidentiality is maintained."
+      ],
+      "correct_answer_idx": 1,
+      "correct_answer_letter": "B",
+      "model_raw_response": "A",
+      "model_answer_letter": "A",
+      "model_correct": false
+    },
+    {
+      "id": "mmlu_9249",
+      "question": "For which of these two scenarios does the main character (who uses I/me/my) do something clearly morally wrong, according to ordinary moral standards in the US as of 2020? Scenario 1 | I cut tomato before putting it on a hamburger, and served it to a customer. Scenario 2 | I knocked over a standing stone at an old quarry.",
+      "subject": "moral_scenarios",
+      "choices": [
+        "Wrong, Wrong",
+        "Wrong, Not wrong",
+        "Not wrong, Wrong",
+        "Not wrong, Not wrong"
+      ],
+      "correct_answer_idx": 3,
+      "correct_answer_letter": "D",
+      "model_raw_response": "B",
+      "model_answer_letter": "B",
+      "model_correct": false
+    },
+    {
+      "id": "mmlu_4831",
+      "question": "An astronaut lands on a planet whose mass and radius are each twice that of Earth. If the astronaut weighs 800 N on Earth, how much will he weigh on this planet?",
+      "subject": "high_school_physics",
+      "choices": [
+        "200 N",
+        "400 N",
+        "800 N",
+        "1600 N"
+      ],
+      "correct_answer_idx": 1,
+      "correct_answer_letter": "B",
+      "model_raw_response": "A\n\n**Explanation:**\n\nWeight is given by",
+      "model_answer_letter": "A",
+      "model_correct": false
+    },
+    {
+      "id": "mmlu_4719",
+      "question": "Suppose that there are only two goods: x and y. Which of the following is NOT correct?",
+      "subject": "high_school_microeconomics",
+      "choices": [
+        "One can have comparative advantage in producing both goods.",
+        "One can have both an absolute advantage and a comparative advantage in producing x.",
+        "One can have absolute advantage and no comparative advantage in producing x.",
+        "One can have comparative advantage and no absolute advantage in producing x."
+      ],
+      "correct_answer_idx": 0,
+      "correct_answer_letter": "A",
+      "model_raw_response": "C",
+      "model_answer_letter": "C",
+      "model_correct": false
+    },
+    {
+      "id": "mmlu_10814",
+      "question": "An owner entered into a written contract with a landscaper whereby the landscaper promised to landscape the exterior of the owner's house for the sum of $5,000. According to their agreement, the owner was to pay the money to the landscaper's son. The landscaper intended to have the $5,000 given to his son as a graduation present. After the landscaper completed the job, the landscaper requested that the owner pay the $5,000 to him instead of to his son. The owner paid the landscaper. The next day, the son learned of the contract between the landscaper and the owner, as well as the payment to his father. In an action by the son against the owner for $5,000, the plaintiff will most likely",
+      "subject": "professional_law",
+      "choices": [
+        "prevail, because the written contract between the owner and the landscaper operated as a valid assignment to the son.",
+        "prevail, because the son was the intended beneficiary under the terms of the written contract between the owner and the landscaper.",
+        "not prevail, because the owner and the landscaper effectively modified their agreement, thereby depriving the son of any rights he may have had.",
+        "not prevail, because the son did not give any consideration."
+      ],
+      "correct_answer_idx": 2,
+      "correct_answer_letter": "C",
+      "model_raw_response": "D",
+      "model_answer_letter": "D",
+      "model_correct": false
+    },
+    {
+      "id": "mmlu_12057",
+      "question": "An accountant had an office on the eighth floor of a downtown building. The accountant wanted to have renovations done to the entrance to the office. He hired an interior designer to do the work. The designer told the accountant that he had several options for the type of glass to be used in the door to the office. He could use half-inch thick plate glass, which would look nice and be relatively inexpensive. On the other hand, he could use tempered glass, which would cost twice as much but would be five times stronger than plate glass, more difficult to scratch, and capable of withstanding a blow from a hammer. The designer explained that the great majority of residential and small business establishments use plate glass for such doors. The accountant chose to go with the plate glass. The accountant ordered a plate glass door from a manufacturer and had the designer install the door when it arrived. A few months later, the door shattered when one of the accountant's clients pulled on the handle to open it. The glass cut the client's hand. If the client asserts a claim against the accountant based on negligence and establishes negligent manufacture of the glass door by the manufacturer that was not discoverable through reasonable inspection, the plaintiff will",
+      "subject": "professional_law",
+      "choices": [
+        "prevail, because the accountant is liable for its supplier's negligence.",
+        "prevail, because the accountant instructed the designer to install plate glass rather than the more durable tempered glass.",
+        "not prevail, because the accountant could not reasonably have been expected to discover the defect.",
+        "not prevail, because the proper defendant is the manufacturer or the designer, not the accountant."
+      ],
+      "correct_answer_idx": 2,
+      "correct_answer_letter": "C",
+      "model_raw_response": "D",
+      "model_answer_letter": "D",
+      "model_correct": false
+    },
+    {
+      "id": "mmlu_9820",
+      "question": "Aquinas claims that the ultimate perfection of operation is:",
+      "subject": "philosophy",
+      "choices": [
+        "delight.",
+        "peace.",
+        "pleasure.",
+        "Godliness."
+      ],
+      "correct_answer_idx": 0,
+      "correct_answer_letter": "A",
+      "model_raw_response": "D",
+      "model_answer_letter": "D",
+      "model_correct": false
+    },
+    {
+      "id": "mmlu_11012",
+      "question": "Congress recently passed a law that would grant, for free, federally owned buses to a religious organization. The congressional statute stipulates that the religious organization must use the buses to travel across America to spread the moral message of sexual abstinence to teenagers at school assemblies. Which of the following is the strongest constitutional grounds for invalidating the gift of the buses to the religious organization?",
+      "subject": "professional_law",
+      "choices": [
+        "The gift violates the equal protection rights of secular organizations.",
+        "The gift violates the establishment clause.",
+        "The gift is a taking of federal property without just compensation.",
+        "The gift violates the commerce clause."
+      ],
+      "correct_answer_idx": 1,
+      "correct_answer_letter": "B",
+      "model_raw_response": "B",
+      "model_answer_letter": "B",
+      "model_correct": true
+    },
+    {
+      "id": "mmlu_6957",
+      "question": "Individualism as a guiding moral philosophy was advocated by which economist?",
+      "subject": "management",
+      "choices": [
+        "John Kenneth Galbraith",
+        "John Maynard Keynes",
+        "Milton Friedman",
+        "Alfred Marshall"
+      ],
+      "correct_answer_idx": 2,
+      "correct_answer_letter": "C",
+      "model_raw_response": "C",
+      "model_answer_letter": "C",
+      "model_correct": true
+    },
+    {
+      "id": "mmlu_10313",
+      "question": "Monk's Mound, at the Mississippian center of Cahokia, served as:",
+      "subject": "prehistory",
+      "choices": [
+        "a lookout or fire tower.",
+        "a meeting ground for egalitarian tribes.",
+        "a burial monument.",
+        "the base for one or more important buildings."
+      ],
+      "correct_answer_idx": 3,
+      "correct_answer_letter": "D",
+      "model_raw_response": "D",
+      "model_answer_letter": "D",
+      "model_correct": true
+    },
+    {
+      "id": "mmlu_12325",
+      "question": "A 27-year-old woman comes to the physician because of a 3-year history of chronic diarrhea and intermittent, crampy, lower abdominal pain. The pain is usually relieved with defecation and does not occur at night or interfere with sleep. She says she is frustrated by her symptoms and has stopped traveling because of her frequent, urgent need to use the bathroom. She has no history of serious illness and takes no medications. Her temperature is 37\u00b0C (98.6\u00b0F), pulse is 70/min, respirations are 14/min, and blood pressure is 120/80 mm Hg. The lower abdomen is mildly tender to palpation; there is no rebound tenderness or guarding. The remainder of the examination shows no abnormalities. Results of laboratory studies are within the reference ranges. Test of the stool for occult blood is negative. Antigliadin antibodies are not present. Which of the following is the most appropriate pharmacotherapy?",
+      "subject": "professional_medicine",
+      "choices": [
+        "Nefazodone",
+        "Nortriptyline",
+        "Phenelzine",
+        "Sertraline"
+      ],
+      "correct_answer_idx": 1,
+      "correct_answer_letter": "B",
+      "model_raw_response": "D",
+      "model_answer_letter": "D",
+      "model_correct": false
+    },
+    {
+      "id": "mmlu_9825",
+      "question": "Descartes says that the chief characteristic of physical things is that _____.",
+      "subject": "philosophy",
+      "choices": [
+        "they cannot be measured",
+        "science can study them",
+        "they do not have extension",
+        "they have extension"
+      ],
+      "correct_answer_idx": 3,
+      "correct_answer_letter": "D",
+      "model_raw_response": "D",
+      "model_answer_letter": "D",
+      "model_correct": true
+    },
+    {
+      "id": "mmlu_12263",
+      "question": "A 64-year-old man with non-Hodgkin lymphoma comes to the physician because of a 3-week history of progressive numbness in his hands and feet and weakness in his legs when he stands. He received his third course of chemotherapy 4 weeks ago. Physical examination shows areflexia. Which of the following drugs is the most likely cause of these adverse effects?",
+      "subject": "professional_medicine",
+      "choices": [
+        "Doxorubicin",
+        "Fluorouracil",
+        "Methotrexate",
+        "Vincristine"
+      ],
+      "correct_answer_idx": 3,
+      "correct_answer_letter": "D",
+      "model_raw_response": "D",
+      "model_answer_letter": "D",
+      "model_correct": true
+    },
+    {
+      "id": "mmlu_13969",
+      "question": "What hours are set aside as the ambrosial hours for the Sikhs?",
+      "subject": "world_religions",
+      "choices": [
+        "5\u20137 a.m.",
+        "9\u201311 p.m.",
+        "3\u20136 p.m.",
+        "3\u20136 a.m."
+      ],
+      "correct_answer_idx": 3,
+      "correct_answer_letter": "D",
+      "model_raw_response": "D",
+      "model_answer_letter": "D",
+      "model_correct": true
+    },
+    {
+      "id": "mmlu_8358",
+      "question": " Since Nagel thinks there can be genuine moral dilemmas, he denies the moral principle that",
+      "subject": "moral_disputes",
+      "choices": [
+        "can implies should.",
+        "can implies ought.",
+        "ought implies can.",
+        "ought implies should."
+      ],
+      "correct_answer_idx": 2,
+      "correct_answer_letter": "C",
+      "model_raw_response": "B",
+      "model_answer_letter": "B",
+      "model_correct": false
+    },
+    {
+      "id": "mmlu_3430",
+      "question": "This question refers to the following information.\n\"XI. As the present sciences are useless for the discovery of effects, so the present system of logic is useless for the discovery of the sciences.\nXIX. There are and can exist but two ways of investigating and discovering truth. The one hurries on rapidly from the senses and particulars to the most general axioms, and from them, as principles and their supposed indisputable truth, derives and discovers the intermediate axioms. This is the way now in use. The other constructs its axioms from the senses and particulars, by ascending continually and gradually, till it finally arrives at the most general axioms, which is the true but unattempted way.\nXXII. Each of these two ways begins from the senses and particulars, and ends in the greatest generalities&\u2026\nXXXVI. We have but one simple method of delivering our sentiments, namely, we must bring men to particulars and their regular series and order, and they must for a while renounce their notions, and begin to form an acquaintance with things.\"\nFrancis Bacon, English philosopher and essayist, Novum Organum, 1620\nThe method of inquiry elucidated by Francis Bacon in the passage is known as",
+      "subject": "high_school_european_history",
+      "choices": [
+        "humanism",
+        "deduction",
+        "empiricism",
+        "scientific socialism"
+      ],
+      "correct_answer_idx": 2,
+      "correct_answer_letter": "C",
+      "model_raw_response": "C",
+      "model_answer_letter": "C",
+      "model_correct": true
+    },
+    {
+      "id": "mmlu_7186",
+      "question": " Before beginning the market segmentation process, a firm should:",
+      "subject": "marketing",
+      "choices": [
+        "Identify bases for segmenting markets.",
+        "Forecast total market potential.",
+        "Forecast market share.",
+        "Select target market segments."
+      ],
+      "correct_answer_idx": 0,
+      "correct_answer_letter": "A",
+      "model_raw_response": "A",
+      "model_answer_letter": "A",
+      "model_correct": true
+    },
+    {
+      "id": "mmlu_6345",
+      "question": "Which of the following teenagers have the highest pregnancy rates?",
+      "subject": "human_sexuality",
+      "choices": [
+        "U.S.",
+        "Canadian",
+        "Swedish",
+        "French"
+      ],
+      "correct_answer_idx": 0,
+      "correct_answer_letter": "A",
+      "model_raw_response": "A",
+      "model_answer_letter": "A",
+      "model_correct": true
+    },
+    {
+      "id": "mmlu_10899",
+      "question": "At 10:00p. m. onNovember 14, a driver was operating his automobile along Main Street. As the driver was approaching the intersection of Main Street and First Avenue, a motorist, who was driving straight through a red light, suddenly appeared before him. Trying to avoid the motorist, the driver veered his car onto the sidewalk. The car landed in a deep hole in the sidewalk. This hole had been dug by a construction company, which had been repairing a water main break earlier in the day. The construction company had been hired by the local municipal water department. Although the' construction company had erected a warning sign advising pedestrians about the hole, there was no fence or barrier surrounding it. When the driver's car fell into the hole, it ruptured the water main, engulfing the car with water. Within a short time, the driver, unable to escape, drowned in his car, which rapidly filled with water. In a wrongful death action by the driver's estate against the municipal water department, the estate will most probably",
+      "subject": "professional_law",
+      "choices": [
+        "prevail, because sovereign immunity would not attach to non-delegable duties, which are proprietary in nature.",
+        "prevail, because the city government would be strictly liable for failing to ensure the water main repair work was done properly.",
+        "not prevail, because the municipal water department would not be liable for the negligence of its independent contractor.",
+        "not prevail, because sovereign immunity attaches to functions that are governmental in nature."
+      ],
+      "correct_answer_idx": 0,
+      "correct_answer_letter": "A",
+      "model_raw_response": "C",
+      "model_answer_letter": "C",
+      "model_correct": false
+    },
+    {
+      "id": "mmlu_5316",
+      "question": "A 10-year-old student who was born in a non- English-speaking country has been referred as a possible candidate for special education services on the basis of low scores achieved on the school district's group achievement test. The student achieved high scores on the district's English fluency test. Of the following approaches to diagnostic assessment, the most appropriate is one that",
+      "subject": "high_school_psychology",
+      "choices": [
+        "uses an interpreter who is fluent in the language of the country in which the student was born",
+        "uses the results of at least two Englishlanguage intelligence tests",
+        "accounts for sociocultural and adaptive behavior in the process of identifying skills and abilities",
+        "includes parent interviews and classroom observations as well as the results of an intelligence test"
+      ],
+      "correct_answer_idx": 2,
+      "correct_answer_letter": "C",
+      "model_raw_response": "D",
+      "model_answer_letter": "D",
+      "model_correct": false
+    },
+    {
+      "id": "mmlu_6093",
+      "question": "The perspective that development is embedded in history means that",
+      "subject": "human_aging",
+      "choices": [
+        "Change can always occur regardless of age",
+        "Sociocultural conditions must always be considered",
+        "Development in any particular areas (e.g., social) is tied to development in other areas (e.g., cognitive)",
+        "Some characteristics change with age while others do not"
+      ],
+      "correct_answer_idx": 1,
+      "correct_answer_letter": "B",
+      "model_raw_response": "B",
+      "model_answer_letter": "B",
+      "model_correct": true
+    },
+    {
+      "id": "mmlu_8587",
+      "question": "For which of these two scenarios does the main character (who uses I/me/my) do something clearly morally wrong, according to ordinary moral standards in the US as of 2020? Scenario 1 | I sold my business to a competitor without my gym partner being present. Scenario 2 | I refused to take Jenny's portrait because she wouldn't pay.",
+      "subject": "moral_scenarios",
+      "choices": [
+        "Wrong, Wrong",
+        "Wrong, Not wrong",
+        "Not wrong, Wrong",
+        "Not wrong, Not wrong"
+      ],
+      "correct_answer_idx": 3,
+      "correct_answer_letter": "D",
+      "model_raw_response": "B",
+      "model_answer_letter": "B",
+      "model_correct": false
+    },
+    {
+      "id": "mmlu_591",
+      "question": "Which of the following is not an amino acid?",
+      "subject": "clinical_knowledge",
+      "choices": [
+        "Glutamic acid",
+        "Aspartic acid",
+        "Glutamine",
+        "Palmitic acid"
+      ],
+      "correct_answer_idx": 3,
+      "correct_answer_letter": "D",
+      "model_raw_response": "D",
+      "model_answer_letter": "D",
+      "model_correct": true
+    },
+    {
+      "id": "mmlu_3114",
+      "question": "Which of the following correctly lists the individual intermolecular attractive forces from the strongest to the weakest?",
+      "subject": "high_school_chemistry",
+      "choices": [
+        "Induced dipole < dipole-dipole < hydrogen bond",
+        "Hydrogen bond < dipole-dipole < induced dipole",
+        "Induced dipole < hydrogen bond < dipole-dipole",
+        "Dipole-dipole < hydrogen bond < induced dipole"
+      ],
+      "correct_answer_idx": 1,
+      "correct_answer_letter": "B",
+      "model_raw_response": "C",
+      "model_answer_letter": "C",
+      "model_correct": false
+    },
+    {
+      "id": "mmlu_10069",
+      "question": "What was the unifying element of Olmec culture?",
+      "subject": "prehistory",
+      "choices": [
+        "religious iconography",
+        "large armies",
+        "agricultural surpluses",
+        "all of the above"
+      ],
+      "correct_answer_idx": 0,
+      "correct_answer_letter": "A",
+      "model_raw_response": "D",
+      "model_answer_letter": "D",
+      "model_correct": false
+    },
+    {
+      "id": "mmlu_8573",
+      "question": "For which of these two scenarios does the main character (who uses I/me/my) do something clearly morally wrong, according to ordinary moral standards in the US as of 2020? Scenario 1 | I made my boyfriend an homemade dinner from eggs I found in a nest outside. Scenario 2 | I voted for the man who was a criminal",
+      "subject": "moral_scenarios",
+      "choices": [
+        "Wrong, Wrong",
+        "Wrong, Not wrong",
+        "Not wrong, Wrong",
+        "Not wrong, Not wrong"
+      ],
+      "correct_answer_idx": 0,
+      "correct_answer_letter": "A",
+      "model_raw_response": "B",
+      "model_answer_letter": "B",
+      "model_correct": false
+    },
+    {
+      "id": "mmlu_12513",
+      "question": "According to Albert Ellis, our emotional and behavioral reactions to an event are due to our beliefs about the event rather than to the event itself. In other words, our beliefs act as a:",
+      "subject": "professional_psychology",
+      "choices": [
+        "moderator variable.",
+        "mediator variable.",
+        "latent variable.",
+        "suppressor variable."
+      ],
+      "correct_answer_idx": 1,
+      "correct_answer_letter": "B",
+      "model_raw_response": "B",
+      "model_answer_letter": "B",
+      "model_correct": true
+    },
+    {
+      "id": "mmlu_6709",
+      "question": "\"The minor premise must affirm the antecedent or deny the consequent\" is a way to determine the validity of which type of argument?",
+      "subject": "logical_fallacies",
+      "choices": [
+        "Categorical syllogism",
+        "Disjunctive syllogism",
+        "Hypothetical syllogism",
+        "Toulmin model"
+      ],
+      "correct_answer_idx": 2,
+      "correct_answer_letter": "C",
+      "model_raw_response": "C",
+      "model_answer_letter": "C",
+      "model_correct": true
+    },
+    {
+      "id": "mmlu_13608",
+      "question": "Who was the first American president to visit communist China?",
+      "subject": "us_foreign_policy",
+      "choices": [
+        "Richard Nixon",
+        "George H. W. Bush",
+        "Jimmy Carter",
+        "Ronald Reagan"
+      ],
+      "correct_answer_idx": 0,
+      "correct_answer_letter": "A",
+      "model_raw_response": "A",
+      "model_answer_letter": "A",
+      "model_correct": true
+    },
+    {
+      "id": "mmlu_8682",
+      "question": "For which of these two scenarios does the main character (who uses I/me/my) do something clearly morally wrong, according to ordinary moral standards in the US as of 2020? Scenario 1 | I visit my granny to make sure she takes her pain pills for her cancer. Scenario 2 | I returned the unused underwear to the store.",
+      "subject": "moral_scenarios",
+      "choices": [
+        "Wrong, Wrong",
+        "Wrong, Not wrong",
+        "Not wrong, Wrong",
+        "Not wrong, Not wrong"
+      ],
+      "correct_answer_idx": 3,
+      "correct_answer_letter": "D",
+      "model_raw_response": "B",
+      "model_answer_letter": "B",
+      "model_correct": false
+    },
+    {
+      "id": "mmlu_11750",
+      "question": "A plaintiff was seriously injured in a collision involving three trucks. A sideswipe occurred between the plaintiff's pickup truck and a trailer truck as they passed in opposite directions. The sideswipe caused the plaintiff's truck to careen down the road and into the path of a second trailer truck. The driver of the second trailer truck was immediately killed. Both of the trailer trucks were owned by the same transport company. At trial, the plaintiff called a witness to the collision to testify that he heard an unidentified female witness scream, \"Oh my God, that trailer truck sideswiped that little pickup truck. \"The trial judge should rule the witness's testimony",
+      "subject": "professional_law",
+      "choices": [
+        "admissible as a declaration of existing state of mind.",
+        "admissible as an excited utterance.",
+        "inadmissible, because it contains inadmissible opinion evidence.",
+        "inadmissible as hearsay not within any recognized exception."
+      ],
+      "correct_answer_idx": 1,
+      "correct_answer_letter": "B",
+      "model_raw_response": "D",
+      "model_answer_letter": "D",
+      "model_correct": false
+    },
+    {
+      "id": "mmlu_3971",
+      "question": "According to Keynesian analysis a decrease in the money supply would",
+      "subject": "high_school_macroeconomics",
+      "choices": [
+        "raise the price level and output in the economy.",
+        "lower the price level and output in the economy.",
+        "raise the price level in the economy.",
+        "lower the price level in the economy."
+      ],
+      "correct_answer_idx": 1,
+      "correct_answer_letter": "B",
+      "model_raw_response": "D",
+      "model_answer_letter": "D",
+      "model_correct": false
+    },
+    {
+      "id": "mmlu_5190",
+      "question": "Mr. Maji gives a test to his class of 25 students. All but three students score between 82 and 94. The other three students score 47, 55, and 62. These scores are potential",
+      "subject": "high_school_psychology",
+      "choices": [
+        "modes.",
+        "skewers.",
+        "outliers.",
+        "variances."
+      ],
+      "correct_answer_idx": 2,
+      "correct_answer_letter": "C",
+      "model_raw_response": "C. outliers.",
+      "model_answer_letter": "C",
+      "model_correct": true
+    },
+    {
+      "id": "mmlu_4623",
+      "question": "Suppose the price of beef rises by 10 percent and the quantity of beef demanded falls by 20 percent. We can conclude that",
+      "subject": "high_school_microeconomics",
+      "choices": [
+        "demand for beef is price elastic and consumer spending on beef is falling.",
+        "demand for beef is price elastic and consumer spending on beef is rising.",
+        "demand for beef is price inelastic and consumer spending on beef is falling.",
+        "demand for beef is price inelastic and consumer spending on beef is rising."
+      ],
+      "correct_answer_idx": 0,
+      "correct_answer_letter": "A",
+      "model_raw_response": "A",
+      "model_answer_letter": "A",
+      "model_correct": true
+    },
+    {
+      "id": "mmlu_11651",
+      "question": "A purse snatcher ran up to a woman, grabbed her purse and ran off. There was a witness at the scene. The witness worked with the police a few days later to try and create a composite sketch of the purse snatcher. This was used by the police to capture the purported purse snatcher. The witness died several days before the trial. When the witness's drawing was offered by the prosecution as evidence at trial, is the trial judge likely to accept it as admissible evidence?",
+      "subject": "professional_law",
+      "choices": [
+        "Yes, because the police took it and used it to find someone, therefore it must be an accurate representation of the perpetrator; the exhibit must be admitted.",
+        "Yes, because it is in the nature of the written recollection of the decedent at a time close to the crime and it therefore has testimonial reliability.",
+        "No, because the defense had no opportunity to cross-examine the witness under oath about the drawing prior to her death and such sketches are inherently unreliable in any event.",
+        "No, because it was drawn up days after the event and is in violation of the best evidence rule."
+      ],
+      "correct_answer_idx": 2,
+      "correct_answer_letter": "C",
+      "model_raw_response": "C",
+      "model_answer_letter": "C",
+      "model_correct": true
+    },
+    {
+      "id": "mmlu_151",
+      "question": "Which of the following structures accompany the oesophagus through the diaphragm?",
+      "subject": "anatomy",
+      "choices": [
+        "The phrenic nerves",
+        "The splanchnic nerves",
+        "The sympathetic trunks",
+        "The vagus nerves"
+      ],
+      "correct_answer_idx": 3,
+      "correct_answer_letter": "D",
+      "model_raw_response": "A",
+      "model_answer_letter": "A",
+      "model_correct": false
+    },
+    {
+      "id": "mmlu_737",
+      "question": "Why should the short-acting bronchodilator be taken first?",
+      "subject": "clinical_knowledge",
+      "choices": [
+        "It works to dilate the airways quickly, allowing better deposition of other medications.",
+        "They are colour-coded.",
+        "It is warmer than the others.",
+        "It is less moist than the others."
+      ],
+      "correct_answer_idx": 0,
+      "correct_answer_letter": "A",
+      "model_raw_response": "A",
+      "model_answer_letter": "A",
+      "model_correct": true
+    },
+    {
+      "id": "mmlu_1368",
+      "question": "The descending loop of Henle of the nephron of the kidney is permeable to which of the following substances?",
+      "subject": "college_medicine",
+      "choices": [
+        "Na+",
+        "H2O",
+        "K+",
+        "Cl-"
+      ],
+      "correct_answer_idx": 1,
+      "correct_answer_letter": "B",
+      "model_raw_response": "A",
+      "model_answer_letter": "A",
+      "model_correct": false
+    },
+    {
+      "id": "mmlu_12616",
+      "question": "Whenever her clients cancel an appointment with Dr. Penny Pincher within less than 24 hours of the appointment, Dr. Pincher routinely bills the client\u2019s insurance company for her full hourly fee. This practice is:",
+      "subject": "professional_psychology",
+      "choices": [
+        "illegal and unethical.",
+        "illegal but ethical.",
+        "legal and ethical.",
+        "legal but unethical."
+      ],
+      "correct_answer_idx": 0,
+      "correct_answer_letter": "A",
+      "model_raw_response": "D",
+      "model_answer_letter": "D",
+      "model_correct": false
+    },
+    {
+      "id": "mmlu_12431",
+      "question": "A 63-year-old woman comes to the physician 1 day after the sudden onset of pain and swelling of her right knee. She has had no injury. Her medications include occasional ibuprofen for mild osteoarthritis of both knees. Her temperature is 37\u00b0C (98.6\u00b0F), pulse is 97/min, respirations are 19/min, and blood pressure is 129/79 mm Hg. Examination of the right knee shows warmth, erythema, and effusion. Exquisite tenderness is produced with minimal range-of-motion testing. Examination of synovial fluid obtained via joint aspiration shows that it is clear, with positively birefringent rhomboids observed under polarized light microscopy. Deposition of which of the following substances is the most likely cause of these findings?",
+      "subject": "professional_medicine",
+      "choices": [
+        "Ammonium urate",
+        "Calcium oxalate",
+        "Calcium pyrophosphate",
+        "Calcium urate"
+      ],
+      "correct_answer_idx": 2,
+      "correct_answer_letter": "C",
+      "model_raw_response": "D",
+      "model_answer_letter": "D",
+      "model_correct": false
+    },
+    {
+      "id": "mmlu_7325",
+      "question": "If an X-linked recessive disorder is in Hardy-Weinberg equilibrium and the incidence in males equals 1 in 100, then the expected incidence of affected homozygous females would be _______.",
+      "subject": "medical_genetics",
+      "choices": [
+        "1 in 1000",
+        "1 in 4000",
+        "1 in 10 000",
+        "1 in 40 000"
+      ],
+      "correct_answer_idx": 2,
+      "correct_answer_letter": "C",
+      "model_raw_response": "D. 1 in 40 0",
+      "model_answer_letter": "D",
+      "model_correct": false
+    },
+    {
+      "id": "mmlu_4794",
+      "question": "In a spring-block oscillator, the maximum speed of the block is",
+      "subject": "high_school_physics",
+      "choices": [
+        "proportional to amplitude",
+        "proportional to the square of amplitude",
+        "proportional to the square root of amplitude",
+        "inversely proportional to the square root of amplitude"
+      ],
+      "correct_answer_idx": 0,
+      "correct_answer_letter": "A",
+      "model_raw_response": "A",
+      "model_answer_letter": "A",
+      "model_correct": true
+    },
+    {
+      "id": "mmlu_6029",
+      "question": "This question refers to the following information.\n\"Thereupon it was declared by the above-mentioned representatives of the aforesaid King and Queen of Castile, Leon, Aragon, Sicily, Granada, etc., and of the aforesaid King of Portugal and the Algarves, etc.:\n[I.] That, whereas a certain controversy exists between the said lords, their constituents, as to what lands, of all those discovered in the ocean sea up to the present day, the date of this treaty, pertain to each one of the said parts respectively; therefore, for the sake of peace and concord, and for the preservation of the relationship and love of the said King of Portugal for the said King and Queen of Castile, Aragon, etc., it being the pleasure of their Highnesses, they, their said representatives, acting in their name and by virtue of their powers herein described, covenanted and agreed that a boundary or straight line be determined and drawn north and south, from pole to pole, on the said ocean sea, from the Arctic to the Antarctic pole. This boundary or line shall be drawn straight, as aforesaid, at a distance of three hundred and seventy leagues west of the Cape Verde Islands, being calculated by degrees, or by any other manner as may be considered the best and readiest, provided the distance shall be no greater than abovesaid. And all lands, both islands and mainlands, found and discovered already, or to be found and discovered hereafter, by the said King of Portugal and by his vessels on this side of the said line and bound determined as above, toward the east, in either north or south latitude, on the eastern side of the said bound provided the said bound is not crossed, shall belong to, and remain in the possession of, and pertain forever to, the said King of Portugal and his successors. And all other lands, both islands and mainlands, found or to be found hereafter, discovered or to be discovered hereafter, which have been discovered or shall be discovered by the said King and Queen of Castile, Aragon, etc., and by their vessels, on the western side of the said bound, determined as above, after having passed the said bound toward the west, in either its north or south latitude, shall belong to, and remain in the possession of, and pertain forever to, the said King and Queen of Castile, Leon, etc., and to their successors.\"\nTreaty of Tordesillas, 1494\nWhich of the following historical developments provides the best context for the treaty above?",
+      "subject": "high_school_world_history",
+      "choices": [
+        "European maritime exploration",
+        "European engagement in the African slave trade",
+        "The Scientific Revolution",
+        "The Protestant Reformation"
+      ],
+      "correct_answer_idx": 0,
+      "correct_answer_letter": "A",
+      "model_raw_response": "A",
+      "model_answer_letter": "A",
+      "model_correct": true
+    },
+    {
+      "id": "mmlu_6126",
+      "question": "Elder abuse most frequently comes from the older adult's",
+      "subject": "human_aging",
+      "choices": [
+        "Spouse",
+        "Children",
+        "Grandchildren",
+        "Neighbors"
+      ],
+      "correct_answer_idx": 1,
+      "correct_answer_letter": "B",
+      "model_raw_response": "A",
+      "model_answer_letter": "A",
+      "model_correct": false
+    },
+    {
+      "id": "mmlu_4836",
+      "question": "Two objects, a sphere and a block of the same mass, are released from rest at the top of an inclined plane. The sphere rolls down the inclined plane without slipping. The block slides down the plane without friction. Which object reaches the bottom of the ramp first?",
+      "subject": "high_school_physics",
+      "choices": [
+        "The sphere, because it gains rotational kinetic energy, but the block does not",
+        "The sphere, because it gains mechanical energy due to the torque exerted on it, but the block does not",
+        "The block, because it does not lose mechanical energy due to friction, but the sphere does",
+        "The block, because it does not gain rotational kinetic energy, but the sphere does"
+      ],
+      "correct_answer_idx": 3,
+      "correct_answer_letter": "D",
+      "model_raw_response": "D",
+      "model_answer_letter": "D",
+      "model_correct": true
+    },
+    {
+      "id": "mmlu_10416",
+      "question": "During the year Verity Co. purchased $200000 of Otra Co. bonds at par and $50000 of U.S. Treasury bills. Verity classified the Otra bonds as available-for-sale securities and the Treasury bills as cash equivalents. In Verity's statement of cash flows what amount should it report as net cash used in investing activities?",
+      "subject": "professional_accounting",
+      "choices": [
+        "$0",
+        "$150,000",
+        "$200,000",
+        "250000"
+      ],
+      "correct_answer_idx": 2,
+      "correct_answer_letter": "C",
+      "model_raw_response": "B",
+      "model_answer_letter": "B",
+      "model_correct": false
+    },
+    {
+      "id": "mmlu_9169",
+      "question": "For which of these two scenarios does the main character (who uses I/me/my) do something clearly morally wrong, according to ordinary moral standards in the US as of 2020? Scenario 1 | I turned the radio lower so my neighbor could sleep. Scenario 2 | I wore a short skirt and tank top to the party.",
+      "subject": "moral_scenarios",
+      "choices": [
+        "Wrong, Wrong",
+        "Wrong, Not wrong",
+        "Not wrong, Wrong",
+        "Not wrong, Not wrong"
+      ],
+      "correct_answer_idx": 3,
+      "correct_answer_letter": "D",
+      "model_raw_response": "B",
+      "model_answer_letter": "B",
+      "model_correct": false
+    },
+    {
+      "id": "mmlu_10220",
+      "question": "What was concluded in a recent study comparing the genomes of modern people with ancient skeletal remains in North and South America?",
+      "subject": "prehistory",
+      "choices": [
+        "Native Americans in North America and South America genetically diverged from each other and their ancestors in the far north by about 30,000 years ago.",
+        "All Native Americans, both ancient and modern, are derived from a single migration of Austral-Melanesians into the Americas by about 13,000 years ago.",
+        "All Native Americans, both ancient and modern, are derived from a single migration of the Inuit, who arrived in the Americas by about 13,000 years ago.",
+        "The separation between native Siberians and the earliest Native Americans occurred sometime between 20,000 and 23,000 years ago."
+      ],
+      "correct_answer_idx": 3,
+      "correct_answer_letter": "D",
+      "model_raw_response": "A",
+      "model_answer_letter": "A",
+      "model_correct": false
+    },
+    {
+      "id": "mmlu_13654",
+      "question": "The largest increase in peacetime defense spending in American history occurred under which president?",
+      "subject": "us_foreign_policy",
+      "choices": [
+        "Jimmy Carter",
+        "Ronald Reagan",
+        "Bill Clinton",
+        "Dwight Eisenhower"
+      ],
+      "correct_answer_idx": 1,
+      "correct_answer_letter": "B",
+      "model_raw_response": "B",
+      "model_answer_letter": "B",
+      "model_correct": true
+    },
+    {
+      "id": "mmlu_5731",
+      "question": "This question refers to the following information.\n\"The seeds of totalitarian regimes are nurtured by misery and want. They spread and grow in the evil soil of poverty and strife. They reach their full growth when the hope of a people for a better life has died. We must keep that hope alive. . . . Great responsibilities have been placed upon us by the swift movement of events. . . . I am confident that the Congress will face these responsibilities squarely.\"\n\u2014President Harry S. Truman, 1947\nThe passage above is part of President Truman's argument to Congress in favor of",
+      "subject": "high_school_us_history",
+      "choices": [
+        "the Servicemen's Readjustment Act (G.I. Bill).",
+        "development of the hydrogen bomb.",
+        "the McCarran Internal Security Act.",
+        "an extension of aid to Greece and Turkey."
+      ],
+      "correct_answer_idx": 3,
+      "correct_answer_letter": "D",
+      "model_raw_response": "D",
+      "model_answer_letter": "D",
+      "model_correct": true
+    },
+    {
+      "id": "mmlu_4942",
+      "question": "Michelle watches David Letterman on television, but doesn't recognize him when she walks past him in Manhattan. Which effect on perception does this best illustrate?",
+      "subject": "high_school_psychology",
+      "choices": [
+        "convergence",
+        "context",
+        "proximity",
+        "closure"
+      ],
+      "correct_answer_idx": 1,
+      "correct_answer_letter": "B",
+      "model_raw_response": "B",
+      "model_answer_letter": "B",
+      "model_correct": true
+    },
+    {
+      "id": "mmlu_11031",
+      "question": "A criminal actor committed the crime of solicitation. Which of the following does not apply to solicitation?",
+      "subject": "professional_law",
+      "choices": [
+        "It is an agreement between two or more to commit a crime.",
+        "It is solicitation of another to commit a felony.",
+        "No act is needed other than the solicitation.",
+        "Withdrawal is generally not a defense."
+      ],
+      "correct_answer_idx": 0,
+      "correct_answer_letter": "A",
+      "model_raw_response": "A",
+      "model_answer_letter": "A",
+      "model_correct": true
+    },
+    {
+      "id": "mmlu_3417",
+      "question": "This question refers to the following information.\n\"The substitution of Plato for the scholastic Aristotle was hastened by contact with Byzantine scholarship. Already at the Council of Ferrera (1438), which nominally reunited the Eastern and Western churches, there was a debate in which the Byzantines maintained the superiority of Plato to Aristotle. Cosimo and Lorenzo de Medici were both addicted to Plato; Cosimo founded and Lorenzo continued the Florentine Academy, which was largely devoted to the study of Plato&\u2026The humanists of the time, however, were too busy acquiring knowledge of antiquity to be able to produce anything of value.\"\nBertrand Russell, British philosopher, History of Western Philosophy, 1946\nAccording to the information in the text, the schools founded by the Medici family most favored a philosophy known as",
+      "subject": "high_school_european_history",
+      "choices": [
+        "Neoclassicism",
+        "Scholasticism",
+        "Renaissance humanism",
+        "Neoplatonism"
+      ],
+      "correct_answer_idx": 3,
+      "correct_answer_letter": "D",
+      "model_raw_response": "D",
+      "model_answer_letter": "D",
+      "model_correct": true
+    },
+    {
+      "id": "mmlu_8747",
+      "question": "For which of these two scenarios does the main character (who uses I/me/my) do something clearly morally wrong, according to ordinary moral standards in the US as of 2020? Scenario 1 | I ran over the fresh carpet with a lawnmower. Scenario 2 | I urinated into my hand so I could test it for infection.",
+      "subject": "moral_scenarios",
+      "choices": [
+        "Wrong, Wrong",
+        "Wrong, Not wrong",
+        "Not wrong, Wrong",
+        "Not wrong, Not wrong"
+      ],
+      "correct_answer_idx": 0,
+      "correct_answer_letter": "A",
+      "model_raw_response": "B",
+      "model_answer_letter": "B",
+      "model_correct": false
+    },
+    {
+      "id": "mmlu_5118",
+      "question": "Which of the following is true regarding lifelong learning and ongoing professional development of school psychologists?",
+      "subject": "high_school_psychology",
+      "choices": [
+        "A formal professional development plan should be made and updated annually.",
+        "Textbooks from graduate school should be reread annually.",
+        "A degree in another field should be pursued.",
+        "A graduate education program should offer adequate preparation for professional practice, so no further training will be needed."
+      ],
+      "correct_answer_idx": 0,
+      "correct_answer_letter": "A",
+      "model_raw_response": "A",
+      "model_answer_letter": "A",
+      "model_correct": true
+    },
+    {
+      "id": "mmlu_6333",
+      "question": "The average male genital size is approximately",
+      "subject": "human_sexuality",
+      "choices": [
+        "4 inches",
+        "5 inches",
+        "7 inches",
+        "1 foot"
+      ],
+      "correct_answer_idx": 1,
+      "correct_answer_letter": "B",
+      "model_raw_response": "A",
+      "model_answer_letter": "A",
+      "model_correct": false
+    },
+    {
+      "id": "mmlu_5196",
+      "question": "A psychologist focusing on whether development occurs in stages is most interested in which of the following controversies?",
+      "subject": "high_school_psychology",
+      "choices": [
+        "nature versus nurture",
+        "continuity versus discontinuity",
+        "stability versus change",
+        "subjectivity versus objectivity"
+      ],
+      "correct_answer_idx": 0,
+      "correct_answer_letter": "A",
+      "model_raw_response": "B",
+      "model_answer_letter": "B",
+      "model_correct": false
+    },
+    {
+      "id": "mmlu_6823",
+      "question": "Which of the following is the best explanation of the fallacy of loaded language?",
+      "subject": "logical_fallacies",
+      "choices": [
+        "Using emotionally charged language to create an impression about the subject of a claim, without making an argument that the language fits the subject.",
+        "Referring to an act committed by an opponent in negative terms while referring to the same act committed by the arguer or supporters in favorable terms.",
+        "Using language and punctuation in a way that a statement can have multiple interpretations, so it's not really clear what is meant.",
+        "Confusing figurative language with literal language"
+      ],
+      "correct_answer_idx": 0,
+      "correct_answer_letter": "A",
+      "model_raw_response": "A",
+      "model_answer_letter": "A",
+      "model_correct": true
+    },
+    {
+      "id": "mmlu_12146",
+      "question": "A shopper purchased a can of sardines, which had been produced by a fish company. A short while later at home, the shopper was preparing a sardine sandwich when she opened the can and, to her astonishment, she saw a decomposed mouse. The shopper became nauseated and vomited upon seeing the mouse. After consulting her attorney, the shopper initiated a strict liability action against the company. At trial, the shopper presented into evidence the sardine can with the company's label, along with other corroborating evidence. The attorney representing the company objected to the introduction of the label on the can. The trial court should",
+      "subject": "professional_law",
+      "choices": [
+        "overrule the objection, because the label is self-authenticating.",
+        "overrule the objection, because the label is the best evidence showing that the can was produced by the company.",
+        "sustain the objection, because there is no corroborating evidence that the company placed the label on the can.",
+        "sustain the objection, because the shopper's proper cause of action is for infliction of emotional distress, not strict liability."
+      ],
+      "correct_answer_idx": 0,
+      "correct_answer_letter": "A",
+      "model_raw_response": "B",
+      "model_answer_letter": "B",
+      "model_correct": false
+    },
+    {
+      "id": "mmlu_2641",
+      "question": "As of 2015, the global fertility rate was about",
+      "subject": "global_facts",
+      "choices": [
+        "1.5 children per woman",
+        "2.5 children per woman",
+        "3.5 children per woman",
+        "4.5 children per woman"
+      ],
+      "correct_answer_idx": 1,
+      "correct_answer_letter": "B",
+      "model_raw_response": "B",
+      "model_answer_letter": "B",
+      "model_correct": true
+    },
+    {
+      "id": "mmlu_6805",
+      "question": "Which of the following fallacies happens when someone attributes the cause of an event to a simple cause when the cause is actually more complicated?",
+      "subject": "logical_fallacies",
+      "choices": [
+        "complex cause",
+        "hasty generalization",
+        "post hoc",
+        "division"
+      ],
+      "correct_answer_idx": 0,
+      "correct_answer_letter": "A",
+      "model_raw_response": "A",
+      "model_answer_letter": "A",
+      "model_correct": true
+    },
+    {
+      "id": "mmlu_3373",
+      "question": "This question refers to the following information.\nRead the the following petition to answer questions.\nThe Scribbling-Machines have thrown thousands of your petitioners out of employ, whereby they are brought into great distress, and are not able to procure a maintenance for their families, and deprived them of the opportunity of bringing up their children to labour. \u2026 The number of Scribbling-Machines extending about seventeen miles south-west of Leeds exceed all belief, being no less than one hundred and seventy! And as each machine will do as much work in twelve hours, as ten men can in that time do by hand, \u2026 [And, as the machines do] as much work in one day as would otherwise employ twenty men, \u2026 [a] full four thousand men are left to shift for a living how they can, and must of course fall to the Parish, if not timely relieved. \u2026 How are those men, thus thrown out of employ to provide for their families; and what are they to put their children apprentice to, that the rising generation may have something to keep them at work, in order that they may not be like vagabonds strolling about in idleness? \u2026 Many more evils we could enumerate, but we would hope, that the sensible part of mankind, who are not biased by interest, must see the dreadful tendency of their continuance; a depopulation must be the consequence; trade being then lost, the landed interest will have no other satisfaction but that of being last devoured.\nLeeds Woolen Workers Petition, 1786\nThe sentiments expressed by the Leeds woolen workers illustrate which of the following historical trends?",
+      "subject": "high_school_european_history",
+      "choices": [
+        "The social effects of industrialization",
+        "The rise of nationalism",
+        "Imperial expansion",
+        "Cultural changes in a material age"
+      ],
+      "correct_answer_idx": 0,
+      "correct_answer_letter": "A",
+      "model_raw_response": "A",
+      "model_answer_letter": "A",
+      "model_correct": true
+    },
+    {
+      "id": "mmlu_8786",
+      "question": "For which of these two scenarios does the main character (who uses I/me/my) do something clearly morally wrong, according to ordinary moral standards in the US as of 2020? Scenario 1 | I went to the seven eleven and placed my items on the counter. Scenario 2 | At the theater, I took out my phone before the movie started to text a friend.",
+      "subject": "moral_scenarios",
+      "choices": [
+        "Wrong, Wrong",
+        "Wrong, Not wrong",
+        "Not wrong, Wrong",
+        "Not wrong, Not wrong"
+      ],
+      "correct_answer_idx": 3,
+      "correct_answer_letter": "D",
+      "model_raw_response": "B",
+      "model_answer_letter": "B",
+      "model_correct": false
+    },
+    {
+      "id": "mmlu_8021",
+      "question": "According to the title of a popular children's TV show what color is Bear's big house?",
+      "subject": "miscellaneous",
+      "choices": [
+        "red",
+        "green",
+        "purple",
+        "blue"
+      ],
+      "correct_answer_idx": 3,
+      "correct_answer_letter": "D",
+      "model_raw_response": "A",
+      "model_answer_letter": "A",
+      "model_correct": false
+    },
+    {
+      "id": "mmlu_8090",
+      "question": "As of 1999 which state has the most Girl Scouts?",
+      "subject": "miscellaneous",
+      "choices": [
+        "California",
+        "Illinois",
+        "New York",
+        "Pennsylvania"
+      ],
+      "correct_answer_idx": 3,
+      "correct_answer_letter": "D",
+      "model_raw_response": "A",
+      "model_answer_letter": "A",
+      "model_correct": false
+    },
+    {
+      "id": "mmlu_13496",
+      "question": "In stage 3 of the 'health transition', the main causes of illness and death are:",
+      "subject": "sociology",
+      "choices": [
+        "acute, infectious diseases such as typhus, measles and cholera",
+        "respiratory diseases such as pneumonia and asthma",
+        "chronic, degenerative diseases, such as cancer, heart disease, and strokes",
+        "too diverse to put into one category"
+      ],
+      "correct_answer_idx": 2,
+      "correct_answer_letter": "C",
+      "model_raw_response": "C",
+      "model_answer_letter": "C",
+      "model_correct": true
+    },
+    {
+      "id": "mmlu_6318",
+      "question": "What is cocaine abuse during pregnancy related to?",
+      "subject": "human_sexuality",
+      "choices": [
+        "an increased risk of low birth weight babies",
+        "poorer growth and lower intelligence",
+        "smaller head circumference",
+        "all of the above"
+      ],
+      "correct_answer_idx": 3,
+      "correct_answer_letter": "D",
+      "model_raw_response": "D",
+      "model_answer_letter": "D",
+      "model_correct": true
+    },
+    {
+      "id": "mmlu_153",
+      "question": "The anatomic location of the spinal canal is",
+      "subject": "anatomy",
+      "choices": [
+        "caudal",
+        "dorsal",
+        "frontal",
+        "transverse"
+      ],
+      "correct_answer_idx": 1,
+      "correct_answer_letter": "B",
+      "model_raw_response": "B",
+      "model_answer_letter": "B",
+      "model_correct": true
+    },
+    {
+      "id": "mmlu_2706",
+      "question": "Which of the following contributes the MOST to genetic variability in a population?",
+      "subject": "high_school_biology",
+      "choices": [
+        "Sporulation",
+        "Binary fission",
+        "Vegetative propagation",
+        "Mutation"
+      ],
+      "correct_answer_idx": 3,
+      "correct_answer_letter": "D",
+      "model_raw_response": "D",
+      "model_answer_letter": "D",
+      "model_correct": true
+    },
+    {
+      "id": "mmlu_6358",
+      "question": "Fetishism typically develops at the age of:",
+      "subject": "human_sexuality",
+      "choices": [
+        "30 through 50",
+        "at birth",
+        "10 through 20",
+        "20 through 30"
+      ],
+      "correct_answer_idx": 2,
+      "correct_answer_letter": "C",
+      "model_raw_response": "D",
+      "model_answer_letter": "D",
+      "model_correct": false
+    },
+    {
+      "id": "mmlu_10920",
+      "question": "A plaintiff sued a defendant for injuries suffered in an automobile accident that occurred six months ago. The plaintiff claimed that the defendant drove through a red light and hit her as she was crossing the street. The posted speed limit at the scene of the accident was 25 m. p. h. In his case-in-chief, the defendant testified that the traffic light was green and he was driving carefully at 20 m. p. h. The plaintiff's attorney did not cross-examine the defendant. Rather, she called a police officer who testified that the defendant told him immediately after the accident that he was going 30 m. p. h. The police officer's testimony is",
+      "subject": "professional_law",
+      "choices": [
+        "a prior inconsistent statement and, therefore, admissible to impeach.",
+        "hearsay, but admissible as a prior inconsistent statement for any purpose.",
+        "admissible, as offered against the defendant.",
+        "inadmissible, because the accident report is the best evidence of what the defendant told the police officer."
+      ],
+      "correct_answer_idx": 2,
+      "correct_answer_letter": "C",
+      "model_raw_response": "A",
+      "model_answer_letter": "A",
+      "model_correct": false
+    },
+    {
+      "id": "mmlu_5251",
+      "question": "Dr. Ramchandran found that his patients who brushed their teeth after lunch had 1/20 the number of cavities in their teeth as those who didn't. After interviewing the dentist, a local newswriter reports that brushing teeth after lunch prevents cavities. Based on the dentist's research, which of the following statements is true?",
+      "subject": "high_school_psychology",
+      "choices": [
+        "If at least 100 patients were studied, the writer's statement is justified.",
+        "If a minimum of 500 patients were studied, the writer's statement is justified.",
+        "At least 100 of the patients needed to have brushed their teeth after lunch for the writer's statement to be justified.",
+        "No matter how many participants, the writer's statement is not justified."
+      ],
+      "correct_answer_idx": 3,
+      "correct_answer_letter": "D",
+      "model_raw_response": "A",
+      "model_answer_letter": "A",
+      "model_correct": false
+    },
+    {
+      "id": "mmlu_5856",
+      "question": "This question refers to the following information.\nBonesteel's prime consideration was to establish a surrender zone as far north as he thought the Soviets would accept. He knew that the Russian troops could reach the southern tip of Korea before American troops could arrive. He also knew that the Russians were on the verge of moving into Korea, or were already there. The nearest American troops to Korea were on Okinawa, 600 miles away. His problem, therefore, was to compose a surrender arrangement which, while acceptable to the Russians, would at the same time prevent them from seizing all of Korea. If they refused to confine their advance to north Korea, the United States would be unable to stop them. . . . He decided to use the 38th parallel as a hypothetical line dividing the zones within which Japanese forces in Korea would surrender to appointed American and Russian authorities.\n\u2014Adapted from U.S. Army Lt. Paul C. McGrath's account of Colonel Bonesteel's decision in the 1940s\nHow did the events depicted here affect Koreans?",
+      "subject": "high_school_world_history",
+      "choices": [
+        "They became a part of Japan\u2019s territory.",
+        "The Americans established freedom for all Koreans.",
+        "The Korean economy never recovered.",
+        "Korea remains divided into two nations near the 38th parallel."
+      ],
+      "correct_answer_idx": 3,
+      "correct_answer_letter": "D",
+      "model_raw_response": "D",
+      "model_answer_letter": "D",
+      "model_correct": true
+    },
+    {
+      "id": "mmlu_3118",
+      "question": "Examining data obtained from mass spectrometry supports which of the following?",
+      "subject": "high_school_chemistry",
+      "choices": [
+        "The common oxidation states of elements",
+        "Atomic size trends within the periodic table",
+        "Ionization energy trends within the periodic table",
+        "The existence of isotopes"
+      ],
+      "correct_answer_idx": 3,
+      "correct_answer_letter": "D",
+      "model_raw_response": "D",
+      "model_answer_letter": "D",
+      "model_correct": true
+    },
+    {
+      "id": "mmlu_11922",
+      "question": "As a legislative aide to a U. S. Senator you are called upon to provide an analysis of the constitutionality of a bill pending congressional approval. The bill imposes a 15% tax upon the gross annual receipts from the sales of all birth control devices. The bill has the strong support of conservative and pro-life organizations. The stated purpose of the proposed measure is to raise revenue and spur population growth across the country. In your learned opinion, the proposed tax is probably",
+      "subject": "professional_law",
+      "choices": [
+        "constitutional, because the fact that the tax applies to all sales of every type of birth control device invalidates any possible objection to the tax on the grounds that it violates the equal protection clause of the Fourteenth Amendment.",
+        "constitutional, because the fact that controversial policy motives may have induced the enactment of an otherwise reasonable measure calculated to raise revenue does not ipso facto invalidate the tax.",
+        "unconstitutional, because in inseverable aggregates, the domestic purchases and sales of birth control devices affect interstate and foreign commerce.",
+        "unconstitutional, because the tax burdens the fundamental right to privacy of users of birth control devices without establishing a compelling national interest for doing so."
+      ],
+      "correct_answer_idx": 1,
+      "correct_answer_letter": "B",
+      "model_raw_response": "B",
+      "model_answer_letter": "B",
+      "model_correct": true
+    },
+    {
+      "id": "mmlu_1722",
+      "question": "When the temperature of a strip of iron is increased, the length of the strip",
+      "subject": "conceptual_physics",
+      "choices": [
+        "also increases.",
+        "actually decreases.",
+        "may increase and may decrease.",
+        "decreases in width as it gets longer."
+      ],
+      "correct_answer_idx": 0,
+      "correct_answer_letter": "A",
+      "model_raw_response": "A",
+      "model_answer_letter": "A",
+      "model_correct": true
+    },
+    {
+      "id": "mmlu_13174",
+      "question": "Following the terrorist attacks of 9/11, what is the predominant paradigm in security and threat perception and to what extent is it an adequate response?",
+      "subject": "security_studies",
+      "choices": [
+        "The security paradigm has been the development of multi-level analysis, to aid the understanding of disempowerment and to promote peace research involvement by NGOs, policy-makers, and the academic community.",
+        "The security paradigm of US led strategy has been the undertaking of short-term measures, many of which are drawn from research of the peace studies community. They focus on peace-keeping, peace-making, and structural change for preventing further conflict.",
+        "The security paradigm of recent years has been to some extent a reversion to 'liddism'; keeping the lid on a potentially fractured international system, without redress to the critical underlying causes of the problems.",
+        "The dominant approach to security studies has been a US led initiative which recognizes the need to undertake responsibility for inter-governmental cooperation, particularly for the commitment towards ethical intervention and for securing peaceful transformations alongside demilitarization of the international community."
+      ],
+      "correct_answer_idx": 2,
+      "correct_answer_letter": "C",
+      "model_raw_response": "C",
+      "model_answer_letter": "C",
+      "model_correct": true
+    },
+    {
+      "id": "mmlu_4862",
+      "question": "Experimenter A uses a very small test charge qo, and experimenter B uses a test charge 2qo to measure an electric field produced by two parallel plates. A finds a field that is",
+      "subject": "high_school_physics",
+      "choices": [
+        "greater than the field found by B",
+        "the same as the field found by B",
+        "less than the field found by B",
+        "either greater or less than the field found by B, depending on the accelerations of the test charges"
+      ],
+      "correct_answer_idx": 1,
+      "correct_answer_letter": "B",
+      "model_raw_response": "B",
+      "model_answer_letter": "B",
+      "model_correct": true
+    },
+    {
+      "id": "mmlu_316",
+      "question": "Which statement about an atom is not true:",
+      "subject": "astronomy",
+      "choices": [
+        "The nucleus contains most of the atom\u2019s mass but almost none of its volume.",
+        "A neutral atom always has equal numbers of electrons and protons.",
+        "A neutral atom always has equal numbers of neutrons and protons.",
+        "The electrons can only orbit at particular energy levels."
+      ],
+      "correct_answer_idx": 2,
+      "correct_answer_letter": "C",
+      "model_raw_response": "C",
+      "model_answer_letter": "C",
+      "model_correct": true
+    },
+    {
+      "id": "mmlu_13239",
+      "question": "Which of the following ways is NOT a defining feature that distinguishes postcolonialism from other perspectives on security?",
+      "subject": "security_studies",
+      "choices": [
+        "Postcolonialism uniquely considers the nation or community group as a valid referent object in security studies.",
+        "Postcolonialism takes account not only of major war, but also of so-called 'small wars' and asymmetric conflicts.",
+        "Postcolonialism employs a distinctive focus on the role of violence in world politics.",
+        "Postcolonialism is not a predominantly or exclusively European form of knowledge."
+      ],
+      "correct_answer_idx": 0,
+      "correct_answer_letter": "A",
+      "model_raw_response": "D",
+      "model_answer_letter": "D",
+      "model_correct": false
+    },
+    {
+      "id": "mmlu_12035",
+      "question": "An uncle owns his property in fee simple. The uncle executes and delivers a deed to the property with the following granting clause:\"To my nephew and my niece for the life of my nephew, then to my gardener. \"As a result of the grant, which of the following is the most accurate statement regarding the ownership rights of the property?",
+      "subject": "professional_law",
+      "choices": [
+        "The nephew and niece are joint tenants in fee simple defeasible, and the gardener has an executory interest.",
+        "The nephew has a life estate, the niece has a life estate pur autre vie, and the gardener has a vested remainder.",
+        "The nephew and niece are tenants in common for the life of the first of them to die, the nephew and niece have contingent remainders in fee simple defeasible, and the gardener has an executory interest.",
+        "The nephew has a life estate, the niece also has a life estate, and the gardener has a vested remainder."
+      ],
+      "correct_answer_idx": 1,
+      "correct_answer_letter": "B",
+      "model_raw_response": "D",
+      "model_answer_letter": "D",
+      "model_correct": false
+    },
+    {
+      "id": "mmlu_4112",
+      "question": "In the balance of payments the trade balance",
+      "subject": "high_school_macroeconomics",
+      "choices": [
+        "is ignored.",
+        "appears in the capital account.",
+        "appears in the current account",
+        "is included in the official reserves."
+      ],
+      "correct_answer_idx": 2,
+      "correct_answer_letter": "C",
+      "model_raw_response": "C",
+      "model_answer_letter": "C",
+      "model_correct": true
+    },
+    {
+      "id": "mmlu_313",
+      "question": "Pluto's extremely cold (~40 K) surface is composed of:",
+      "subject": "astronomy",
+      "choices": [
+        "mainly water ice which always remains frozen",
+        "nitrogen methane and carbon monoxide ices which sublimate into an atmosphere near perihelion",
+        "nitrogen methane and carbon monoxide ices which always remain frozen",
+        "roughly half ices and half rocky materials"
+      ],
+      "correct_answer_idx": 1,
+      "correct_answer_letter": "B",
+      "model_raw_response": "B",
+      "model_answer_letter": "B",
+      "model_correct": true
+    },
+    {
+      "id": "mmlu_12495",
+      "question": "Dr. Harold Hanson, a psychologist who heads the personnel committee at a mental health facility, recommends that a psychologist who has an unresolved charge of sexual harassment against him not be considered for a promotion. In terms of his ethical responsibilities, Dr. Hanson:",
+      "subject": "professional_psychology",
+      "choices": [
+        "has acted ethically since sexual harassment is explicitly prohibited by the ethical guidelines.",
+        "has acted ethically as long as he is willing to consider the psychologist for promotion if he is acquitted of the harassment charge.",
+        "has acted ethically as long as his decision is consistent with the stated promotion policy of the mental health facility.",
+        "has acted unethically by violating the requirements of the ethical guidelines regarding employment procedures."
+      ],
+      "correct_answer_idx": 3,
+      "correct_answer_letter": "D",
+      "model_raw_response": "C",
+      "model_answer_letter": "C",
+      "model_correct": false
+    },
+    {
+      "id": "mmlu_11315",
+      "question": "A husband and wife own a piece of land as tenants by the entirety. When there were marital problems, wife secretly conveyed her interest in the real estate to her youngest son from a prior marriage so that he would always have a place to live. Wife died and the husband filed to evict his stepson. According to the majority view among the states, can the stepson prevail by asserting his deed from his mother?",
+      "subject": "professional_law",
+      "choices": [
+        "Yes, the entireties ownership was severed by the valid deed from mother to her son, and son now owns one-half of the property as tenants in common with the husband.",
+        "Yes, the son became a tenant by the entireties with his mother's husband upon his mother's death.",
+        "No, the mother's deed was a nullity because the entireties estate can only be broken with the consent of both parties; the husband became the sole fee simple owner on wife's death.",
+        "No, a mother cannot convey a real estate interest to a son without getting the approval of all of her children."
+      ],
+      "correct_answer_idx": 2,
+      "correct_answer_letter": "C",
+      "model_raw_response": "C",
+      "model_answer_letter": "C",
+      "model_correct": true
+    },
+    {
+      "id": "mmlu_9084",
+      "question": "For which of these two scenarios does the main character (who uses I/me/my) do something clearly morally wrong, according to ordinary moral standards in the US as of 2020? Scenario 1 | I used up the toilet paper in the bathroom that I share with my roommates after defecating, but I did not take a new roll from the closet to replace the old roll because there were none left. Scenario 2 | I took pictures of the women walking on the runway.",
+      "subject": "moral_scenarios",
+      "choices": [
+        "Wrong, Wrong",
+        "Wrong, Not wrong",
+        "Not wrong, Wrong",
+        "Not wrong, Not wrong"
+      ],
+      "correct_answer_idx": 3,
+      "correct_answer_letter": "D",
+      "model_raw_response": "B",
+      "model_answer_letter": "B",
+      "model_correct": false
+    },
+    {
+      "id": "mmlu_11865",
+      "question": "A homeowner conveyed his property to his cousin \"for life, with remainder to (the homeowner's) heirs. \" Later, the cousin conveyed the property to a farmer \"for as long as he would continue to farm the property. \" After the cousin's death, the homeowner's heirs brought suit against the farmer to quiet title. Which common law doctrine would be most applicable in the court's determination of the ownership of the property?",
+      "subject": "professional_law",
+      "choices": [
+        "Rule in Wild's Case.",
+        "Doctrine of Destructibility of Contingent Remainders.",
+        "Doctrine of Worthier Title.",
+        "Rule against Remainders in the Grantees' Heirs."
+      ],
+      "correct_answer_idx": 2,
+      "correct_answer_letter": "C",
+      "model_raw_response": "A",
+      "model_answer_letter": "A",
+      "model_correct": false
+    },
+    {
+      "id": "mmlu_11166",
+      "question": "There is a newcomer who joins a small town in the middle of nowhere, where she gets a job as a city employee. The city manual requires that newcomers pay a higher contribution to the city's employee betterment fund for the first three years of employment. Newcomer refuses to pay a higher contribution than other employees, whereupon she is terminated. Can she make a successful equal protection argument to fight for her job?",
+      "subject": "professional_law",
+      "choices": [
+        "No, she is not a member of a suspect class as there cannot be a \"class-of-one\" in the employment law context.",
+        "No, the request for the contribution was not unreasonable and cannot support an equal protection argument.",
+        "Yes, she can claim a class of one who is being discriminated against.",
+        "Yes, she can claim membership in a group of newcomers who are coming and are being treated differently than everyone else, even if she is the only newcomer she knows of at this time."
+      ],
+      "correct_answer_idx": 0,
+      "correct_answer_letter": "A",
+      "model_raw_response": "A",
+      "model_answer_letter": "A",
+      "model_correct": true
+    },
+    {
+      "id": "mmlu_6219",
+      "question": "Loss of muscle fiber may be due to loss of neurons which may be due to",
+      "subject": "human_aging",
+      "choices": [
+        "Clogged blood vessels",
+        "Loss of bone density",
+        "Changes in hormone levels",
+        "Loss of collagen"
+      ],
+      "correct_answer_idx": 0,
+      "correct_answer_letter": "A",
+      "model_raw_response": "C",
+      "model_answer_letter": "C",
+      "model_correct": false
+    },
+    {
+      "id": "mmlu_3020",
+      "question": "The units for R, the ideal gas law equation constant, may be",
+      "subject": "high_school_chemistry",
+      "choices": [
+        "L atm mol-1 K-1",
+        "J mol-1 K-1",
+        "volt coulomb mol-1 K-1",
+        "(A), (B), and (C)"
+      ],
+      "correct_answer_idx": 3,
+      "correct_answer_letter": "D",
+      "model_raw_response": "D",
+      "model_answer_letter": "D",
+      "model_correct": true
+    },
+    {
+      "id": "mmlu_10151",
+      "question": "Based on the analysis of oxygen isotope ratios in the shells of gastropods found in the sediments of an ancient lake, what happened to civilization in the Indus Valley?",
+      "subject": "prehistory",
+      "choices": [
+        "It became increasingly complex due to increased rainfall and longer growing seasons.",
+        "It eventually collapsed due to climate change and drought.",
+        "It collapsed due to increased monsoons and a series of catastrophic floods.",
+        "It evolved into a series of city states along rivers and lake shores."
+      ],
+      "correct_answer_idx": 1,
+      "correct_answer_letter": "B",
+      "model_raw_response": "B",
+      "model_answer_letter": "B",
+      "model_correct": true
+    },
+    {
+      "id": "mmlu_8709",
+      "question": "For which of these two scenarios does the main character (who uses I/me/my) do something clearly morally wrong, according to ordinary moral standards in the US as of 2020? Scenario 1 | I stuck a knife in his black scabbord. Scenario 2 | I ran a comb through my husband's hair.",
+      "subject": "moral_scenarios",
+      "choices": [
+        "Wrong, Wrong",
+        "Wrong, Not wrong",
+        "Not wrong, Wrong",
+        "Not wrong, Not wrong"
+      ],
+      "correct_answer_idx": 3,
+      "correct_answer_letter": "D",
+      "model_raw_response": "B",
+      "model_answer_letter": "B",
+      "model_correct": false
+    },
+    {
+      "id": "mmlu_9937",
+      "question": "Cicero claims that it is sometimes permissible to:",
+      "subject": "philosophy",
+      "choices": [
+        "commit acts of injustice.",
+        "break one\u2019s promises.",
+        "steal.",
+        "none of the above."
+      ],
+      "correct_answer_idx": 1,
+      "correct_answer_letter": "B",
+      "model_raw_response": "D",
+      "model_answer_letter": "D",
+      "model_correct": false
+    },
+    {
+      "id": "mmlu_12664",
+      "question": "At the outset of group counseling, the therapist should explain char the obligation of the group member to respect confidentiality is",
+      "subject": "professional_psychology",
+      "choices": [
+        "less of an issue than it is in individual therapy",
+        "the legal responsibility of the therapist",
+        "protected by state/provincial laws",
+        "on the \u201chonor system\u201d only"
+      ],
+      "correct_answer_idx": 3,
+      "correct_answer_letter": "D",
+      "model_raw_response": "C",
+      "model_answer_letter": "C",
+      "model_correct": false
+    },
+    {
+      "id": "mmlu_6829",
+      "question": "The concomitant variation fallacy is",
+      "subject": "logical_fallacies",
+      "choices": [
+        "attributing the cause of an event to a single cause when the cause is more complicated",
+        "arguing that since two events happened at the same time, one event must have caused the other",
+        "arguing that since one event preceded another event it must have caused the second event",
+        "drawing a conclusion based on sign reasoning when there is not really a direct relationship between the alleged sign and the subject of the conclusion"
+      ],
+      "correct_answer_idx": 1,
+      "correct_answer_letter": "B",
+      "model_raw_response": "B",
+      "model_answer_letter": "B",
+      "model_correct": true
+    },
+    {
+      "id": "mmlu_1314",
+      "question": "Prosthetic groups are:",
+      "subject": "college_medicine",
+      "choices": [
+        "required by all enzymes in the cell.",
+        "loosely bound to enzymes via hydrogen bonds.",
+        "sites on the enzyme molecule that permit allosteric modification of enzyme activity.",
+        "tightly bound to enzymes and are required for their activity."
+      ],
+      "correct_answer_idx": 3,
+      "correct_answer_letter": "D",
+      "model_raw_response": "D",
+      "model_answer_letter": "D",
+      "model_correct": true
+    },
+    {
+      "id": "mmlu_6410",
+      "question": "What are the experiences when a sexual addict has completed the sexual act?",
+      "subject": "human_sexuality",
+      "choices": [
+        "(s)he experiences feelings of hopelessness and despair",
+        "(s)he uses the fantasy of the behaviour just completed to become aroused again",
+        "(s)he feels relaxed and emotionally relieved",
+        "(s)he immediately becomes sexually aroused again and feels good about the behaviour"
+      ],
+      "correct_answer_idx": 0,
+      "correct_answer_letter": "A",
+      "model_raw_response": "B",
+      "model_answer_letter": "B",
+      "model_correct": false
+    },
+    {
+      "id": "mmlu_11123",
+      "question": "A man and a woman were arrested and charged with bank robbery. After receiving Miranda warnings, both requested an attorney. Following their arrests, the man and the woman were placed in separate jail cells. The next day before arraignment, the man asked a police officer if he could see his friend, the woman. The man was taken to the woman's jail cell and allowed to talk to her. Neither defendant knew that the police had placed a listening device in the woman's jail cell. As a result, their conversation was being overheard and recorded by the police. The police planted the listening device without first securing a warrant. While they were together, the man told the woman not to admit to anything because they could beat the charges with the help of a good lawyer. At trial, the prosecution sought to introduce the man's incriminating statement into evidence. The man's attorney has filed a motion to exclude. The motion should be",
+      "subject": "professional_law",
+      "choices": [
+        "denied, because the defendants did not have a reasonable expectation of privacy.",
+        "denied, because the statement did not violate the man's Fifth Amendment privilege against self-incrimination.",
+        "granted, because both defendants requested an attorney before engaging in their conversation.",
+        "granted, because the police did not secure a warrant before installing the listening device."
+      ],
+      "correct_answer_idx": 0,
+      "correct_answer_letter": "A",
+      "model_raw_response": "D",
+      "model_answer_letter": "D",
+      "model_correct": false
+    },
+    {
+      "id": "mmlu_1720",
+      "question": "A 1134-Hz tuning fork is sounded at the same time a piano note is struck. You hear three beats per second. The frequency of the piano string is",
+      "subject": "conceptual_physics",
+      "choices": [
+        "1131 Hz",
+        "1134 Hz",
+        "1137 Hz",
+        "More information is needed"
+      ],
+      "correct_answer_idx": 3,
+      "correct_answer_letter": "D",
+      "model_raw_response": "A\n\nThe beat frequency is the difference between the",
+      "model_answer_letter": "A",
+      "model_correct": false
+    },
+    {
+      "id": "mmlu_6970",
+      "question": "Of what is individual freedom to schedule work an example?",
+      "subject": "management",
+      "choices": [
+        "Job design",
+        "Job enrichment",
+        "Job rate",
+        "Job planning"
+      ],
+      "correct_answer_idx": 1,
+      "correct_answer_letter": "B",
+      "model_raw_response": "A",
+      "model_answer_letter": "A",
+      "model_correct": false
+    }
+  ]
+}

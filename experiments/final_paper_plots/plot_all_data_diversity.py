@@ -5,10 +5,7 @@ from matplotlib.patches import Patch
 import numpy as np
 import os
 from collections import defaultdict
-import sys
 
-# Add current directory to path to import shared_color_mapping
-sys.path.insert(0, str(Path(__file__).parent))
 from shared_color_mapping import get_shared_palette
 
 # Text sizes for plots (matching plot_classification_eval_all_models.py)

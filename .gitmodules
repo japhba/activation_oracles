@@ -1,0 +1,6 @@
+[submodule "tex"]
+	path = tex
+	url = https://git@git.overleaf.com/69fcf43cc0802586862dd51e
+[submodule "third_party/cot-oracle"]
+	path = third_party/cot-oracle
+	url = https://github.com/ceselder/cot-oracle

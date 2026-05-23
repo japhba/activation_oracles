@@ -1,0 +1,765 @@
+{
+  "layer_combinations": [
+    [
+      25,
+      50,
+      75
+    ]
+  ],
+  "act_layer_combinations": [
+    [
+      9,
+      18,
+      27
+    ]
+  ],
+  "schema_version": 1,
+  "special_token": " ?",
+  "prefix_template": "Layer: {layer}\\n{special_token} * {num_positions} \\n",
+  "model_name": "Qwen/Qwen3-8B",
+  "hook_onto_layer": 1,
+  "dataset_configs": [
+    {
+      "custom_dataset_params": {
+        "min_k_tokens": 1,
+        "max_k_tokens": 50,
+        "min_k_activations": 1,
+        "max_k_activations": 1,
+        "max_length": 2000,
+        "directions": [
+          "past",
+          "future"
+        ],
+        "vllm_max_new_tokens": 200,
+        "max_vllm_context_tokens": 2000,
+        "future_chat_system_prompt_prob": 0.5,
+        "system_prompt_path": "data_pipelines/latentqa_datasets/train/system.json",
+        "english_only_temp_filter": false
+      },
+      "num_train": 250000,
+      "num_test": 0,
+      "splits": [
+        "train"
+      ],
+      "model_name": "Qwen/Qwen3-8B",
+      "layer_combinations": [
+        [
+          25,
+          50,
+          75
+        ]
+      ],
+      "save_acts": false,
+      "batch_size": 16,
+      "dataset_name": "past_lens",
+      "dataset_folder": "sft_training_data",
+      "seed": 42
+    },
+    {
+      "custom_dataset_params": {
+        "min_k_tokens": 1,
+        "max_k_tokens": 50,
+        "min_k_activations": 1,
+        "max_k_activations": 50,
+        "max_length": 2000,
+        "directions": [
+          "past",
+          "future"
+        ],
+        "vllm_max_new_tokens": 200,
+        "max_vllm_context_tokens": 2000,
+        "future_chat_system_prompt_prob": 0.5,
+        "system_prompt_path": "data_pipelines/latentqa_datasets/train/system.json",
+        "english_only_temp_filter": false
+      },
+      "num_train": 250000,
+      "num_test": 0,
+      "splits": [
+        "train"
+      ],
+      "model_name": "Qwen/Qwen3-8B",
+      "layer_combinations": [
+        [
+          25,
+          50,
+          75
+        ]
+      ],
+      "save_acts": false,
+      "batch_size": 16,
+      "dataset_name": "past_lens",
+      "dataset_folder": "sft_training_data",
+      "seed": 42
+    },
+    {
+      "custom_dataset_params": {
+        "max_window_size": 3,
+        "min_window_size": 1,
+        "min_end_offset": -1,
+        "max_end_offset": -10,
+        "position_types": [
+          "all",
+          "window"
+        ]
+      },
+      "num_train": 66000,
+      "num_test": 0,
+      "splits": [
+        "train"
+      ],
+      "model_name": "Qwen/Qwen3-8B",
+      "layer_combinations": [
+        [
+          25,
+          50,
+          75
+        ]
+      ],
+      "save_acts": false,
+      "batch_size": 16,
+      "dataset_name": "latentqa",
+      "dataset_folder": "sft_training_data",
+      "seed": 42
+    },
+    {
+      "custom_dataset_params": {
+        "classification_dataset_name": "geometry_of_truth",
+        "num_qa_per_sample": 6,
+        "min_end_offset": -1,
+        "max_end_offset": -5,
+        "max_window_size": 1,
+        "min_window_size": 1
+      },
+      "num_train": 1588,
+      "num_test": 250,
+      "splits": [
+        "train",
+        "test"
+      ],
+      "model_name": "Qwen/Qwen3-8B",
+      "layer_combinations": [
+        [
+          25,
+          50,
+          75
+        ]
+      ],
+      "save_acts": false,
+      "batch_size": 16,
+      "dataset_name": "classification_geometry_of_truth",
+      "dataset_folder": "sft_training_data",
+      "seed": 42
+    },
+    {
+      "custom_dataset_params": {
+        "classification_dataset_name": "geometry_of_truth",
+        "num_qa_per_sample": 3,
+        "min_end_offset": -1,
+        "max_end_offset": -5,
+        "max_window_size": 50,
+        "min_window_size": 1
+      },
+      "num_train": 1588,
+      "num_test": 250,
+      "splits": [
+        "train",
+        "test"
+      ],
+      "model_name": "Qwen/Qwen3-8B",
+      "layer_combinations": [
+        [
+          25,
+          50,
+          75
+        ]
+      ],
+      "save_acts": false,
+      "batch_size": 16,
+      "dataset_name": "classification_geometry_of_truth",
+      "dataset_folder": "sft_training_data",
+      "seed": 42
+    },
+    {
+      "custom_dataset_params": {
+        "classification_dataset_name": "relations",
+        "num_qa_per_sample": 6,
+        "min_end_offset": -1,
+        "max_end_offset": -5,
+        "max_window_size": 1,
+        "min_window_size": 1
+      },
+      "num_train": 1588,
+      "num_test": 250,
+      "splits": [
+        "train",
+        "test"
+      ],
+      "model_name": "Qwen/Qwen3-8B",
+      "layer_combinations": [
+        [
+          25,
+          50,
+          75
+        ]
+      ],
+      "save_acts": false,
+      "batch_size": 16,
+      "dataset_name": "classification_relations",
+      "dataset_folder": "sft_training_data",
+      "seed": 42
+    },
+    {
+      "custom_dataset_params": {
+        "classification_dataset_name": "relations",
+        "num_qa_per_sample": 3,
+        "min_end_offset": -1,
+        "max_end_offset": -5,
+        "max_window_size": 50,
+        "min_window_size": 1
+      },
+      "num_train": 1588,
+      "num_test": 250,
+      "splits": [
+        "train",
+        "test"
+      ],
+      "model_name": "Qwen/Qwen3-8B",
+      "layer_combinations": [
+        [
+          25,
+          50,
+          75
+        ]
+      ],
+      "save_acts": false,
+      "batch_size": 16,
+      "dataset_name": "classification_relations",
+      "dataset_folder": "sft_training_data",
+      "seed": 42
+    },
+    {
+      "custom_dataset_params": {
+        "classification_dataset_name": "sst2",
+        "num_qa_per_sample": 6,
+        "min_end_offset": -1,
+        "max_end_offset": -5,
+        "max_window_size": 1,
+        "min_window_size": 1
+      },
+      "num_train": 1588,
+      "num_test": 250,
+      "splits": [
+        "train",
+        "test"
+      ],
+      "model_name": "Qwen/Qwen3-8B",
+      "layer_combinations": [
+        [
+          25,
+          50,
+          75
+        ]
+      ],
+      "save_acts": false,
+      "batch_size": 16,
+      "dataset_name": "classification_sst2",
+      "dataset_folder": "sft_training_data",
+      "seed": 42
+    },
+    {
+      "custom_dataset_params": {
+        "classification_dataset_name": "sst2",
+        "num_qa_per_sample": 3,
+        "min_end_offset": -1,
+        "max_end_offset": -5,
+        "max_window_size": 50,
+        "min_window_size": 1
+      },
+      "num_train": 1588,
+      "num_test": 250,
+      "splits": [
+        "train",
+        "test"
+      ],
+      "model_name": "Qwen/Qwen3-8B",
+      "layer_combinations": [
+        [
+          25,
+          50,
+          75
+        ]
+      ],
+      "save_acts": false,
+      "batch_size": 16,
+      "dataset_name": "classification_sst2",
+      "dataset_folder": "sft_training_data",
+      "seed": 42
+    },
+    {
+      "custom_dataset_params": {
+        "classification_dataset_name": "md_gender",
+        "num_qa_per_sample": 6,
+        "min_end_offset": -1,
+        "max_end_offset": -5,
+        "max_window_size": 1,
+        "min_window_size": 1
+      },
+      "num_train": 1588,
+      "num_test": 250,
+      "splits": [
+        "train",
+        "test"
+      ],
+      "model_name": "Qwen/Qwen3-8B",
+      "layer_combinations": [
+        [
+          25,
+          50,
+          75
+        ]
+      ],
+      "save_acts": false,
+      "batch_size": 16,
+      "dataset_name": "classification_md_gender",
+      "dataset_folder": "sft_training_data",
+      "seed": 42
+    },
+    {
+      "custom_dataset_params": {
+        "classification_dataset_name": "md_gender",
+        "num_qa_per_sample": 3,
+        "min_end_offset": -1,
+        "max_end_offset": -5,
+        "max_window_size": 50,
+        "min_window_size": 1
+      },
+      "num_train": 1588,
+      "num_test": 250,
+      "splits": [
+        "train",
+        "test"
+      ],
+      "model_name": "Qwen/Qwen3-8B",
+      "layer_combinations": [
+        [
+          25,
+          50,
+          75
+        ]
+      ],
+      "save_acts": false,
+      "batch_size": 16,
+      "dataset_name": "classification_md_gender",
+      "dataset_folder": "sft_training_data",
+      "seed": 42
+    },
+    {
+      "custom_dataset_params": {
+        "classification_dataset_name": "snli",
+        "num_qa_per_sample": 6,
+        "min_end_offset": -1,
+        "max_end_offset": -5,
+        "max_window_size": 1,
+        "min_window_size": 1
+      },
+      "num_train": 1588,
+      "num_test": 250,
+      "splits": [
+        "train",
+        "test"
+      ],
+      "model_name": "Qwen/Qwen3-8B",
+      "layer_combinations": [
+        [
+          25,
+          50,
+          75
+        ]
+      ],
+      "save_acts": false,
+      "batch_size": 16,
+      "dataset_name": "classification_snli",
+      "dataset_folder": "sft_training_data",
+      "seed": 42
+    },
+    {
+      "custom_dataset_params": {
+        "classification_dataset_name": "snli",
+        "num_qa_per_sample": 3,
+        "min_end_offset": -1,
+        "max_end_offset": -5,
+        "max_window_size": 50,
+        "min_window_size": 1
+      },
+      "num_train": 1588,
+      "num_test": 250,
+      "splits": [
+        "train",
+        "test"
+      ],
+      "model_name": "Qwen/Qwen3-8B",
+      "layer_combinations": [
+        [
+          25,
+          50,
+          75
+        ]
+      ],
+      "save_acts": false,
+      "batch_size": 16,
+      "dataset_name": "classification_snli",
+      "dataset_folder": "sft_training_data",
+      "seed": 42
+    },
+    {
+      "custom_dataset_params": {
+        "classification_dataset_name": "ag_news",
+        "num_qa_per_sample": 6,
+        "min_end_offset": -1,
+        "max_end_offset": -5,
+        "max_window_size": 1,
+        "min_window_size": 1
+      },
+      "num_train": 1588,
+      "num_test": 250,
+      "splits": [
+        "test"
+      ],
+      "model_name": "Qwen/Qwen3-8B",
+      "layer_combinations": [
+        [
+          25,
+          50,
+          75
+        ]
+      ],
+      "save_acts": false,
+      "batch_size": 16,
+      "dataset_name": "classification_ag_news",
+      "dataset_folder": "sft_training_data",
+      "seed": 42
+    },
+    {
+      "custom_dataset_params": {
+        "classification_dataset_name": "ag_news",
+        "num_qa_per_sample": 3,
+        "min_end_offset": -1,
+        "max_end_offset": -5,
+        "max_window_size": 50,
+        "min_window_size": 1
+      },
+      "num_train": 1588,
+      "num_test": 250,
+      "splits": [
+        "test"
+      ],
+      "model_name": "Qwen/Qwen3-8B",
+      "layer_combinations": [
+        [
+          25,
+          50,
+          75
+        ]
+      ],
+      "save_acts": false,
+      "batch_size": 16,
+      "dataset_name": "classification_ag_news",
+      "dataset_folder": "sft_training_data",
+      "seed": 42
+    },
+    {
+      "custom_dataset_params": {
+        "classification_dataset_name": "ner",
+        "num_qa_per_sample": 6,
+        "min_end_offset": -1,
+        "max_end_offset": -5,
+        "max_window_size": 1,
+        "min_window_size": 1
+      },
+      "num_train": 1588,
+      "num_test": 250,
+      "splits": [
+        "train",
+        "test"
+      ],
+      "model_name": "Qwen/Qwen3-8B",
+      "layer_combinations": [
+        [
+          25,
+          50,
+          75
+        ]
+      ],
+      "save_acts": false,
+      "batch_size": 16,
+      "dataset_name": "classification_ner",
+      "dataset_folder": "sft_training_data",
+      "seed": 42
+    },
+    {
+      "custom_dataset_params": {
+        "classification_dataset_name": "ner",
+        "num_qa_per_sample": 3,
+        "min_end_offset": -1,
+        "max_end_offset": -5,
+        "max_window_size": 50,
+        "min_window_size": 1
+      },
+      "num_train": 1588,
+      "num_test": 250,
+      "splits": [
+        "train",
+        "test"
+      ],
+      "model_name": "Qwen/Qwen3-8B",
+      "layer_combinations": [
+        [
+          25,
+          50,
+          75
+        ]
+      ],
+      "save_acts": false,
+      "batch_size": 16,
+      "dataset_name": "classification_ner",
+      "dataset_folder": "sft_training_data",
+      "seed": 42
+    },
+    {
+      "custom_dataset_params": {
+        "classification_dataset_name": "tense",
+        "num_qa_per_sample": 6,
+        "min_end_offset": -1,
+        "max_end_offset": -5,
+        "max_window_size": 1,
+        "min_window_size": 1
+      },
+      "num_train": 1588,
+      "num_test": 250,
+      "splits": [
+        "train",
+        "test"
+      ],
+      "model_name": "Qwen/Qwen3-8B",
+      "layer_combinations": [
+        [
+          25,
+          50,
+          75
+        ]
+      ],
+      "save_acts": false,
+      "batch_size": 16,
+      "dataset_name": "classification_tense",
+      "dataset_folder": "sft_training_data",
+      "seed": 42
+    },
+    {
+      "custom_dataset_params": {
+        "classification_dataset_name": "tense",
+        "num_qa_per_sample": 3,
+        "min_end_offset": -1,
+        "max_end_offset": -5,
+        "max_window_size": 50,
+        "min_window_size": 1
+      },
+      "num_train": 1588,
+      "num_test": 250,
+      "splits": [
+        "train",
+        "test"
+      ],
+      "model_name": "Qwen/Qwen3-8B",
+      "layer_combinations": [
+        [
+          25,
+          50,
+          75
+        ]
+      ],
+      "save_acts": false,
+      "batch_size": 16,
+      "dataset_name": "classification_tense",
+      "dataset_folder": "sft_training_data",
+      "seed": 42
+    },
+    {
+      "custom_dataset_params": {
+        "classification_dataset_name": "language_identification",
+        "num_qa_per_sample": 6,
+        "min_end_offset": -1,
+        "max_end_offset": -5,
+        "max_window_size": 1,
+        "min_window_size": 1
+      },
+      "num_train": 1588,
+      "num_test": 250,
+      "splits": [
+        "test"
+      ],
+      "model_name": "Qwen/Qwen3-8B",
+      "layer_combinations": [
+        [
+          25,
+          50,
+          75
+        ]
+      ],
+      "save_acts": false,
+      "batch_size": 4,
+      "dataset_name": "classification_language_identification",
+      "dataset_folder": "sft_training_data",
+      "seed": 42
+    },
+    {
+      "custom_dataset_params": {
+        "classification_dataset_name": "language_identification",
+        "num_qa_per_sample": 3,
+        "min_end_offset": -1,
+        "max_end_offset": -5,
+        "max_window_size": 50,
+        "min_window_size": 1
+      },
+      "num_train": 1588,
+      "num_test": 250,
+      "splits": [
+        "test"
+      ],
+      "model_name": "Qwen/Qwen3-8B",
+      "layer_combinations": [
+        [
+          25,
+          50,
+          75
+        ]
+      ],
+      "save_acts": false,
+      "batch_size": 16,
+      "dataset_name": "classification_language_identification",
+      "dataset_folder": "sft_training_data",
+      "seed": 42
+    },
+    {
+      "custom_dataset_params": {
+        "classification_dataset_name": "singular_plural",
+        "num_qa_per_sample": 6,
+        "min_end_offset": -1,
+        "max_end_offset": -5,
+        "max_window_size": 1,
+        "min_window_size": 1
+      },
+      "num_train": 0,
+      "num_test": 250,
+      "splits": [
+        "test"
+      ],
+      "model_name": "Qwen/Qwen3-8B",
+      "layer_combinations": [
+        [
+          25,
+          50,
+          75
+        ]
+      ],
+      "save_acts": false,
+      "batch_size": 16,
+      "dataset_name": "classification_singular_plural",
+      "dataset_folder": "sft_training_data",
+      "seed": 42
+    },
+    {
+      "custom_dataset_params": {
+        "classification_dataset_name": "singular_plural",
+        "num_qa_per_sample": 3,
+        "min_end_offset": -1,
+        "max_end_offset": -5,
+        "max_window_size": 50,
+        "min_window_size": 1
+      },
+      "num_train": 0,
+      "num_test": 250,
+      "splits": [
+        "test"
+      ],
+      "model_name": "Qwen/Qwen3-8B",
+      "layer_combinations": [
+        [
+          25,
+          50,
+          75
+        ]
+      ],
+      "save_acts": false,
+      "batch_size": 16,
+      "dataset_name": "classification_singular_plural",
+      "dataset_folder": "sft_training_data",
+      "seed": 42
+    }
+  ],
+  "dataset_loader_names": [
+    "past_lens",
+    "past_lens",
+    "latentqa",
+    "classification_geometry_of_truth",
+    "classification_geometry_of_truth",
+    "classification_relations",
+    "classification_relations",
+    "classification_sst2",
+    "classification_sst2",
+    "classification_md_gender",
+    "classification_md_gender",
+    "classification_snli",
+    "classification_snli",
+    "classification_ag_news",
+    "classification_ag_news",
+    "classification_ner",
+    "classification_ner",
+    "classification_tense",
+    "classification_tense",
+    "classification_language_identification",
+    "classification_language_identification",
+    "classification_singular_plural",
+    "classification_singular_plural"
+  ],
+  "use_decoder_vectors": true,
+  "generation_kwargs": {
+    "do_sample": false,
+    "max_new_tokens": 20
+  },
+  "steering_coefficient": 1.0,
+  "dataset_folder": "sft_training_data",
+  "train_batch_size": 16,
+  "eval_batch_size": 128,
+  "train_batches_per_materialization_block": 64,
+  "use_lora": true,
+  "lora_r": 64,
+  "lora_alpha": 128,
+  "lora_dropout": 0.05,
+  "lora_target_modules": "all-linear",
+  "num_epochs": 1,
+  "lr": 1e-05,
+  "gradient_accumulation_steps": 1,
+  "max_grad_norm": 1.0,
+  "eval_steps": 5000,
+  "eval_on_start": false,
+  "gradient_checkpointing": true,
+  "window_mult": 20,
+  "save_steps": 5000,
+  "save_dir": "checkpoints_full_mix_250k_past_lens_no_synthetic_qa_v3",
+  "max_train_examples": null,
+  "seed": 42,
+  "eval_logs_path": "eval_logs.json",
+  "load_lora_path": null,
+  "created_at_utc": "",
+  "git_commit": "",
+  "wandb_project": "misc_experiments",
+  "wandb_run_name": "Qwen/Qwen3-8B-layers_9-18-27_full_mix_250k_past_lens_no_synthetic_qa_v3",
+  "wandb_suffix": "_full_mix_250k_past_lens_no_synthetic_qa_v3",
+  "hf_push_to_hub": false,
+  "hf_private_repo": false,
+  "hf_repo_name": "",
+  "hf_repo_id": "",
+  "load_in_8bit": false,
+  "open_ended_eval_include": null,
+  "positive_negative_examples": false
+}

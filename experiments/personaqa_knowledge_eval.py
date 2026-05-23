@@ -33,7 +33,7 @@ MODEL_CONFIGS = [
     },
 ]
 
-DATA_DIR = "datasets/personaqa_data/shuffled"
+DATA_DIR = "data_pipelines/personaqa_data/shuffled"
 PERSONAS_FILENAME = "personas.jsonl"
 
 # ========================================

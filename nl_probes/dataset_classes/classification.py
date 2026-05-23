@@ -52,9 +52,10 @@ class ClassificationDatasetLoader(ActDatasetLoader):
         self.model_kwargs = model_kwargs
         self.model = model
 
-        self.act_layers = [
-            layer_percent_to_layer(self.dataset_config.model_name, layer_percent)
-            for layer_percent in self.dataset_config.layer_percents
+        assert self.dataset_config.layer_combinations, "layer_combinations must be non-empty"
+        self.act_layer_combinations = [
+            [layer_percent_to_layer(self.dataset_config.model_name, layer_percent) for layer_percent in layer_combo]
+            for layer_combo in self.dataset_config.layer_combinations
         ]
 
         assert self.dataset_params.min_end_offset < 0, "Min end offset must be negative"
@@ -88,7 +89,7 @@ class ClassificationDatasetLoader(ActDatasetLoader):
                 tokenizer,
                 self.dataset_config.model_name,
                 self.dataset_config.batch_size,
-                self.act_layers,
+                self.act_layer_combinations,
                 min_end_offset=self.dataset_params.min_end_offset,
                 max_end_offset=self.dataset_params.max_end_offset,
                 max_window_size=self.dataset_params.max_window_size,
@@ -169,7 +170,7 @@ def create_vector_dataset(
     tokenizer: AutoTokenizer,
     model_name: str,
     batch_size: int,
-    act_layers: list[int],
+    act_layer_combinations: list[list[int]],
     min_end_offset: int,
     max_end_offset: int,
     max_window_size: int,
@@ -184,17 +185,19 @@ def create_vector_dataset(
     assert min_end_offset < 0, "Min end offset must be negative"
     assert max_end_offset < 0, "Max end offset must be negative"
     assert max_end_offset <= min_end_offset, "Max end offset must be less than or equal to min end offset"
+    assert act_layer_combinations, "act_layer_combinations must be non-empty"
     training_data = []
 
     assert tokenizer.padding_side == "left", "Padding side must be left"
     device = torch.device("cpu")
+    unique_layers = sorted({layer for layer_combo in act_layer_combinations for layer in layer_combo})
 
     if save_acts:
         if model is None:
             if model_kwargs is None:
                 model_kwargs = {}
             model = load_model(model_name, torch.bfloat16, **model_kwargs)
-        submodules = {layer: get_hf_submodule(model, layer) for layer in act_layers}
+        submodules = {layer: get_hf_submodule(model, layer) for layer in unique_layers}
         device = model.device
 
     if lora_path is not None:
@@ -221,52 +224,56 @@ def create_vector_dataset(
         tokenized_prompts["input_ids"] = tokenized_prompts["input_ids"]
         tokenized_prompts["attention_mask"] = tokenized_prompts["attention_mask"]
 
-        for layer in act_layers:
-            for j in range(len(batch_datapoints)):
-                attn_mask_L = tokenized_prompts["attention_mask"][j].bool()
-                input_ids_L = tokenized_prompts["input_ids"][j, attn_mask_L]
-                L = len(input_ids_L)
-                end_offset = random.randint(max_end_offset, min_end_offset)
-                end_pos = L + end_offset
+        for j in range(len(batch_datapoints)):
+            act_layers = random.choice(act_layer_combinations)
+            attn_mask_L = tokenized_prompts["attention_mask"][j].bool()
+            input_ids_L = tokenized_prompts["input_ids"][j, attn_mask_L]
+            L = len(input_ids_L)
+            end_offset = random.randint(max_end_offset, min_end_offset)
+            end_pos = L + end_offset
 
-                assert L > 0, f"L={L}"
-                assert end_pos > 0, f"end_pos={end_pos}"
+            assert L > 0, f"L={L}"
+            assert end_pos > 0, f"end_pos={end_pos}"
 
-                k = random.randint(min_window_size, max_window_size)
-                k = min(k, end_pos + 1)
-                assert k > 0, f"k={k}"
-                begin_pos = end_pos - k + 1
-                positions_K = list(range(begin_pos, end_pos + 1))
-                assert len(positions_K) == k
+            k = random.randint(min_window_size, max_window_size)
+            k = min(k, end_pos + 1)
+            assert k > 0, f"k={k}"
+            begin_pos = end_pos - k + 1
+            positions_K = list(range(begin_pos, end_pos + 1))
+            assert len(positions_K) == k
 
-                # assert tokenized_prompts["input_ids"][j][offset + 1] == tokenizer.eos_token_id
-                if debug_print:
-                    view_tokens(input_ids_L, tokenizer, positions_K[-1])
-                classification_prompt = f"{batch_datapoints[j].classification_prompt}"
+            # assert tokenized_prompts["input_ids"][j][offset + 1] == tokenizer.eos_token_id
+            if debug_print:
+                view_tokens(input_ids_L, tokenizer, positions_K[-1])
+            classification_prompt = f"{batch_datapoints[j].classification_prompt}"
 
-                if save_acts is False:
-                    acts_KD = None
-                else:
+            if save_acts is False:
+                acts_BD = None
+            else:
+                acts_layers = []
+                for layer in act_layers:
                     acts_LD = acts_BLD_by_layer_dict[layer][j, attn_mask_L]
                     acts_KD = acts_LD[positions_K]
                     assert acts_KD.shape[0] == k
+                    acts_layers.append(acts_KD)
+                acts_BD = torch.cat(acts_layers, dim=0)
 
-                training_data_point = create_training_datapoint(
-                    datapoint_type=datapoint_type,
-                    prompt=classification_prompt,
-                    target_response=batch_datapoints[j].target_response,
-                    layer=layer,
-                    num_positions=k,
-                    tokenizer=tokenizer,
-                    acts_BD=acts_KD,
-                    feature_idx=-1,
-                    context_input_ids=input_ids_L,
-                    context_positions=positions_K,
-                    ds_label=batch_datapoints[j].ds_label,
-                )
-                if training_data_point is None:
-                    continue
-                training_data.append(training_data_point)
+            training_data_point = create_training_datapoint(
+                datapoint_type=datapoint_type,
+                prompt=classification_prompt,
+                target_response=batch_datapoints[j].target_response,
+                layers=act_layers,
+                num_positions=k,
+                tokenizer=tokenizer,
+                acts_BD=acts_BD,
+                feature_idx=-1,
+                context_input_ids=input_ids_L,
+                context_positions=positions_K,
+                ds_label=batch_datapoints[j].ds_label,
+            )
+            if training_data_point is None:
+                continue
+            training_data.append(training_data_point)
 
     return training_data
 
@@ -304,7 +311,7 @@ if __name__ == "__main__":
     tokenizer = load_tokenizer(model_name)
 
     classification_dataset_loaders: list[ClassificationDatasetLoader] = []
-    layer_percents = [25, 50, 75]
+    layer_combinations = [[25, 50, 75]]
     batch_size = 16
     steering_coefficient = 2.0
     hook_layer = 1
@@ -325,8 +332,9 @@ if __name__ == "__main__":
             num_test=classification_datasets[dataset_name]["num_test"],
             splits=classification_datasets[dataset_name]["splits"],
             model_name=model_name,
-            layer_percents=layer_percents,
+            layer_combinations=layer_combinations,
             save_acts=False,
+            batch_size=batch_size,
         )
 
         classification_dataset_loader = ClassificationDatasetLoader(

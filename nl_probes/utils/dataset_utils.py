@@ -1,3 +1,4 @@
+import contextlib
 from typing import Any, Mapping
 
 import torch
@@ -10,10 +11,13 @@ from nl_probes.utils.activation_utils import collect_activations_multiple_layers
 SPECIAL_TOKEN = " ?"
 
 
-def get_introspection_prefix(sae_layer: int, num_positions: int) -> str:
-    prefix = f"Layer: {sae_layer}\n"
-    prefix += SPECIAL_TOKEN * num_positions
-    prefix += " \n"
+def get_introspection_prefix(layers: list[int], num_positions: int) -> str:
+    assert len(layers) > 0, "layers must be non-empty"
+    prefix = ""
+    for layer in layers:
+        prefix += f"Layer: {layer}\n"
+        prefix += SPECIAL_TOKEN * num_positions
+        prefix += " \n"
     return prefix
 
 
@@ -22,6 +26,19 @@ class FeatureResult(BaseModel):
 
     feature_idx: int
     api_response: str
+    prompt: str
+    meta_info: Mapping[str, Any] = {}
+
+
+class BinaryFeatureResult(BaseModel):
+    """First-token candidate score result for a single feature evaluation."""
+
+    feature_idx: int
+    candidate_scores: dict[str, float]
+    candidate_token_scores: dict[str, list[dict[str, Any]]]
+    argmax_token_id: int
+    argmax_token_text: str
+    argmax_logit: float
     prompt: str
     meta_info: Mapping[str, Any] = {}
 
@@ -43,7 +60,7 @@ class TrainingDataPoint(BaseModel):
     datapoint_type: str
     input_ids: list[int]
     labels: list[int]  # Can contain -100 for ignored tokens
-    layer: int
+    layers: list[int]
     steering_vectors: torch.Tensor | None
     positions: list[int]
     feature_idx: int
@@ -55,15 +72,28 @@ class TrainingDataPoint(BaseModel):
 
     @model_validator(mode="after")
     def _check_context_alignment(cls, values):
+        layers = values.layers
+        if len(layers) == 0:
+            raise ValueError("layers must be non-empty")
+        if len(layers) != len(set(layers)):
+            raise ValueError(f"layers must be unique, got {layers}")
+
         sv = values.steering_vectors
         if sv is not None:
             if len(values.positions) != sv.shape[0]:
                 raise ValueError("positions and steering_vectors must have the same length")
+            if sv.shape[0] % len(layers) != 0:
+                raise ValueError("steering_vectors length must be divisible by number of layers")
+            if values.context_positions is not None:
+                if len(values.context_positions) * len(layers) != sv.shape[0]:
+                    raise ValueError("context_positions length does not match steering_vectors length")
         else:
             if values.context_positions is None or values.context_input_ids is None:
                 raise ValueError("context_* must be provided when steering_vectors is None")
-            if len(values.positions) != len(values.context_positions):
-                raise ValueError("positions and context_positions must have the same length")
+            if len(values.positions) % len(layers) != 0:
+                raise ValueError("positions length must be divisible by number of layers")
+            if len(values.positions) != len(values.context_positions) * len(layers):
+                raise ValueError("positions length must match num_layers * num_context_positions")
         return values
 
 
@@ -160,6 +190,8 @@ def materialize_missing_steering_vectors(
     batch_points: list[TrainingDataPoint],
     tokenizer: AutoTokenizer,
     model: PeftModel,
+    *,
+    manage_model_state: bool = True,
 ) -> list[TrainingDataPoint]:
     """
     Materialization of missing steering vectors for a heterogenous batch
@@ -173,8 +205,18 @@ def materialize_missing_steering_vectors(
          then write back a [num_positions, D] tensor to dp.steering_vectors. Returns a new batch.
 
     No-op if every item already has steering_vectors.
+
+    `manage_model_state=True` is the safe default and should be used for normal
+    standalone calls, including evaluation. In that mode this function switches
+    the model to eval mode, disables LoRA adapters while collecting base-model
+    activations, and restores the previous train/eval state afterwards.
+
+    `manage_model_state=False` is only for callers that have already wrapped a
+    larger outer scope in `model.eval()` and `model.disable_adapter()`. This is
+    used in the efficient training block path to avoid paying repeated
+    adapter/mode-toggle overhead for every materialization group. It should not
+    be used unless the caller is already managing that state correctly.
     """
-    # Select datapoints that need generation
     to_fill: list[tuple[int, TrainingDataPoint]] = [
         (i, dp) for i, dp in enumerate(batch_points) if dp.steering_vectors is None
     ]
@@ -183,83 +225,100 @@ def materialize_missing_steering_vectors(
 
     assert isinstance(model, PeftModel), "Model must be a PeftModel"
 
-    # Validate context fields
-    for _, dp in to_fill:
-        if dp.context_input_ids is None or dp.context_positions is None:
-            raise ValueError(
-                "Datapoint has steering_vectors=None but is missing context_input_ids or context_positions"
+    state_context = contextlib.nullcontext()
+    was_training = model.training
+    if manage_model_state:
+        model.eval()
+        state_context = model.disable_adapter()
+    else:
+        assert not model.training, "manage_model_state=False requires model to already be in eval mode"
+
+    try:
+        with state_context:
+            # Validate context fields
+            for _, dp in to_fill:
+                if dp.context_input_ids is None or dp.context_positions is None:
+                    raise ValueError(
+                        "Datapoint has steering_vectors=None but is missing context_input_ids or context_positions"
+                    )
+
+            # Build the input batch (left padding to match your construct_batch convention)
+            pad_id = tokenizer.pad_token_id
+            contexts: list[list[int]] = [list(dp.context_input_ids) for _, dp in to_fill]
+            positions_per_item: list[list[int]] = [list(dp.context_positions) for _, dp in to_fill]
+            max_len = max(len(c) for c in contexts)
+
+            input_ids_tensors: list[torch.Tensor] = []
+            attn_masks_tensors: list[torch.Tensor] = []
+            left_offsets: list[int] = []
+
+            device = next(model.parameters()).device
+
+            for c in contexts:
+                pad_len = max_len - len(c)
+                input_ids_tensors.append(torch.tensor([pad_id] * pad_len + c, dtype=torch.long, device=device))
+                attn_masks_tensors.append(
+                    torch.tensor([False] * pad_len + [True] * len(c), dtype=torch.bool, device=device)
+                )
+                left_offsets.append(pad_len)
+
+            inputs_BL = {
+                "input_ids": torch.stack(input_ids_tensors, dim=0),
+                "attention_mask": torch.stack(attn_masks_tensors, dim=0),
+            }
+
+            layers_needed = sorted({layer for _, dp in to_fill for layer in dp.layers})
+            submodules = {layer: get_hf_submodule(model, layer, use_lora=True) for layer in layers_needed}
+
+            acts_by_layer = collect_activations_multiple_layers(
+                model=model,
+                submodules=submodules,
+                inputs_BL=inputs_BL,
+                min_offset=None,
+                max_offset=None,
             )
 
-    # Build the input batch (left padding to match your construct_batch convention)
-    pad_id = tokenizer.pad_token_id
-    contexts: list[list[int]] = [list(dp.context_input_ids) for _, dp in to_fill]
-    positions_per_item: list[list[int]] = [list(dp.context_positions) for _, dp in to_fill]
-    max_len = max(len(c) for c in contexts)
+            new_batch: list[TrainingDataPoint] = list(batch_points)
+            for b in range(len(to_fill)):
+                idx, dp = to_fill[b]
+                idxs = [p + left_offsets[b] for p in positions_per_item[b]]
+                any_layer = dp.layers[0]
+                acts_BLD_any = acts_by_layer[any_layer]
+                L = acts_BLD_any.shape[1]
+                if any(i < 0 or i >= L for i in idxs):
+                    raise IndexError(f"Activation index out of range for item {b}: {idxs} with L={L}")
 
-    input_ids_tensors: list[torch.Tensor] = []
-    attn_masks_tensors: list[torch.Tensor] = []
-    left_offsets: list[int] = []
+                layer_vectors = []
+                for layer in dp.layers:
+                    acts_BLD = acts_by_layer[layer]
+                    vectors_layer = acts_BLD[b, idxs, :].detach().contiguous()
+                    assert len(vectors_layer.shape) == 2, (
+                        f"Expected 2D tensor, got vectors_layer.shape={vectors_layer.shape}"
+                    )
+                    layer_vectors.append(vectors_layer)
 
-    device = next(model.parameters()).device
+                vectors = torch.cat(layer_vectors, dim=0)
 
-    for c in contexts:
-        pad_len = max_len - len(c)
-        input_ids_tensors.append(torch.tensor([pad_id] * pad_len + c, dtype=torch.long, device=device))
-        # For HF, bool masks are fine; your construct_batch uses bool too
-        attn_masks_tensors.append(torch.tensor([False] * pad_len + [True] * len(c), dtype=torch.bool, device=device))
-        left_offsets.append(pad_len)
+                assert len(vectors.shape) == 2, f"Expected 2D tensor, got vectors.shape={vectors.shape}"
+                assert vectors.shape[0] == len(dp.positions), "steering_vectors length must match positions length"
 
-    inputs_BL = {
-        "input_ids": torch.stack(input_ids_tensors, dim=0),
-        "attention_mask": torch.stack(attn_masks_tensors, dim=0),
-    }
+                dp_new = dp.model_copy(deep=True)
+                dp_new.steering_vectors = vectors
 
-    # Prepare hooks for all unique requested layers
-    layers_needed = sorted({dp.layer for _, dp in to_fill})
-    submodules = {layer: get_hf_submodule(model, layer, use_lora=True) for layer in layers_needed}
+                new_batch[idx] = dp_new
 
-    # Run a single pass with dropout off, then restore the previous train/eval mode
-    was_training = model.training
-    model.eval()
-    with model.disable_adapter():
-        # [layer] -> [B, L, D], where B == len(to_fill)
-        acts_by_layer = collect_activations_multiple_layers(
-            model=model,
-            submodules=submodules,
-            inputs_BL=inputs_BL,
-            min_offset=None,
-            max_offset=None,
-        )
-    if was_training:
-        model.train()
-
-    # Build the new list, copying only items we change
-    new_batch: list[TrainingDataPoint] = list(batch_points)  # references by default
-    for b in range(len(to_fill)):
-        idx, dp = to_fill[b]
-        layer = dp.layer
-        acts_BLD = acts_by_layer[layer]  # [B, L, D] on GPU
-
-        idxs = [p + left_offsets[b] for p in positions_per_item[b]]
-        # Bounds check for safety
-        L = acts_BLD.shape[1]
-        if any(i < 0 or i >= L for i in idxs):
-            raise IndexError(f"Activation index out of range for item {b}: {idxs} with L={L}")
-
-        vectors = acts_BLD[b, idxs, :].detach().contiguous()
-
-        assert len(vectors.shape) == 2, f"Expected 2D tensor, got vectors.shape={vectors.shape}"
-
-        dp_new = dp.model_copy(deep=True)
-        dp_new.steering_vectors = vectors
-
-        new_batch[idx] = dp_new
-
-    return new_batch
+            return new_batch
+    finally:
+        if manage_model_state and was_training:
+            model.train()
 
 
 def find_pattern_in_tokens(
-    token_ids: list[int], special_token_str: str, num_positions: int, tokenizer: AutoTokenizer
+    token_ids: list[int],
+    special_token_str: str,
+    layers: list[int],
+    num_positions: int,
+    tokenizer: AutoTokenizer,
 ) -> list[int]:
     start_idx = 0
     end_idx = len(token_ids)
@@ -267,20 +326,27 @@ def find_pattern_in_tokens(
     assert len(special_token_id) == 1, f"Expected single token, got {len(special_token_id)}"
     special_token_id = special_token_id[0]
     positions = []
+    num_layers = len(layers)
+    assert num_layers > 0, "layers must be non-empty"
 
     for i in range(start_idx, end_idx):
-        if len(positions) == num_positions:
+        if len(positions) == num_layers * num_positions:
             break
         if token_ids[i] == special_token_id:
             positions.append(i)
 
-    assert len(positions) == num_positions, f"Expected {num_positions} positions, got {len(positions)}"
-    assert positions[-1] - positions[0] == num_positions - 1, f"Positions are not consecutive: {positions}"
+    assert len(positions) == num_layers * num_positions, (
+        f"Expected {num_layers * num_positions} positions, got {len(positions)}"
+    )
+    assert positions == sorted(positions), "Positions are not sorted"
 
-    final_pos = positions[-1] + 1
-    final_tokens = token_ids[final_pos : final_pos + 2]
-    final_str = tokenizer.decode(final_tokens, skip_special_tokens=False)
-    assert "\n" in final_str, f"Expected newline in {final_str}"
+    for layer_idx in range(num_layers):
+        block = positions[layer_idx * num_positions : (layer_idx + 1) * num_positions]
+        assert block[-1] - block[0] == num_positions - 1, f"Positions are not consecutive: {block}"
+        final_pos = block[-1] + 1
+        final_tokens = token_ids[final_pos : final_pos + 2]
+        final_str = tokenizer.decode(final_tokens, skip_special_tokens=False)
+        assert "\n" in final_str, f"Expected newline in {final_str}"
 
     return positions
 
@@ -289,7 +355,7 @@ def create_training_datapoint(
     datapoint_type: str,
     prompt: str,
     target_response: str,
-    layer: int,
+    layers: list[int],
     num_positions: int,
     tokenizer: AutoTokenizer,
     acts_BD: torch.Tensor | None,
@@ -301,7 +367,7 @@ def create_training_datapoint(
 ) -> TrainingDataPoint:
     if meta_info is None:
         meta_info = {}
-    prefix = get_introspection_prefix(layer, num_positions)
+    prefix = get_introspection_prefix(layers, num_positions)
     assert prefix not in prompt, f"Prefix {prefix} found in prompt {prompt}"
     prompt = prefix + prompt
     input_messages = [{"role": "user", "content": prompt}]
@@ -336,11 +402,14 @@ def create_training_datapoint(
     for i in range(assistant_start_idx):
         labels[i] = -100
 
-    positions = find_pattern_in_tokens(full_prompt_ids, SPECIAL_TOKEN, num_positions, tokenizer)
+    positions = find_pattern_in_tokens(full_prompt_ids, SPECIAL_TOKEN, layers, num_positions, tokenizer)
 
     if acts_BD is None:
         assert context_input_ids is not None and context_positions is not None, (
             "acts_BD is None but context_input_ids and context_positions are None"
+        )
+        assert len(context_positions) == num_positions, (
+            f"context_positions length {len(context_positions)} does not match num_positions {num_positions}"
         )
     else:
         assert len(acts_BD.shape) == 2, f"Expected 2D tensor, got {acts_BD.shape}"
@@ -350,7 +419,7 @@ def create_training_datapoint(
     training_data_point = TrainingDataPoint(
         input_ids=full_prompt_ids,
         labels=labels,
-        layer=layer,
+        layers=layers,
         steering_vectors=acts_BD,
         positions=positions,
         feature_idx=feature_idx,
@@ -363,3 +432,24 @@ def create_training_datapoint(
     )
 
     return training_data_point
+
+
+def assert_eval_datapoint_layers(dp: TrainingDataPoint, expected_layers: list[int]) -> None:
+    assert dp.layers == expected_layers, f"Expected layers {expected_layers}, got {dp.layers}"
+    if dp.context_positions is not None:
+        assert len(dp.positions) == len(dp.context_positions) * len(dp.layers)
+    if dp.steering_vectors is not None:
+        assert dp.steering_vectors.shape[0] == len(dp.positions)
+
+
+def assert_eval_datapoint_layers_in_combinations(
+    dp: TrainingDataPoint, expected_layer_combinations: list[list[int]]
+) -> None:
+    assert expected_layer_combinations, "expected_layer_combinations must be non-empty"
+    assert dp.layers in expected_layer_combinations, (
+        f"Expected layers in one of {expected_layer_combinations}, got {dp.layers}"
+    )
+    if dp.context_positions is not None:
+        assert len(dp.positions) == len(dp.context_positions) * len(dp.layers)
+    if dp.steering_vectors is not None:
+        assert dp.steering_vectors.shape[0] == len(dp.positions)

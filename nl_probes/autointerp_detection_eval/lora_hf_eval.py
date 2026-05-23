@@ -235,14 +235,15 @@ async def score_detection_async(
     max_par: int = 40,
 ):
     """For use in interactive notebooks."""
+    mc = caller.load_openai_caller(cache_path=cache_path)
     return await _score_detection_async(
         prompts,
         detection_model=detection_model,
         max_completion_tokens=max_completion_tokens,
         reasoning_effort=reasoning_effort,
         temperature=temperature,
-        cache_path=cache_path,
         max_par=max_par,
+        mc=mc,
     )
 
 

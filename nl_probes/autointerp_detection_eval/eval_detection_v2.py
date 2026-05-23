@@ -32,7 +32,7 @@ EXPLANATION_PROMPT = "Can you explain to me what this concept means?"
 
 
 def get_introspection_prompt(sae_layer: int, num_positions: int) -> str:
-    return f"{get_introspection_prefix(sae_layer, num_positions)}{EXPLANATION_PROMPT}"
+    return f"{get_introspection_prefix([sae_layer], num_positions)}{EXPLANATION_PROMPT}"
 
 
 class ModelInfo(BaseModel):
@@ -877,7 +877,9 @@ async def run_gemma_steering(
     """
     Run gemma steering for a single SAE.
     """
-    history = ChatHistory.from_user(get_introspection_prompt(sae_layer=sae.sae_info.sae_layer))
+    # TODO: num_positions was missing — using 1 as the SAE steering path uses a single feature vector.
+    # Verify this matches the expected prompt format for SAE introspection.
+    history = ChatHistory.from_user(get_introspection_prompt(sae_layer=sae.sae_info.sae_layer, num_positions=1))
     response = await gemma_caller.call(
         messages=history,
         config=InferenceConfig(

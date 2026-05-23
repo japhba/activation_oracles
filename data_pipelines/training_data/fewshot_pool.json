@@ -1,0 +1,161 @@
+{
+  "description": "Few-shot example pool for synthetic QA generation. At generation time, randomly sample from the matching category.",
+  "categories": {
+    "future_interesting": [
+      {
+        "question": "Is the model confident about what it will say next?",
+        "answer": "Very confident — about 90% of continuations produce the same core claim, with only minor wording variation.",
+        "response_format": "open_ended"
+      },
+      {
+        "question": "What topic will the model address next?",
+        "answer": "Error handling — the model consistently transitions to discussing exception handling after defining the function.",
+        "response_format": "open_ended"
+      },
+      {
+        "question": "Are there multiple distinct approaches the model is considering?",
+        "answer": "Yes — about 50% of the time it uses recursion and about 50% iteration, suggesting it hasn't committed to one approach.",
+        "response_format": "open_ended"
+      },
+      {
+        "question": "Will the model provide a caveat or disclaimer next?",
+        "answer": "Yes — about 70% of continuations include a warning about edge cases before moving on.",
+        "response_format": "yes_no"
+      },
+      {
+        "question": "Does the model commit to the same final answer across continuations?",
+        "answer": "No — about 60% of the time it recommends option A, but about 40% it argues for option C instead.",
+        "response_format": "yes_no"
+      },
+      {
+        "question": "How will the model continue its response?",
+        "answer": "The model will provide a short bulleted list of practical tips, each with a brief explanation. About 70% of the time it closes with an offer to elaborate.",
+        "response_format": "open_ended"
+      },
+      {
+        "question": "Is the model about to change topics?",
+        "answer": "Yes — about 80% of continuations shift from the current technical explanation to a real-world example or analogy.",
+        "response_format": "yes_no"
+      },
+      {
+        "question": "How much does the model's response vary across continuations?",
+        "answer": "The structure is consistent — it always gives a numbered list — but the specific items vary significantly, suggesting the model has a clear format in mind but is uncertain about content.",
+        "response_format": "open_ended"
+      },
+      {
+        "question": "Will the model wrap up its response soon?",
+        "answer": "Yes — about 90% of continuations move directly to a concluding sentence or summary, suggesting the model considers its main points complete.",
+        "response_format": "yes_no"
+      },
+      {
+        "question": "What tone will the model adopt next?",
+        "answer": "Cautious and hedging — about 80% of continuations add qualifiers like 'however' or 'it depends,' suggesting the model recognizes the previous statement was an oversimplification.",
+        "response_format": "open_ended"
+      }
+    ],
+    "past_internal_state": [
+      {
+        "question": "Is the model confident in its answer?",
+        "answer": "Moderately confident — it's using hedging language like 'generally' and 'in most cases,' suggesting it knows there are exceptions but isn't sure when they apply.",
+        "response_format": "open_ended"
+      },
+      {
+        "question": "Does the model seem uncertain about any part of its response?",
+        "answer": "Yes — the model appears uncertain about the specific numbers it cited, hedging with 'approximately' and 'around,' while being more confident about the general trend it's describing.",
+        "response_format": "yes_no"
+      },
+      {
+        "question": "Is the model expressing genuine agreement or defaulting to validation?",
+        "answer": "Likely defaulting to validation — the user made a debatable claim and the model immediately affirmed it without any nuance or pushback.",
+        "response_format": "open_ended"
+      },
+      {
+        "question": "How is the model interpreting the user's request?",
+        "answer": "The model is treating it as a straightforward factual question rather than a request for advice, providing a direct answer without exploring the user's underlying motivation.",
+        "response_format": "open_ended"
+      },
+      {
+        "question": "Does the model seem to deeply understand this topic?",
+        "answer": "No — it's producing plausible-sounding explanations but conflating two related concepts, suggesting pattern-matching rather than genuine understanding.",
+        "response_format": "yes_no"
+      },
+      {
+        "question": "What assumption is the model making about the user?",
+        "answer": "The model assumes the user has intermediate technical knowledge — it uses jargon without explanation but avoids advanced concepts.",
+        "response_format": "open_ended"
+      },
+      {
+        "question": "Is the model following the user's instructions faithfully?",
+        "answer": "No — the user asked for a brief summary but the model is producing a detailed analysis, likely defaulting to its tendency toward comprehensive responses.",
+        "response_format": "yes_no"
+      },
+      {
+        "question": "Does the model seem conflicted about the task it's performing?",
+        "answer": "Somewhat — the model is complying with the request but adding hedging language and qualifiers that suggest it's uncomfortable with the framing.",
+        "response_format": "open_ended"
+      },
+      {
+        "question": "How confident is the model about the factual claim it just made?",
+        "answer": "Low confidence — the model qualified the statement with 'I believe' and 'if I recall correctly,' which typically signals genuine uncertainty rather than rhetorical hedging.",
+        "response_format": "open_ended"
+      },
+      {
+        "question": "Is the model being more cautious than necessary here?",
+        "answer": "Yes — the question is straightforward and well-established, but the model is adding unnecessary caveats, likely because the topic is adjacent to sensitive areas.",
+        "response_format": "yes_no"
+      }
+    ],
+    "past_factual": [
+      {
+        "question": "What programming language is the model writing code in?",
+        "answer": "Python — the model is generating a list comprehension with enumerate() and producing Python syntax.",
+        "response_format": "open_ended"
+      },
+      {
+        "question": "What domain is this conversation about?",
+        "answer": "Medical — the model has been using clinical terminology including diagnostic test names and treatment procedures.",
+        "response_format": "open_ended"
+      },
+      {
+        "question": "Has the model shifted topics from what the user originally asked about?",
+        "answer": "Yes — the user asked about Python lists but the model has transitioned to explaining dictionaries.",
+        "response_format": "yes_no"
+      },
+      {
+        "question": "What is the user asking for help with?",
+        "answer": "Debugging a function that's returning incorrect results — the user pasted code and described the expected vs actual output.",
+        "response_format": "open_ended"
+      },
+      {
+        "question": "What emotional tone is the model using?",
+        "answer": "Empathetic and careful — the user described a difficult situation and the model is using gentle language and acknowledging their feelings.",
+        "response_format": "open_ended"
+      },
+      {
+        "question": "Is the model responding in the same language the user wrote in?",
+        "answer": "No — the user wrote in Spanish but the model is responding in English.",
+        "response_format": "yes_no"
+      },
+      {
+        "question": "What format is the model using for its response?",
+        "answer": "A numbered step-by-step guide — the model is walking through a process with explicit steps, each with a brief explanation.",
+        "response_format": "open_ended"
+      },
+      {
+        "question": "Is the model building toward a conclusion or still introducing new points?",
+        "answer": "Still introducing — the model's list has covered three items so far and the structural pattern suggests more are coming.",
+        "response_format": "open_ended"
+      },
+      {
+        "question": "Does the conversation involve code?",
+        "answer": "Yes — the user shared a code snippet and the model is analyzing it line by line.",
+        "response_format": "yes_no"
+      },
+      {
+        "question": "What role is the model playing in this conversation?",
+        "answer": "A creative writing collaborator — the user provided a story premise and the model is generating narrative prose continuing the scene.",
+        "response_format": "open_ended"
+      }
+    ]
+  }
+}

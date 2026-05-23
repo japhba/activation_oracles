@@ -19,8 +19,10 @@ from nl_probes.dataset_classes.classification import (
     ClassificationDatasetLoader,
 )
 from nl_probes.utils.activation_utils import get_hf_submodule
-from nl_probes.utils.common import load_model, load_tokenizer
+from nl_probes.utils.common import load_model, load_tokenizer, layer_percent_to_layer
 from nl_probes.utils.eval import parse_answer, run_evaluation
+from nl_probes.configs.sft_config import read_training_config
+from nl_probes.utils.dataset_utils import assert_eval_datapoint_layers
 from nl_probes.base_experiment import sanitize_lora_name
 
 # -----------------------------
@@ -30,33 +32,37 @@ from nl_probes.base_experiment import sanitize_lora_name
 
 # Model and eval config
 MODEL_CONFIGS = {
-    "Qwen/Qwen3-8B": [
-        "adamkarvonen/checkpoints_cls_latentqa_only_addition_Qwen3-8B",
-        "adamkarvonen/checkpoints_latentqa_only_addition_Qwen3-8B",
-        "adamkarvonen/checkpoints_cls_only_addition_Qwen3-8B",
-        "adamkarvonen/checkpoints_latentqa_cls_past_lens_addition_Qwen3-8B",
-        "adamkarvonen/checkpoints_cls_latentqa_sae_addition_Qwen3-8B",
-        "adamkarvonen/checkpoints_classification_single_token_Qwen3-8B",
-        None,
-    ],
-    "google/gemma-2-9b-it": [
-        "adamkarvonen/checkpoints_cls_latentqa_only_addition_gemma-2-9b-it",
-        "adamkarvonen/checkpoints_latentqa_only_addition_gemma-2-9b-it",
-        "adamkarvonen/checkpoints_cls_only_addition_gemma-2-9b-it",
-        "adamkarvonen/checkpoints_latentqa_cls_past_lens_addition_gemma-2-9b-it",
-        "adamkarvonen/checkpoints_classification_single_token_gemma-2-9b-it",
-        None,
-        #     "adamkarvonen/checkpoints_latentqa_only_gemma-2-9b-it_lr_1e-6",
-        #     "adamkarvonen/checkpoints_latentqa_only_gemma-2-9b-it_lr_3e-6",
-        #     "adamkarvonen/checkpoints_latentqa_only_addition_gemma-2-9b-it",
-        #     "adamkarvonen/checkpoints_latentqa_only_gemma-2-9b-it_lr_3e-5",
-        #     "adamkarvonen/checkpoints_latentqa_only_gemma-2-9b-it_lr_1e-4",
-        #     "adamkarvonen/checkpoints_latentqa_only_gemma-2-9b-it_lr_3e-4",
-    ],
-    "meta-llama/Llama-3.3-70B-Instruct": [
-        "adamkarvonen/checkpoints_act_cls_latentqa_pretrain_mix_adding_Llama-3_3-70B-Instruct",
-        "adamkarvonen/checkpoints_latentqa_only_adding_Llama-3_3-70B-Instruct",
-        "adamkarvonen/checkpoints_cls_only_adding_Llama-3_3-70B-Instruct",
+    # "Qwen/Qwen3-8B": [
+    #     "adamkarvonen/checkpoints_cls_latentqa_only_addition_Qwen3-8B",
+    #     "adamkarvonen/checkpoints_latentqa_only_addition_Qwen3-8B",
+    #     "adamkarvonen/checkpoints_cls_only_addition_Qwen3-8B",
+    #     "adamkarvonen/checkpoints_latentqa_cls_past_lens_addition_Qwen3-8B",
+    #     "adamkarvonen/checkpoints_cls_latentqa_sae_addition_Qwen3-8B",
+    #     "adamkarvonen/checkpoints_classification_single_token_Qwen3-8B",
+    #     None,
+    # ],
+    # "google/gemma-2-9b-it": [
+    #     "adamkarvonen/checkpoints_cls_latentqa_only_addition_gemma-2-9b-it",
+    #     "adamkarvonen/checkpoints_latentqa_only_addition_gemma-2-9b-it",
+    #     "adamkarvonen/checkpoints_cls_only_addition_gemma-2-9b-it",
+    #     "adamkarvonen/checkpoints_latentqa_cls_past_lens_addition_gemma-2-9b-it",
+    #     "adamkarvonen/checkpoints_classification_single_token_gemma-2-9b-it",
+    #     None,
+    #     #     "adamkarvonen/checkpoints_latentqa_only_gemma-2-9b-it_lr_1e-6",
+    #     #     "adamkarvonen/checkpoints_latentqa_only_gemma-2-9b-it_lr_3e-6",
+    #     #     "adamkarvonen/checkpoints_latentqa_only_addition_gemma-2-9b-it",
+    #     #     "adamkarvonen/checkpoints_latentqa_only_gemma-2-9b-it_lr_3e-5",
+    #     #     "adamkarvonen/checkpoints_latentqa_only_gemma-2-9b-it_lr_1e-4",
+    #     #     "adamkarvonen/checkpoints_latentqa_only_gemma-2-9b-it_lr_3e-4",
+    # ],
+    # "meta-llama/Llama-3.3-70B-Instruct": [
+    #     "adamkarvonen/checkpoints_act_cls_latentqa_pretrain_mix_adding_Llama-3_3-70B-Instruct",
+    #     "adamkarvonen/checkpoints_latentqa_only_adding_Llama-3_3-70B-Instruct",
+    #     "adamkarvonen/checkpoints_cls_only_adding_Llama-3_3-70B-Instruct",
+    #     None,
+    # ],
+    "Qwen/Qwen3-4B": [
+        "checkpoints_latentqa_cls_past_lens_Qwen3-4B/final",
         None,
     ],
 }
@@ -114,9 +120,8 @@ CLASSIFICATION_DATASETS: dict[str, dict[str, Any]] = {
     "engels_wikidata_isresearcher": {"num_train": 0, "num_test": 250, "splits": ["test"]},
 }
 
-# Layer percent settings - will iterate over these individually
-LAYER_PERCENTS = [25, 33, 50, 66, 75]
-LAYER_PERCENTS = [0, 10]
+# Layer combination used together for MLAO evaluation
+DEFAULT_LAYER_COMBINATION = [25, 50, 75]
 
 KEY_FOR_NONE = "original"
 
@@ -155,10 +160,39 @@ def get_batch_size(model_name: str) -> int:
     return BASE_BATCH_SIZE
 
 
-def load_datasets_for_layer_percent(
-    model_name: str, layer_percent: int, model_kwargs: dict, model=None
+def get_layer_specs_for_lora(model_name: str, lora_path: str | None) -> list[tuple[list[int], list[int]]]:
+    if lora_path is None:
+        layer_combination = DEFAULT_LAYER_COMBINATION
+        act_layer_combination = [layer_percent_to_layer(model_name, p) for p in layer_combination]
+        return [(layer_combination, act_layer_combination)]
+
+    training_cfg = read_training_config(lora_path)
+    assert training_cfg.model_name == model_name, (
+        f"Training config model_name {training_cfg.model_name} does not match {model_name}"
+    )
+    layer_combinations = training_cfg.layer_combinations
+    act_layer_combinations = training_cfg.act_layer_combinations
+
+    assert len(layer_combinations) == len(act_layer_combinations), (
+        f"Layer combination mismatch: {len(layer_combinations)} perc combos vs "
+        f"{len(act_layer_combinations)} act combos"
+    )
+
+    layer_specs: list[tuple[list[int], list[int]]] = []
+    for layer_combination, act_layer_combination in zip(layer_combinations, act_layer_combinations, strict=True):
+        expected_layers = [layer_percent_to_layer(model_name, p) for p in layer_combination]
+        assert act_layer_combination == expected_layers, (
+            f"act_layers {act_layer_combination} do not match percents {layer_combination}"
+        )
+        layer_specs.append((layer_combination, act_layer_combination))
+
+    return layer_specs
+
+
+def load_datasets_for_layer_combination(
+    model_name: str, layer_combination: list[int], model_kwargs: dict, model=None
 ) -> dict[str, list[Any]]:
-    """Load all classification datasets for a specific model and layer percent."""
+    """Load all classification datasets for a specific model and layer combination."""
     batch_size = get_batch_size(model_name)
 
     classification_dataset_loaders: list[ClassificationDatasetLoader] = []
@@ -190,7 +224,7 @@ def load_datasets_for_layer_percent(
             num_test=dcfg["num_test"],
             splits=dcfg["splits"],
             model_name=model_name,
-            layer_percents=[layer_percent],
+            layer_combinations=[layer_combination],
             save_acts=True,
             batch_size=ds_batch_size,
         )
@@ -217,7 +251,8 @@ def run_eval_for_datasets(
     tokenizer,
     submodule,
     model_name: str,
-    layer_percent: int,
+    layer_combination: list[int],
+    act_layer_combination: list[int],
     lora_path: str | None,
     eval_data_by_ds: dict[str, list[Any]],
     batch_size: int,
@@ -244,7 +279,8 @@ def run_eval_for_datasets(
         "meta": {
             "model_name": model_name,
             "dtype": str(DTYPE),
-            "layer_percent": layer_percent,
+            "layer_combination": layer_combination,
+            "act_layer_combination": act_layer_combination,
             "injection_layer": INJECTION_LAYER,
             "investigator_lora_path": lora_path,
             "steering_coefficient": STEERING_COEFFICIENT,
@@ -287,7 +323,7 @@ def run_eval_for_datasets(
 
 
 # %%
-# Main loop over models and layer percents
+# Main loop over models and layer combinations
 
 for model_name in MODEL_CONFIGS:
     print(f"\n{'=' * 60}")
@@ -308,34 +344,46 @@ for model_name in MODEL_CONFIGS:
     dummy_config = LoraConfig()
     model.add_adapter(dummy_config, adapter_name="default")
 
-    for layer_percent in LAYER_PERCENTS:
-        print(f"\n--- Layer percent: {layer_percent} ---")
+    eval_data_cache: dict[tuple[int, ...], dict[str, list[Any]]] = {}
 
-        # Create run_dir with layer_percent in folder name
-        run_dir = f"{EXPERIMENTS_DIR}/{DATA_DIR}/classification_{model_name_str}_{mode_str}_{layer_percent}/"
-        os.makedirs(run_dir, exist_ok=True)
+    for lora in investigator_lora_paths:
+        print(f"Evaluating LORA: {lora}")
+        if lora is None:
+            active_lora_path = None
+            lora_name = "base_model"
+        else:
+            active_lora_path = f"{LORA_DIR}{lora}"
+            lora_name = lora.split("/")[-1].replace("/", "_").replace(".", "_")
 
-        # Load datasets for this layer percent (reuses the loaded model)
-        all_eval_data = load_datasets_for_layer_percent(model_name, layer_percent, model_kwargs, model=model)
-        print(f"Loaded datasets: {list(all_eval_data.keys())}")
+        for layer_combination, act_layer_combination in get_layer_specs_for_lora(model_name, active_lora_path):
+            layer_tag = "-".join(str(p) for p in layer_combination)
+            print(f"\n--- Layer combination: {layer_tag} ---")
 
-        output_json_template = f"{run_dir}" + "classification_results_lora_{lora}.json"
+            run_dir = f"{EXPERIMENTS_DIR}/{DATA_DIR}/classification_{model_name_str}_{mode_str}_{layer_tag}/"
+            os.makedirs(run_dir, exist_ok=True)
 
-        for lora in investigator_lora_paths:
-            print(f"Evaluating LORA: {lora}")
-            if lora is None:
-                active_lora_path = None
-                lora_name = "base_model"
+            cache_key = tuple(layer_combination)
+            if cache_key not in eval_data_cache:
+                all_eval_data = load_datasets_for_layer_combination(
+                    model_name, layer_combination, model_kwargs, model=model
+                )
+                for ds_id, eval_data in all_eval_data.items():
+                    for dp in eval_data:
+                        assert_eval_datapoint_layers(dp, act_layer_combination)
+                eval_data_cache[cache_key] = all_eval_data
+                print(f"Loaded datasets: {list(all_eval_data.keys())}")
             else:
-                active_lora_path = f"{LORA_DIR}{lora}"
-                lora_name = lora.split("/")[-1].replace("/", "_").replace(".", "_")
+                all_eval_data = eval_data_cache[cache_key]
+
+            output_json_template = f"{run_dir}" + "classification_results_lora_{lora}.json"
 
             results = run_eval_for_datasets(
                 model=model,
                 tokenizer=tokenizer,
                 submodule=submodule,
                 model_name=model_name,
-                layer_percent=layer_percent,
+                layer_combination=layer_combination,
+                act_layer_combination=act_layer_combination,
                 lora_path=active_lora_path,
                 eval_data_by_ds=all_eval_data,
                 batch_size=batch_size,

@@ -1,0 +1,16 @@
+{
+  "exclude": [
+    ".venv",
+    "checkpoints",
+    "checkpoints_*",
+    "datasets",
+    "sft_training_data",
+    "wandb",
+    "experiments",
+    "logs",
+    "cache",
+    "__pycache__",
+    "*.egg-info",
+    "archive"
+  ]
+}

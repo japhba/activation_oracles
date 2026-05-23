@@ -25,8 +25,13 @@ def load_model(
     # Gemma prefers eager attention; others use FA2
     attn = "eager" if "gemma" in model_name.lower() else "flash_attention_2"
 
+    # Default to current CUDA device rather than "auto" which spreads across
+    # all visible GPUs — dangerous on shared Slurm nodes where other users'
+    # jobs occupy other GPUs. Callers can still pass device_map="auto" explicitly.
+    default_device_map: str | dict = {"": torch.device("cuda")}
+
     kwargs: dict = {
-        "device_map": "auto",
+        "device_map": default_device_map,
         "attn_implementation": attn,
         "torch_dtype": dtype,
         **model_kwargs,

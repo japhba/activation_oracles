@@ -1,0 +1,198 @@
+{
+  "schema_version": 1,
+  "special_token": " ?",
+  "prefix_template": "Layer: {layer}\\n{special_token} * {num_positions} \\n",
+
+  "model_name": "Qwen/Qwen3-8B",
+  "hook_onto_layer": 1,
+
+  "layer_combinations": [[25, 50, 75]],
+  "act_layer_combinations": [[9, 18, 27]],
+
+  "dataset_configs": [
+    {
+      "custom_dataset_params": {
+        "hf_dataset_repo": "cds-jb/cot-oracle-convqa-chunked",
+        "hf_split": "train",
+        "stochastic_max_k": 100,
+        "max_cot_prefix_tokens": 4096,
+        "target_field": "target_response"
+      },
+      "num_train": 80016,
+      "num_test": 0,
+      "splits": ["train"],
+      "model_name": "Qwen/Qwen3-8B",
+      "layer_combinations": [[25, 50, 75]],
+      "save_acts": false,
+      "batch_size": 16,
+      "dataset_name": "cot_oracle_convqa",
+      "dataset_folder": "sft_training_data",
+      "seed": 44
+    }
+  ],
+  "dataset_loader_names": ["cot_oracle_convqa"],
+
+  "validation_dataset_configs": [
+    {
+      "custom_dataset_params": {
+        "hf_dataset_repo": "cds-jb/cot-oracle-convqa-chunked",
+        "hf_split": "test",
+        "cot_prefix_field": "cot_prefix",
+        "stochastic_max_k": 100,
+        "max_cot_prefix_tokens": 4096,
+        "target_field": "target_response"
+      },
+      "num_train": 100,
+      "num_test": 0,
+      "splits": ["train"],
+      "model_name": "Qwen/Qwen3-8B",
+      "layer_combinations": [[25, 50, 75]],
+      "save_acts": false,
+      "batch_size": 16,
+      "dataset_name": "cot_oracle_convqa",
+      "dataset_folder": "sft_training_data",
+      "seed": 45
+    },
+    {
+      "custom_dataset_params": {
+        "hf_dataset_repo": "cds-jb/fineweb-oracle-convqa-chunked",
+        "hf_split": "test",
+        "cot_prefix_field": "cot_prefix",
+        "stochastic_max_k": 100,
+        "max_cot_prefix_tokens": 4096,
+        "target_field": "target_response"
+      },
+      "num_train": 100,
+      "num_test": 0,
+      "splits": ["train"],
+      "model_name": "Qwen/Qwen3-8B",
+      "layer_combinations": [[25, 50, 75]],
+      "save_acts": false,
+      "batch_size": 16,
+      "dataset_name": "cot_oracle_convqa",
+      "dataset_folder": "sft_training_data",
+      "seed": 45
+    },
+    {
+      "custom_dataset_params": {
+        "hf_dataset_repo": "cds-jb/cot-oracle-eval-cot-description",
+        "hf_split": "train",
+        "cot_prefix_field": "cot_text",
+        "stochastic_max_k": 100,
+        "max_cot_prefix_tokens": 4096,
+        "target_field": "target_response"
+      },
+      "num_train": 100,
+      "num_test": 0,
+      "splits": ["train"],
+      "model_name": "Qwen/Qwen3-8B",
+      "layer_combinations": [[25, 50, 75]],
+      "save_acts": false,
+      "batch_size": 16,
+      "dataset_name": "cot_oracle_convqa",
+      "dataset_folder": "sft_training_data",
+      "seed": 45
+    },
+    {
+      "custom_dataset_params": {
+        "hf_dataset_repo": "cds-jb/cot-oracle-eval-cot-metacognition",
+        "hf_split": "test",
+        "cot_prefix_field": "cot_text",
+        "stochastic_max_k": 100,
+        "max_cot_prefix_tokens": 4096,
+        "target_field": "target_response"
+      },
+      "num_train": 100,
+      "num_test": 0,
+      "splits": ["train"],
+      "model_name": "Qwen/Qwen3-8B",
+      "layer_combinations": [[25, 50, 75]],
+      "save_acts": false,
+      "batch_size": 16,
+      "dataset_name": "cot_oracle_convqa",
+      "dataset_folder": "sft_training_data",
+      "seed": 45
+    },
+    {
+      "custom_dataset_params": {
+        "hf_dataset_repo": "cds-jb/cot-oracle-eval-instruction-following",
+        "hf_split": "test",
+        "cot_prefix_field": "cot_text",
+        "stochastic_max_k": 100,
+        "max_cot_prefix_tokens": 4096,
+        "target_field": "target_response"
+      },
+      "num_train": 100,
+      "num_test": 0,
+      "splits": ["train"],
+      "model_name": "Qwen/Qwen3-8B",
+      "layer_combinations": [[25, 50, 75]],
+      "save_acts": false,
+      "batch_size": 16,
+      "dataset_name": "cot_oracle_convqa",
+      "dataset_folder": "sft_training_data",
+      "seed": 45
+    }
+  ],
+  "validation_dataset_loader_names": ["cot_oracle_convqa", "cot_oracle_convqa", "cot_oracle_convqa", "cot_oracle_convqa", "cot_oracle_convqa"],
+  "validation_steps": 67,
+  "validation_on_start": false,
+
+  "use_decoder_vectors": true,
+  "generation_kwargs": {"do_sample": false, "max_new_tokens": 64},
+  "steering_coefficient": 1.0,
+  "dataset_folder": "sft_training_data",
+
+  "train_batch_size": 48,
+  "eval_batch_size": 48,
+  "train_batches_per_materialization_block": 16,
+
+  "use_lora": true,
+  "lora_r": 64,
+  "lora_alpha": 128,
+  "lora_dropout": 0.0,
+  "lora_target_modules": "all-linear",
+
+  "use_unsloth": true,
+  "unsloth_max_seq_length": 4096,
+
+  "num_epochs": 1,
+  "lr": 5e-5,
+  "gradient_accumulation_steps": 1,
+  "max_grad_norm": 1.0,
+
+  "eval_steps": 67,
+  "eval_on_start": false,
+  "gradient_checkpointing": true,
+  "window_mult": 20,
+
+  "save_steps": 67,
+  "save_dir": "checkpoints/cot_oracle_convqa_qwen3_8b",
+
+  "max_train_examples": null,
+  "seed": 42,
+  "eval_logs_path": "eval_logs.json",
+  "load_lora_path": null,
+  "created_at_utc": "",
+  "git_commit": "",
+
+  "examples_per_source_epoch": 26669,
+  "wandb_project": "cot-oracle",
+  "wandb_run_name": "cot_oracle_convqa_qwen3_8b_cotstochk100_bs48_lr5e5_5mcq_2gen",
+  "wandb_suffix": "_cot_oracle_convqa_qwen3_8b",
+
+  "hf_push_to_hub": false,
+  "hf_private_repo": false,
+  "hf_repo_name": "",
+  "hf_repo_id": "",
+
+  "load_in_8bit": false,
+
+  "open_ended_eval_include": ["number_prediction", "mmlu_prediction"],
+  "open_ended_eval_max_entries": 30,
+  "positive_negative_examples": false,
+
+  "monitor_num_eval_examples_per_component": null,
+  "monitor_eval_steps": null,
+  "monitor_eval_on_start": false
+}

@@ -9,7 +9,7 @@ from peft import LoraConfig
 from nl_probes.utils.activation_utils import get_hf_submodule
 from nl_probes.utils.eval import run_evaluation
 
-folder = "datasets/factual"
+folder = "data_pipelines/factual"
 
 files = os.listdir(folder)
 
@@ -101,6 +101,7 @@ max_window_size = 1
 # we will construct our dataset using layers 9, 18, and 27
 # This means for every datapoint, we will be evaluating it 3 times - once for each layer
 act_layers = [9, 18, 27]
+act_layer_combinations = [act_layers]
 
 # we will save the activations in the TrainingDataPoint object
 # if false, we will generate them on the fly
@@ -120,7 +121,7 @@ training_data = classification.create_vector_dataset(
     tokenizer,
     model_name,
     batch_size=batch_size,
-    act_layers=act_layers,
+    act_layer_combinations=act_layer_combinations,
     min_end_offset=end_offset,
     max_end_offset=end_offset,
     max_window_size=max_window_size,

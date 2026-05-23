@@ -1,0 +1,19 @@
+{
+  "final": {
+    "mean_normalized_score": -0.013974873096446704,
+    "num_evals": 9,
+    "per_eval_normalized": {
+      "number_prediction": 0.0,
+      "mmlu_prediction": -0.05020000000000002,
+      "backtracking": 0.0,
+      "missing_info": -0.14666666666666672,
+      "sycophancy": 0.024350000000000094,
+      "vagueness": 0.005076142131979695,
+      "domain_confusion": 0.0,
+      "activation_sensitivity": 0.0,
+      "hallucination": 0.04166666666666663
+    },
+    "ci_lo": -0.05092454408667115,
+    "ci_hi": 0.027213395260762697
+  }
+}

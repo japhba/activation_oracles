@@ -1,0 +1,43 @@
+{
+  "run_dirs": [
+    "data_pipelines/model_understanding/runs/qwen3_14b_run_train"
+  ],
+  "model_name": "Qwen/Qwen3-14B",
+  "prepared_dataset_path": "text_sft_training_data/mu_qwen3_14b_s7_synth_v2.pt",
+  "save_dir": "checkpoints_text_sft/mu_qwen3_14b_s7_synth_v2_e1_kl1",
+  "wandb_project": "model_understanding_sft",
+  "wandb_run_name": "mu_qwen3_14b_s7_synth_v2_e1_kl1",
+  "synthetic_data_paths": [
+    "data_pipelines/model_understanding/runs/qwen3_14b_run_train/synthetic_data_v2.json"
+  ],
+  "global_train_batch_size": 8,
+  "num_epochs": 1,
+  "lr": 5e-05,
+  "schema_version": 1,
+  "min_interest_score": 3,
+  "min_verification_score": 7,
+  "completion_selection_mode": "first",
+  "max_train_examples": null,
+  "max_seq_len": 4096,
+  "max_steps": null,
+  "gradient_accumulation_steps": 1,
+  "warmup_ratio": 0.05,
+  "max_grad_norm": 1.0,
+  "gradient_checkpointing": true,
+  "window_mult": 20,
+  "use_lora": true,
+  "load_lora_path": null,
+  "lora_r": 64,
+  "lora_alpha": 128,
+  "lora_dropout": 0.05,
+  "lora_target_modules": "all-linear",
+  "load_in_8bit": false,
+  "save_steps": 9999999,
+  "log_steps": 1,
+  "debug_num_examples_to_dump": 2,
+  "seed": 42,
+  "kl_loss_weight": 1.0,
+  "kl_every_n_steps": 100,
+  "kl_batch_size": 2,
+  "kl_data_path": "text_sft_training_data/kl_wildchat_qwen3-8b_20000.pt"
+}

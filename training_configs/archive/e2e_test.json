@@ -1,0 +1,99 @@
+{
+  "layer_combinations": [
+    [
+      25,
+      50,
+      75
+    ]
+  ],
+  "act_layer_combinations": [
+    [
+      7,
+      14,
+      21
+    ]
+  ],
+  "schema_version": 1,
+  "special_token": " ?",
+  "prefix_template": "Layer: {layer}\\n{special_token} * {num_positions} \\n",
+  "model_name": "Qwen/Qwen3-0.6B",
+  "hook_onto_layer": 1,
+  "dataset_configs": [
+    {
+      "custom_dataset_params": {
+        "min_k_tokens": 1,
+        "max_k_tokens": 50,
+        "min_k_activations": 1,
+        "max_k_activations": 1,
+        "max_length": 2000,
+        "directions": [
+          "past",
+          "future"
+        ],
+        "vllm_max_new_tokens": 200,
+        "max_vllm_context_tokens": 2000,
+        "future_chat_system_prompt_prob": 0.5,
+        "system_prompt_path": "data_pipelines/latentqa_datasets/train/system.json",
+        "english_only_temp_filter": false
+      },
+      "num_train": 800,
+      "num_test": 0,
+      "splits": [
+        "train"
+      ],
+      "model_name": "Qwen/Qwen3-0.6B",
+      "layer_combinations": [
+        [
+          25,
+          50,
+          75
+        ]
+      ],
+      "save_acts": false,
+      "batch_size": 8,
+      "dataset_name": "past_lens",
+      "dataset_folder": "sft_training_data",
+      "seed": 42
+    }
+  ],
+  "dataset_loader_names": [
+    "past_lens"
+  ],
+  "use_decoder_vectors": true,
+  "generation_kwargs": {
+    "do_sample": false,
+    "max_new_tokens": 20
+  },
+  "steering_coefficient": 1.0,
+  "dataset_folder": "sft_training_data",
+  "train_batch_size": 8,
+  "eval_batch_size": 8,
+  "train_batches_per_materialization_block": 16,
+  "use_lora": true,
+  "lora_r": 64,
+  "lora_alpha": 128,
+  "lora_dropout": 0.05,
+  "lora_target_modules": "all-linear",
+  "num_epochs": 1,
+  "lr": 1e-05,
+  "gradient_accumulation_steps": 1,
+  "max_grad_norm": 1.0,
+  "eval_steps": 9999999,
+  "eval_on_start": false,
+  "gradient_checkpointing": true,
+  "window_mult": 20,
+  "save_steps": 9999999,
+  "save_dir": "/tmp/test_sft_e2e_checkpoints_test_e2e",
+  "seed": 42,
+  "eval_logs_path": "eval_logs.json",
+  "load_lora_path": null,
+  "wandb_project": "test_e2e",
+  "wandb_run_name": "Qwen/Qwen3-0.6B-layers_7-14-21-decoder-True_test_e2e",
+  "wandb_suffix": "_test_e2e",
+  "hf_push_to_hub": false,
+  "hf_private_repo": false,
+  "hf_repo_name": "",
+  "hf_repo_id": "",
+  "positive_negative_examples": false,
+  "open_ended_eval_include": ["number_prediction"]
+}

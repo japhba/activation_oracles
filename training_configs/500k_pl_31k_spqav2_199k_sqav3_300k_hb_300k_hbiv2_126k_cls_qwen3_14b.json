@@ -1,0 +1,835 @@
+{
+  "layer_combinations": [
+    [
+      25,
+      50,
+      75
+    ]
+  ],
+  "act_layer_combinations": [
+    [
+      10,
+      20,
+      30
+    ]
+  ],
+  "schema_version": 1,
+  "special_token": " ?",
+  "prefix_template": "Layer: {layer}\\n{special_token} * {num_positions} \\n",
+  "model_name": "Qwen/Qwen3-14B",
+  "hook_onto_layer": 1,
+  "dataset_configs": [
+    {
+      "custom_dataset_params": {
+        "min_k_tokens": 1,
+        "max_k_tokens": 50,
+        "min_k_activations": 1,
+        "max_k_activations": 1,
+        "max_length": 2000,
+        "directions": [
+          "past",
+          "future"
+        ],
+        "vllm_max_new_tokens": 200,
+        "max_vllm_context_tokens": 2000,
+        "future_chat_system_prompt_prob": 0.5,
+        "system_prompt_path": "data_pipelines/latentqa_datasets/train/system.json",
+        "english_only_temp_filter": false
+      },
+      "num_train": 250000,
+      "num_test": 0,
+      "splits": [
+        "train"
+      ],
+      "model_name": "Qwen/Qwen3-14B",
+      "layer_combinations": [
+        [
+          25,
+          50,
+          75
+        ]
+      ],
+      "save_acts": false,
+      "batch_size": 16,
+      "dataset_name": "past_lens",
+      "dataset_folder": "sft_training_data",
+      "seed": 42
+    },
+    {
+      "custom_dataset_params": {
+        "min_k_tokens": 1,
+        "max_k_tokens": 50,
+        "min_k_activations": 1,
+        "max_k_activations": 50,
+        "max_length": 2000,
+        "directions": [
+          "past",
+          "future"
+        ],
+        "vllm_max_new_tokens": 200,
+        "max_vllm_context_tokens": 2000,
+        "future_chat_system_prompt_prob": 0.5,
+        "system_prompt_path": "data_pipelines/latentqa_datasets/train/system.json",
+        "english_only_temp_filter": false
+      },
+      "num_train": 250000,
+      "num_test": 0,
+      "splits": [
+        "train"
+      ],
+      "model_name": "Qwen/Qwen3-14B",
+      "layer_combinations": [
+        [
+          25,
+          50,
+          75
+        ]
+      ],
+      "save_acts": false,
+      "batch_size": 16,
+      "dataset_name": "past_lens",
+      "dataset_folder": "sft_training_data",
+      "seed": 42
+    },
+    {
+      "custom_dataset_params": {
+        "data_path": "data_pipelines/latentqa_datasets/artifacts/Qwen3-8B/spqa_v2.json"
+      },
+      "num_train": 31374,
+      "num_test": 0,
+      "splits": [
+        "train"
+      ],
+      "model_name": "Qwen/Qwen3-14B",
+      "layer_combinations": [
+        [
+          25,
+          50,
+          75
+        ]
+      ],
+      "save_acts": false,
+      "batch_size": 16,
+      "dataset_name": "synthetic_qa",
+      "dataset_folder": "sft_training_data",
+      "seed": 42
+    },
+    {
+      "custom_dataset_params": {
+        "classification_dataset_name": "geometry_of_truth",
+        "num_qa_per_sample": 2,
+        "min_end_offset": -1,
+        "max_end_offset": -5,
+        "max_window_size": 1,
+        "min_window_size": 1
+      },
+      "num_train": 6000,
+      "num_test": 0,
+      "splits": [
+        "train"
+      ],
+      "model_name": "Qwen/Qwen3-14B",
+      "layer_combinations": [
+        [
+          25,
+          50,
+          75
+        ]
+      ],
+      "save_acts": false,
+      "batch_size": 16,
+      "dataset_name": "classification_geometry_of_truth",
+      "dataset_folder": "sft_training_data",
+      "seed": 42
+    },
+    {
+      "custom_dataset_params": {
+        "classification_dataset_name": "geometry_of_truth",
+        "num_qa_per_sample": 1,
+        "min_end_offset": -1,
+        "max_end_offset": -5,
+        "max_window_size": 50,
+        "min_window_size": 1
+      },
+      "num_train": 6000,
+      "num_test": 0,
+      "splits": [
+        "train"
+      ],
+      "model_name": "Qwen/Qwen3-14B",
+      "layer_combinations": [
+        [
+          25,
+          50,
+          75
+        ]
+      ],
+      "save_acts": false,
+      "batch_size": 16,
+      "dataset_name": "classification_geometry_of_truth",
+      "dataset_folder": "sft_training_data",
+      "seed": 42
+    },
+    {
+      "custom_dataset_params": {
+        "classification_dataset_name": "relations",
+        "num_qa_per_sample": 2,
+        "min_end_offset": -1,
+        "max_end_offset": -5,
+        "max_window_size": 1,
+        "min_window_size": 1
+      },
+      "num_train": 6000,
+      "num_test": 0,
+      "splits": [
+        "train"
+      ],
+      "model_name": "Qwen/Qwen3-14B",
+      "layer_combinations": [
+        [
+          25,
+          50,
+          75
+        ]
+      ],
+      "save_acts": false,
+      "batch_size": 16,
+      "dataset_name": "classification_relations",
+      "dataset_folder": "sft_training_data",
+      "seed": 42
+    },
+    {
+      "custom_dataset_params": {
+        "classification_dataset_name": "relations",
+        "num_qa_per_sample": 1,
+        "min_end_offset": -1,
+        "max_end_offset": -5,
+        "max_window_size": 50,
+        "min_window_size": 1
+      },
+      "num_train": 6000,
+      "num_test": 0,
+      "splits": [
+        "train"
+      ],
+      "model_name": "Qwen/Qwen3-14B",
+      "layer_combinations": [
+        [
+          25,
+          50,
+          75
+        ]
+      ],
+      "save_acts": false,
+      "batch_size": 16,
+      "dataset_name": "classification_relations",
+      "dataset_folder": "sft_training_data",
+      "seed": 42
+    },
+    {
+      "custom_dataset_params": {
+        "classification_dataset_name": "sst2",
+        "num_qa_per_sample": 2,
+        "min_end_offset": -1,
+        "max_end_offset": -5,
+        "max_window_size": 1,
+        "min_window_size": 1
+      },
+      "num_train": 6000,
+      "num_test": 0,
+      "splits": [
+        "train"
+      ],
+      "model_name": "Qwen/Qwen3-14B",
+      "layer_combinations": [
+        [
+          25,
+          50,
+          75
+        ]
+      ],
+      "save_acts": false,
+      "batch_size": 16,
+      "dataset_name": "classification_sst2",
+      "dataset_folder": "sft_training_data",
+      "seed": 42
+    },
+    {
+      "custom_dataset_params": {
+        "classification_dataset_name": "sst2",
+        "num_qa_per_sample": 1,
+        "min_end_offset": -1,
+        "max_end_offset": -5,
+        "max_window_size": 50,
+        "min_window_size": 1
+      },
+      "num_train": 6000,
+      "num_test": 0,
+      "splits": [
+        "train"
+      ],
+      "model_name": "Qwen/Qwen3-14B",
+      "layer_combinations": [
+        [
+          25,
+          50,
+          75
+        ]
+      ],
+      "save_acts": false,
+      "batch_size": 16,
+      "dataset_name": "classification_sst2",
+      "dataset_folder": "sft_training_data",
+      "seed": 42
+    },
+    {
+      "custom_dataset_params": {
+        "classification_dataset_name": "md_gender",
+        "num_qa_per_sample": 2,
+        "min_end_offset": -1,
+        "max_end_offset": -5,
+        "max_window_size": 1,
+        "min_window_size": 1
+      },
+      "num_train": 6000,
+      "num_test": 0,
+      "splits": [
+        "train"
+      ],
+      "model_name": "Qwen/Qwen3-14B",
+      "layer_combinations": [
+        [
+          25,
+          50,
+          75
+        ]
+      ],
+      "save_acts": false,
+      "batch_size": 16,
+      "dataset_name": "classification_md_gender",
+      "dataset_folder": "sft_training_data",
+      "seed": 42
+    },
+    {
+      "custom_dataset_params": {
+        "classification_dataset_name": "md_gender",
+        "num_qa_per_sample": 1,
+        "min_end_offset": -1,
+        "max_end_offset": -5,
+        "max_window_size": 50,
+        "min_window_size": 1
+      },
+      "num_train": 6000,
+      "num_test": 0,
+      "splits": [
+        "train"
+      ],
+      "model_name": "Qwen/Qwen3-14B",
+      "layer_combinations": [
+        [
+          25,
+          50,
+          75
+        ]
+      ],
+      "save_acts": false,
+      "batch_size": 16,
+      "dataset_name": "classification_md_gender",
+      "dataset_folder": "sft_training_data",
+      "seed": 42
+    },
+    {
+      "custom_dataset_params": {
+        "classification_dataset_name": "snli",
+        "num_qa_per_sample": 2,
+        "min_end_offset": -1,
+        "max_end_offset": -5,
+        "max_window_size": 1,
+        "min_window_size": 1
+      },
+      "num_train": 6000,
+      "num_test": 0,
+      "splits": [
+        "train"
+      ],
+      "model_name": "Qwen/Qwen3-14B",
+      "layer_combinations": [
+        [
+          25,
+          50,
+          75
+        ]
+      ],
+      "save_acts": false,
+      "batch_size": 16,
+      "dataset_name": "classification_snli",
+      "dataset_folder": "sft_training_data",
+      "seed": 42
+    },
+    {
+      "custom_dataset_params": {
+        "classification_dataset_name": "snli",
+        "num_qa_per_sample": 1,
+        "min_end_offset": -1,
+        "max_end_offset": -5,
+        "max_window_size": 50,
+        "min_window_size": 1
+      },
+      "num_train": 6000,
+      "num_test": 0,
+      "splits": [
+        "train"
+      ],
+      "model_name": "Qwen/Qwen3-14B",
+      "layer_combinations": [
+        [
+          25,
+          50,
+          75
+        ]
+      ],
+      "save_acts": false,
+      "batch_size": 16,
+      "dataset_name": "classification_snli",
+      "dataset_folder": "sft_training_data",
+      "seed": 42
+    },
+    {
+      "custom_dataset_params": {
+        "classification_dataset_name": "ner",
+        "num_qa_per_sample": 2,
+        "min_end_offset": -1,
+        "max_end_offset": -5,
+        "max_window_size": 1,
+        "min_window_size": 1
+      },
+      "num_train": 6000,
+      "num_test": 0,
+      "splits": [
+        "train"
+      ],
+      "model_name": "Qwen/Qwen3-14B",
+      "layer_combinations": [
+        [
+          25,
+          50,
+          75
+        ]
+      ],
+      "save_acts": false,
+      "batch_size": 16,
+      "dataset_name": "classification_ner",
+      "dataset_folder": "sft_training_data",
+      "seed": 42
+    },
+    {
+      "custom_dataset_params": {
+        "classification_dataset_name": "ner",
+        "num_qa_per_sample": 1,
+        "min_end_offset": -1,
+        "max_end_offset": -5,
+        "max_window_size": 50,
+        "min_window_size": 1
+      },
+      "num_train": 6000,
+      "num_test": 0,
+      "splits": [
+        "train"
+      ],
+      "model_name": "Qwen/Qwen3-14B",
+      "layer_combinations": [
+        [
+          25,
+          50,
+          75
+        ]
+      ],
+      "save_acts": false,
+      "batch_size": 16,
+      "dataset_name": "classification_ner",
+      "dataset_folder": "sft_training_data",
+      "seed": 42
+    },
+    {
+      "custom_dataset_params": {
+        "classification_dataset_name": "tense",
+        "num_qa_per_sample": 2,
+        "min_end_offset": -1,
+        "max_end_offset": -5,
+        "max_window_size": 1,
+        "min_window_size": 1
+      },
+      "num_train": 6000,
+      "num_test": 0,
+      "splits": [
+        "train"
+      ],
+      "model_name": "Qwen/Qwen3-14B",
+      "layer_combinations": [
+        [
+          25,
+          50,
+          75
+        ]
+      ],
+      "save_acts": false,
+      "batch_size": 16,
+      "dataset_name": "classification_tense",
+      "dataset_folder": "sft_training_data",
+      "seed": 42
+    },
+    {
+      "custom_dataset_params": {
+        "classification_dataset_name": "tense",
+        "num_qa_per_sample": 1,
+        "min_end_offset": -1,
+        "max_end_offset": -5,
+        "max_window_size": 50,
+        "min_window_size": 1
+      },
+      "num_train": 6000,
+      "num_test": 0,
+      "splits": [
+        "train"
+      ],
+      "model_name": "Qwen/Qwen3-14B",
+      "layer_combinations": [
+        [
+          25,
+          50,
+          75
+        ]
+      ],
+      "save_acts": false,
+      "batch_size": 16,
+      "dataset_name": "classification_tense",
+      "dataset_folder": "sft_training_data",
+      "seed": 42
+    },
+    {
+      "custom_dataset_params": {
+        "data_path": "data_pipelines/training_data/artifacts/synthetic_qa_2gpu_100k_qwen3_14b/training_data.json"
+      },
+      "num_train": 199284,
+      "num_test": 0,
+      "splits": [
+        "train"
+      ],
+      "model_name": "Qwen/Qwen3-14B",
+      "layer_combinations": [
+        [
+          25,
+          50,
+          75
+        ]
+      ],
+      "save_acts": false,
+      "batch_size": 16,
+      "dataset_name": "synthetic_qa",
+      "dataset_folder": "sft_training_data",
+      "seed": 42
+    },
+    {
+      "custom_dataset_params": {
+        "data_path": "data_pipelines/training_data/artifacts/system_prompt_qa/hidden_bias_300k_qwen3_14b/training_data.json"
+      },
+      "num_train": 285047,
+      "num_test": 0,
+      "splits": [
+        "train"
+      ],
+      "model_name": "Qwen/Qwen3-14B",
+      "layer_combinations": [
+        [
+          25,
+          50,
+          75
+        ]
+      ],
+      "save_acts": false,
+      "batch_size": 16,
+      "dataset_name": "synthetic_qa",
+      "dataset_folder": "sft_training_data",
+      "seed": 42
+    },
+    {
+      "custom_dataset_params": {
+        "data_path": "data_pipelines/training_data/artifacts/system_prompt_qa/hidden_bias_inactive_v2_300k_qwen3_14b/training_data.json"
+      },
+      "num_train": 285046,
+      "num_test": 0,
+      "splits": [
+        "train"
+      ],
+      "model_name": "Qwen/Qwen3-14B",
+      "layer_combinations": [
+        [
+          25,
+          50,
+          75
+        ]
+      ],
+      "save_acts": false,
+      "batch_size": 16,
+      "dataset_name": "synthetic_qa",
+      "dataset_folder": "sft_training_data",
+      "seed": 42
+    }
+  ],
+  "dataset_loader_names": [
+    "past_lens",
+    "past_lens",
+    "synthetic_qa",
+    "classification_geometry_of_truth",
+    "classification_geometry_of_truth",
+    "classification_relations",
+    "classification_relations",
+    "classification_sst2",
+    "classification_sst2",
+    "classification_md_gender",
+    "classification_md_gender",
+    "classification_snli",
+    "classification_snli",
+    "classification_ner",
+    "classification_ner",
+    "classification_tense",
+    "classification_tense",
+    "synthetic_qa",
+    "synthetic_qa",
+    "synthetic_qa"
+  ],
+  "use_decoder_vectors": true,
+  "generation_kwargs": {
+    "do_sample": false,
+    "max_new_tokens": 20
+  },
+  "steering_coefficient": 1.0,
+  "dataset_folder": "sft_training_data",
+  "train_batch_size": 32,
+  "eval_batch_size": 128,
+  "train_batches_per_materialization_block": 64,
+  "use_lora": true,
+  "lora_r": 64,
+  "lora_alpha": 128,
+  "lora_dropout": 0.05,
+  "lora_target_modules": "all-linear",
+  "num_epochs": 1,
+  "lr": 1e-05,
+  "gradient_accumulation_steps": 1,
+  "max_grad_norm": 1.0,
+  "eval_steps": 999999,
+  "eval_on_start": false,
+  "gradient_checkpointing": true,
+  "window_mult": 20,
+  "save_steps": 5000,
+  "save_dir": "checkpoints/500k_pl_31k_spqav2_199k_sqav3_300k_hb_300k_hbiv2_126k_cls_qwen3_14b",
+  "max_train_examples": null,
+  "seed": 42,
+  "eval_logs_path": "eval_logs.json",
+  "load_lora_path": null,
+  "created_at_utc": "",
+  "git_commit": "",
+  "wandb_project": "misc_experiments",
+  "chat_regularization_path": null,
+  "chat_regularization_every_n_ao_updates": 0,
+  "wandb_run_name": "500k_pl_31k_spqav2_199k_sqav3_300k_hb_300k_hbiv2_126k_cls_qwen3_14b",
+  "wandb_suffix": "_500k_pl_31k_spqav2_199k_sqav3_300k_hb_300k_hbiv2_126k_cls_qwen3_14b",
+  "hf_push_to_hub": false,
+  "hf_private_repo": false,
+  "hf_repo_name": "",
+  "hf_repo_id": "",
+  "load_in_8bit": false,
+  "open_ended_eval_include": [
+    "number_prediction",
+    "mmlu_prediction",
+    "backtracking",
+    "missing_info",
+    "sycophancy",
+    "system_prompt_qa_hidden",
+    "system_prompt_qa_latentqa"
+  ],
+  "positive_negative_examples": false,
+  "monitor_eval_steps": null,
+  "monitor_num_eval_examples_per_component": null,
+  "validation_dataset_configs": [
+    {
+      "custom_dataset_params": {
+        "data_path": "sft_validation_data/500k_pl_31k_spqav2_199k_sqav3_50k_hb_50k_hbi_126k_cls_qwen3_14b__qwen3_14b_core_validation_v1/prebuilt_pt/past_lens_model_Qwen3-14B_n_256_save_acts_False_train_1e74e5a92363.pt",
+        "component_name": "past_lens_acts_1_past"
+      },
+      "num_train": 256,
+      "num_test": 0,
+      "splits": [
+        "train"
+      ],
+      "model_name": "Qwen/Qwen3-14B",
+      "layer_combinations": [
+        [
+          25,
+          50,
+          75
+        ]
+      ],
+      "save_acts": false,
+      "batch_size": 32,
+      "dataset_name": "prebuilt_pt",
+      "dataset_folder": "sft_training_data",
+      "seed": 42
+    },
+    {
+      "custom_dataset_params": {
+        "data_path": "sft_validation_data/500k_pl_31k_spqav2_199k_sqav3_50k_hb_50k_hbi_126k_cls_qwen3_14b__qwen3_14b_core_validation_v1/prebuilt_pt/past_lens_model_Qwen3-14B_n_256_save_acts_False_train_0ca338163a9e.pt",
+        "component_name": "past_lens_acts_1_future"
+      },
+      "num_train": 256,
+      "num_test": 0,
+      "splits": [
+        "train"
+      ],
+      "model_name": "Qwen/Qwen3-14B",
+      "layer_combinations": [
+        [
+          25,
+          50,
+          75
+        ]
+      ],
+      "save_acts": false,
+      "batch_size": 32,
+      "dataset_name": "prebuilt_pt",
+      "dataset_folder": "sft_training_data",
+      "seed": 42
+    },
+    {
+      "custom_dataset_params": {
+        "data_path": "sft_validation_data/500k_pl_31k_spqav2_199k_sqav3_50k_hb_50k_hbi_126k_cls_qwen3_14b__qwen3_14b_core_validation_v1/prebuilt_pt/past_lens_model_Qwen3-14B_n_256_save_acts_False_train_f297d1baa3a5.pt",
+        "component_name": "past_lens_acts_50_past"
+      },
+      "num_train": 256,
+      "num_test": 0,
+      "splits": [
+        "train"
+      ],
+      "model_name": "Qwen/Qwen3-14B",
+      "layer_combinations": [
+        [
+          25,
+          50,
+          75
+        ]
+      ],
+      "save_acts": false,
+      "batch_size": 32,
+      "dataset_name": "prebuilt_pt",
+      "dataset_folder": "sft_training_data",
+      "seed": 42
+    },
+    {
+      "custom_dataset_params": {
+        "data_path": "sft_validation_data/500k_pl_31k_spqav2_199k_sqav3_50k_hb_50k_hbi_126k_cls_qwen3_14b__qwen3_14b_core_validation_v1/prebuilt_pt/past_lens_model_Qwen3-14B_n_256_save_acts_False_train_030aa21ef03b.pt",
+        "component_name": "past_lens_acts_50_future"
+      },
+      "num_train": 256,
+      "num_test": 0,
+      "splits": [
+        "train"
+      ],
+      "model_name": "Qwen/Qwen3-14B",
+      "layer_combinations": [
+        [
+          25,
+          50,
+          75
+        ]
+      ],
+      "save_acts": false,
+      "batch_size": 32,
+      "dataset_name": "prebuilt_pt",
+      "dataset_folder": "sft_training_data",
+      "seed": 42
+    },
+    {
+      "custom_dataset_params": {
+        "data_path": "sft_validation_data/500k_pl_31k_spqav2_199k_sqav3_50k_hb_50k_hbi_126k_cls_qwen3_14b__qwen3_14b_core_validation_v1/prebuilt_pt/synthetic_qa_model_Qwen3-14B_n_256_save_acts_False_train_aaaf205d49fa.pt",
+        "component_name": "synthetic_qa_v3"
+      },
+      "num_train": 256,
+      "num_test": 0,
+      "splits": [
+        "train"
+      ],
+      "model_name": "Qwen/Qwen3-14B",
+      "layer_combinations": [
+        [
+          25,
+          50,
+          75
+        ]
+      ],
+      "save_acts": false,
+      "batch_size": 32,
+      "dataset_name": "prebuilt_pt",
+      "dataset_folder": "sft_training_data",
+      "seed": 42
+    },
+    {
+      "custom_dataset_params": {
+        "data_path": "sft_validation_data/500k_pl_31k_spqav2_199k_sqav3_50k_hb_50k_hbi_126k_cls_qwen3_14b__qwen3_14b_core_validation_v1/prebuilt_pt/synthetic_qa_model_Qwen3-14B_n_256_save_acts_False_train_adf88a2752d8.pt",
+        "component_name": "hidden_bias_active"
+      },
+      "num_train": 256,
+      "num_test": 0,
+      "splits": [
+        "train"
+      ],
+      "model_name": "Qwen/Qwen3-14B",
+      "layer_combinations": [
+        [
+          25,
+          50,
+          75
+        ]
+      ],
+      "save_acts": false,
+      "batch_size": 32,
+      "dataset_name": "prebuilt_pt",
+      "dataset_folder": "sft_training_data",
+      "seed": 42
+    },
+    {
+      "custom_dataset_params": {
+        "data_path": "sft_validation_data/500k_pl_31k_spqav2_199k_sqav3_50k_hb_50k_hbi_126k_cls_qwen3_14b__qwen3_14b_core_validation_v1/prebuilt_pt/synthetic_qa_model_Qwen3-14B_n_256_save_acts_False_train_ed94e8f7b601.pt",
+        "component_name": "hidden_bias_inactive"
+      },
+      "num_train": 256,
+      "num_test": 0,
+      "splits": [
+        "train"
+      ],
+      "model_name": "Qwen/Qwen3-14B",
+      "layer_combinations": [
+        [
+          25,
+          50,
+          75
+        ]
+      ],
+      "save_acts": false,
+      "batch_size": 32,
+      "dataset_name": "prebuilt_pt",
+      "dataset_folder": "sft_training_data",
+      "seed": 42
+    }
+  ],
+  "validation_dataset_loader_names": [
+    "past_lens_acts_1_past",
+    "past_lens_acts_1_future",
+    "past_lens_acts_50_past",
+    "past_lens_acts_50_future",
+    "synthetic_qa_v3",
+    "hidden_bias_active",
+    "hidden_bias_inactive"
+  ],
+  "validation_steps": 5000,
+  "validation_on_start": false
+}

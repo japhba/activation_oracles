@@ -1,0 +1,182 @@
+[
+  {
+    "id": "math_modular_1",
+    "domain": "number_theory",
+    "problem": "Find the last three digits of 7^999.",
+    "notes": "Requires modular exponentiation, easy to make errors in repeated squaring"
+  },
+  {
+    "id": "math_combinatorics_1",
+    "domain": "combinatorics",
+    "problem": "In how many ways can 8 people be seated around a circular table if 3 specific people must not sit next to each other?",
+    "notes": "Inclusion-exclusion on circular permutations, tricky constraints"
+  },
+  {
+    "id": "logic_knights_knaves_1",
+    "domain": "logic",
+    "problem": "On an island, knights always tell the truth and knaves always lie. You meet three people: A, B, and C. A says 'Exactly one of us is a knave.' B says 'Exactly two of us are knaves.' C says 'All of us are knaves.' Determine each person's type.",
+    "notes": "Requires systematic case analysis with self-referential constraints"
+  },
+  {
+    "id": "math_algebra_1",
+    "domain": "algebra",
+    "problem": "Find all real solutions to the system: x + y + z = 1, x^2 + y^2 + z^2 = 2, x^3 + y^3 + z^3 = 3.",
+    "notes": "Newton's identities, symmetric polynomials — easy to get lost in algebra"
+  },
+  {
+    "id": "math_geometry_1",
+    "domain": "geometry",
+    "problem": "In triangle ABC, angle A = 40°, angle B = 60°, angle C = 80°. The bisector of angle B meets AC at D. Find angle BDC.",
+    "notes": "Angle chasing with bisectors, multiple steps"
+  },
+  {
+    "id": "logic_river_crossing_1",
+    "domain": "logic",
+    "problem": "A farmer needs to cross a river with a wolf, a goat, a cabbage, and a chicken. The boat can carry the farmer and at most two items. The wolf eats the goat if left alone, the goat eats the cabbage if left alone, and the chicken eats the cabbage if left alone. Find the minimum number of crossings.",
+    "notes": "Modified classic puzzle with extra constraint (chicken+cabbage), forces reconsideration"
+  },
+  {
+    "id": "math_probability_1",
+    "domain": "probability",
+    "problem": "A box contains 5 red balls and 3 blue balls. You draw balls one at a time without replacement. What is the probability that all red balls are drawn before all blue balls are drawn?",
+    "notes": "Equivalent to asking P(last ball is blue), but non-obvious"
+  },
+  {
+    "id": "math_number_theory_2",
+    "domain": "number_theory",
+    "problem": "How many positive integers n ≤ 1000 satisfy the property that n^2 + 1 is divisible by both 5 and 13?",
+    "notes": "Chinese remainder theorem + quadratic residues, multiple steps"
+  },
+  {
+    "id": "logic_scheduling_1",
+    "domain": "constraint_satisfaction",
+    "problem": "Five professors (A, B, C, D, E) must teach five courses (1, 2, 3, 4, 5) in five time slots (Mon, Tue, Wed, Thu, Fri). Constraints: A can't teach on Monday or Friday. B must teach before C. Course 3 must be on Wednesday. D can't teach course 1 or 2. E must teach on an adjacent day to A. Each professor teaches exactly one course on one day. Find a valid assignment.",
+    "notes": "Constraint propagation with backtracking needed"
+  },
+  {
+    "id": "math_series_1",
+    "domain": "analysis",
+    "problem": "Compute the exact value of the sum: 1/(1·2·3) + 1/(2·3·4) + 1/(3·4·5) + ... + 1/(98·99·100).",
+    "notes": "Partial fractions / telescoping, but need to get the decomposition right"
+  },
+  {
+    "id": "logic_truth_table_1",
+    "domain": "logic",
+    "problem": "Three switches in room A control three light bulbs in room B. You start in room A, can flip switches as much as you want, but can only go to room B once. Once in room B, how can you determine which switch controls which bulb? Now suppose one of the three bulbs is an LED (gives no heat). Can you still solve it?",
+    "notes": "Classic puzzle with twist that breaks the standard solution"
+  },
+  {
+    "id": "math_diophantine_1",
+    "domain": "number_theory",
+    "problem": "Find all pairs of positive integers (x, y) such that x^2 - y^2 = 2024.",
+    "notes": "Factor as (x-y)(x+y), then factor 2024 and check parity constraints"
+  },
+  {
+    "id": "math_geometry_2",
+    "domain": "geometry",
+    "problem": "A circle of radius 1 is inscribed in a square. Four smaller circles are each tangent to two sides of the square and to the inscribed circle. Find the radius of each smaller circle.",
+    "notes": "Coordinate geometry with tangency conditions, algebraic manipulation"
+  },
+  {
+    "id": "logic_hats_1",
+    "domain": "logic",
+    "problem": "100 prisoners stand in a line, each wearing a red or blue hat. Each person can see all hats in front of them but not their own or those behind. Starting from the back, each must guess their hat color. They can hear all previous guesses. What strategy maximizes the number of guaranteed correct guesses?",
+    "notes": "Parity strategy, but requires careful reasoning about information flow"
+  },
+  {
+    "id": "math_counting_1",
+    "domain": "combinatorics",
+    "problem": "How many 6-digit numbers have the property that their digits are in strictly increasing order?",
+    "notes": "Bijection to choosing 6 digits from {1,...,9}, but need to realize 0 can't be included"
+  },
+  {
+    "id": "math_polynomial_1",
+    "domain": "algebra",
+    "problem": "Let p(x) be a polynomial with integer coefficients such that p(1) = 7, p(2) = 5, p(3) = 1, p(4) = 2. What is the smallest possible degree of p?",
+    "notes": "Differences analysis, checking if degree 3 works requires solving a system"
+  },
+  {
+    "id": "logic_weighing_1",
+    "domain": "logic",
+    "problem": "You have 12 coins, one of which is counterfeit and is either heavier or lighter than the rest. Using a balance scale exactly 3 times, determine which coin is counterfeit and whether it is heavier or lighter.",
+    "notes": "Classic but genuinely hard — requires careful case splitting and backtracking"
+  },
+  {
+    "id": "math_graph_theory_1",
+    "domain": "graph_theory",
+    "problem": "In a tournament with 7 teams where every team plays every other team exactly once (no draws), prove that there exists a team A that, for every other team B, either A beat B directly, or A beat some team C that beat B.",
+    "notes": "King vertex theorem, requires structural argument"
+  },
+  {
+    "id": "math_inequality_1",
+    "domain": "algebra",
+    "problem": "For positive reals a, b, c with a + b + c = 1, find the minimum value of (1/a - 1)(1/b - 1)(1/c - 1).",
+    "notes": "AM-GM or substitution, symmetry suggests a=b=c but need to verify"
+  },
+  {
+    "id": "logic_game_theory_1",
+    "domain": "game_theory",
+    "problem": "Alice and Bob take turns removing 1, 2, or 3 stones from a pile of 30 stones. The person who takes the last stone wins. Alice goes first. Who has a winning strategy and what is it?",
+    "notes": "Nim-like, modular analysis, straightforward but requires careful reasoning"
+  },
+  {
+    "id": "math_floor_1",
+    "domain": "number_theory",
+    "problem": "Find the number of positive integers n ≤ 500 such that floor(sqrt(n)) divides n.",
+    "notes": "Case analysis on floor(sqrt(n)) = k, then count multiples of k in [k^2, (k+1)^2 - 1]"
+  },
+  {
+    "id": "logic_prisoners_1",
+    "domain": "logic",
+    "problem": "Five pirates (A, B, C, D, E in seniority order) divide 100 gold coins. A proposes a distribution; all vote. If at least half approve, it's accepted. Otherwise, A is thrown overboard and B proposes, etc. Each pirate is rational, greedy, and prefers survival. What does A propose?",
+    "notes": "Backward induction, but easy to make errors tracking who votes for what"
+  },
+  {
+    "id": "math_recursive_1",
+    "domain": "sequences",
+    "problem": "A sequence is defined by a_1 = 1, a_2 = 1, and a_n = a_{n-1} + 2*a_{n-2} for n ≥ 3. Find a closed-form expression for a_n.",
+    "notes": "Characteristic equation, but need to solve quadratic and handle initial conditions"
+  },
+  {
+    "id": "math_geometry_3",
+    "domain": "geometry",
+    "problem": "Two circles of radii 3 and 5 have their centers 7 apart. Find the length of their common internal tangent.",
+    "notes": "Right triangle setup, but internal vs external tangent distinction matters"
+  },
+  {
+    "id": "logic_grid_1",
+    "domain": "constraint_satisfaction",
+    "problem": "Place the numbers 1 through 9 in a 3x3 grid such that: the sum of each row is different, the sum of each column is different, and no two adjacent cells (horizontally or vertically) contain consecutive numbers.",
+    "notes": "Heavy constraint satisfaction, likely requires trial and backtracking"
+  },
+  {
+    "id": "math_digit_1",
+    "domain": "number_theory",
+    "problem": "Find the smallest positive integer whose digits sum to 37 and is divisible by 37.",
+    "notes": "Needs to balance digit sum constraint with divisibility, not obvious approach"
+  },
+  {
+    "id": "math_probability_2",
+    "domain": "probability",
+    "problem": "Two players alternate flipping a fair coin. The first player to flip heads wins. What is the probability that the first player wins? Now modify: player 1 flips once, player 2 flips twice, player 1 flips once, player 2 flips twice, etc. Who is favored and by how much?",
+    "notes": "Geometric series for first part; second part changes the series structure"
+  },
+  {
+    "id": "math_matrix_1",
+    "domain": "linear_algebra",
+    "problem": "Let A be a 3x3 matrix with entries a_{ij} = min(i, j). Find the determinant of A.",
+    "notes": "Need to construct the matrix carefully, then compute determinant"
+  },
+  {
+    "id": "logic_calendar_1",
+    "domain": "logic",
+    "problem": "A professor tells two students: 'I'm thinking of a date in the next year. I'll tell Student A the month and Student B the day.' Student A says: 'I don't know the date, and I know Student B doesn't know either.' Student B says: 'At first I didn't know, but now I do.' Student A says: 'Now I know too.' The possible dates are: Jan 15, Jan 16, Feb 15, Feb 23, Feb 24, Mar 15, Mar 22, Apr 15, Apr 22, May 16, May 23. What is the date?",
+    "notes": "Cheryl's birthday variant, requires careful elimination reasoning"
+  },
+  {
+    "id": "math_functional_1",
+    "domain": "algebra",
+    "problem": "Find all functions f: R → R such that f(x + y) = f(x) + f(y) + 2xy for all real x, y.",
+    "notes": "Substitution strategy, guess f(x) = x^2 + cx, verify and prove uniqueness"
+  }
+]

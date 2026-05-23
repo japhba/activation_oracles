@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 YES_TOKEN = "Yes"
 NO_TOKEN = "No"
-DEFAULT_DATA_DIR = "datasets/classification_datasets"
+DEFAULT_DATA_DIR = "data_pipelines/classification_datasets"
 
 
 @dataclass
@@ -814,11 +814,11 @@ class DatasetManager:
             yield self.examples[i : i + self.batch_size]
 
     @staticmethod
-    def from_named_datasets(dataset_names, batch_size=1, shuffle=True):
+    def from_named_datasets(dataset_names, batch_size=1, shuffle=True, num_qa_per_sample=1):
         examples = []
         for group, name in dataset_names:
             dataset = DatasetManager.supported_datasets[(group, name)]
-            examples.extend(dataset.load())
+            examples.extend(dataset.load(num_qa_per_sample=num_qa_per_sample))
         return DatasetManager(examples, batch_size, shuffle)
 
     @staticmethod
