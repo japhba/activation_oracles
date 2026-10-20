@@ -263,14 +263,21 @@ def collect_target_activations(
                     max_offset=None,
                 )
         else:
-            submodules = {layer: get_hf_submodule(model, layer) for layer in config.selected_act_layers}
-            lora_acts = collect_activations_multiple_layers(
-                model=model,
-                submodules=submodules,
-                inputs_BL=inputs_BL,
-                min_offset=None,
-                max_offset=None,
-            )
+            # Disable adapters explicitly: otherwise the target is read through
+            # whichever adapter is active, which is the AO (load_adapter and
+            # run_verbalizer both leave it active), not the base model.
+            model.disable_adapters()
+            try:
+                submodules = {layer: get_hf_submodule(model, layer) for layer in config.selected_act_layers}
+                lora_acts = collect_activations_multiple_layers(
+                    model=model,
+                    submodules=submodules,
+                    inputs_BL=inputs_BL,
+                    min_offset=None,
+                    max_offset=None,
+                )
+            finally:
+                model.enable_adapters()
         act_types["lora"] = lora_acts
 
     if "orig" in config.activation_input_types:
