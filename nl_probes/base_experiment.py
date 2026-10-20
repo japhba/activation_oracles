@@ -263,6 +263,10 @@ def collect_target_activations(
                     max_offset=None,
                 )
         else:
+            # Disable adapters explicitly: run_verbalizer leaves the AO adapter
+            # active after each batch, so the next batch would otherwise read
+            # the target through the AO LoRA instead of the base model.
+            model.disable_adapters()
             submodules = {layer: get_hf_submodule(model, layer) for layer in config.selected_act_layers}
             lora_acts = collect_activations_multiple_layers(
                 model=model,
@@ -271,6 +275,7 @@ def collect_target_activations(
                 min_offset=None,
                 max_offset=None,
             )
+            model.enable_adapters()
         act_types["lora"] = lora_acts
 
     if "orig" in config.activation_input_types:
